@@ -1,37 +1,9 @@
-from helpers import *
 import scipy
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.graph_scene import GraphScene
+from manimlib.imports import *
 from old_projects.eoc.chapter1 import Thumbnail as Chapter1Thumbnail
 from old_projects.eoc.chapter2 import Car, MoveCar, ShowSpeedometer, \
     IncrementNumber, GraphCarTrajectory, SecantLineToTangentLine, \
     VELOCITY_COLOR, TIME_COLOR, DISTANCE_COLOR
-from topics.common_scenes import OpeningQuote, PatreonThanks
 
 def v_rate_func(t):
     return 4*t - 4*(t**2)
@@ -75,7 +47,7 @@ class Chapter8OpeningQuote(OpeningQuote, PiCreatureScene):
             author.next_to, self.pi_creature.get_corner(UP+LEFT), UP,
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither(3)
+        self.wait(3)
         self.play(
             author.restore,
             self.pi_creature.change_mode, "plain"
@@ -85,12 +57,12 @@ class Chapter8OpeningQuote(OpeningQuote, PiCreatureScene):
                 LEFT, MED_SMALL_BUFF, UP,
             self.pi_creature.change_mode, "thinking"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(formula),
             self.pi_creature.change_mode, "confused"
         )
-        self.dither()
+        self.wait()
 
     def get_formula(self):
         result = TexMobject(
@@ -102,10 +74,10 @@ class Chapter8OpeningQuote(OpeningQuote, PiCreatureScene):
             "\\sin(", "h", ")\\cos(\\theta)\\big] - \\sin(\\theta) \\over", "h}",
             "= \\dots"
         )
-        result.highlight_by_tex("h", GREEN, substring = False)
-        result.highlight_by_tex("d\\theta", GREEN)
+        result.set_color_by_tex("h", GREEN, substring = False)
+        result.set_color_by_tex("d\\theta", GREEN)
 
-        result.scale_to_fit_width(2*SPACE_WIDTH - 2*MED_SMALL_BUFF)
+        result.set_width(FRAME_WIDTH - 2*MED_SMALL_BUFF)
         return result
 
 class ThisVideo(TeacherStudentsScene):
@@ -121,25 +93,25 @@ class ThisVideo(TeacherStudentsScene):
             "\\int_0^T", "v(t)", "\\,dt", 
             "=", "v(T)"
         )
-        formula.highlight_by_tex("v", VELOCITY_COLOR)
+        formula.set_color_by_tex("v", VELOCITY_COLOR)
         formula.next_to(self.teacher.get_corner(UP+LEFT), UP, MED_LARGE_BUFF)
 
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.play(
             this_video.shift, this_video.get_height()*DOWN/2,
-            this_video.highlight, YELLOW,
+            this_video.set_color, YELLOW,
             self.teacher.change_mode, "raise_right_hand",
         )
         self.play(Write(VGroup(integral, v_t, dt)))
         self.change_student_modes(*["erm"]*3)
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(deriv, equals, v_T)), )
         self.change_student_modes(*["confused"]*3)
-        self.dither(3)
+        self.wait(3)
         self.play(
             this_video.restore,
             next_video.shift, next_video.get_height()*DOWN/2,
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             integral[0].copy().next_to, next_video, DOWN, MED_LARGE_BUFF,
             FadeOut(formula),
             *it.chain(*[
@@ -147,7 +119,7 @@ class ThisVideo(TeacherStudentsScene):
                 for pi in self.pi_creatures
             ])
         )
-        self.dither(2)
+        self.wait(2)
 
 class InCarRestrictedView(ShowSpeedometer):
     CONFIG = {
@@ -175,9 +147,9 @@ class InCarRestrictedView(ShowSpeedometer):
         time_label = TextMobject("Time (in seconds):", "0")
         time_label.shift(2*UP)
 
-        dots = VGroup(*map(Dot, [self.point_A, self.point_B]))
+        dots = VGroup(*list(map(Dot, [self.point_A, self.point_B])))
         line = Line(*dots, buff = 0)
-        line.highlight(DISTANCE_COLOR)
+        line.set_color(DISTANCE_COLOR)
         brace = Brace(line, DOWN)
         brace_text = brace.get_text("Distance traveled?")
 
@@ -187,12 +159,12 @@ class InCarRestrictedView(ShowSpeedometer):
         self.play(Blink(car.randy))
         self.play(car.randy.restore, Animation(car))
         self.play(ShowCreation(window, run_time = 2))
-        self.dither()
+        self.wait()
 
         #Show speedometer
         self.introduce_added_mobjects()
         self.play(ShowCreation(square))
-        self.dither()
+        self.wait()
 
         #Travel
         self.play(FadeIn(time_label))
@@ -211,16 +183,16 @@ class InCarRestrictedView(ShowSpeedometer):
             time_label[1], eight,
             rate_func = squish_rate_func(smooth, 0, 0.5)
         ))
-        self.dither()
+        self.wait()
 
         #Ask about distance
-        self.play(*map(ShowCreation, dots))
+        self.play(*list(map(ShowCreation, dots)))
         self.play(ShowCreation(line))
         self.play(
             GrowFromCenter(brace),
             Write(brace_text)
         )
-        self.dither(2)
+        self.wait(2)
 
 class GraphDistanceVsTime(GraphCarTrajectory):
     CONFIG = {
@@ -228,14 +200,14 @@ class GraphDistanceVsTime(GraphCarTrajectory):
         "y_max" : 100,
         "y_axis_height" : 6,
         "y_tick_frequency" : 10,
-        "y_labeled_nums" : range(10, 100, 10),
+        "y_labeled_nums" : list(range(10, 100, 10)),
         "y_axis_label" : "Distance (in meters)",
         "x_min" : -1,
         "x_max" : 9,
         "x_axis_width" : 9,
         "x_tick_frequency" : 1,
         "x_leftmost_tick" : None, #Change if different from x_min
-        "x_labeled_nums" : range(1, 9),
+        "x_labeled_nums" : list(range(1, 9)),
         "x_axis_label" : "$t$",
         "time_of_journey" : 8,
         "care_movement_rate_func" : s_rate_func,
@@ -261,13 +233,13 @@ class PlotVelocity(GraphScene):
         "x_max" : 9,
         "x_axis_width" : 9,
         "x_tick_frequency" : 1,
-        "x_labeled_nums" : range(1, 9),
+        "x_labeled_nums" : list(range(1, 9)),
         "x_axis_label" : "$t$",
         "y_min" : 0,
         "y_max" : 25,
         "y_axis_height" : 6,
         "y_tick_frequency" : 5,
-        "y_labeled_nums" : range(5, 30, 5),
+        "y_labeled_nums" : list(range(5, 30, 5)),
         "y_axis_label" : "Velocity in $\\frac{\\text{meters}}{\\text{second}}$",
         "num_graph_anchor_points" : 50,
     }
@@ -284,20 +256,20 @@ class PlotVelocity(GraphScene):
 
         self.play(DrawBorderThenFill(
             speedometer, 
-            submobject_mode = "lagged_start",
-            rate_func = None,
+            lag_ratio = 0.5,
+            rate_func=linear,
         ))
 
         self.speedometer = speedometer
 
     def plot_points(self):
-        times = range(0, 9)
+        times = list(range(0, 9))
         points = [
             self.coords_to_point(t, v_func(t))
             for t in times
         ]
         dots = VGroup(*[Dot(p, radius = 0.07) for p in points])
-        dots.highlight(VELOCITY_COLOR)
+        dots.set_color(VELOCITY_COLOR)
 
         pre_dots = VGroup()
         dot_intro_anims = []
@@ -322,7 +294,7 @@ class PlotVelocity(GraphScene):
 
         self.play(
             Succession(
-                *dot_intro_anims, rate_func = None
+                *dot_intro_anims, rate_func=linear
             ),
             ApplyMethod(
                 self.speedometer.move_needle_to_velocity,
@@ -334,7 +306,7 @@ class PlotVelocity(GraphScene):
             ),
             run_time = 5
         )
-        self.dither()
+        self.wait()
 
     def draw_curve(self):
         graph, label = self.get_v_graph_and_label()
@@ -342,7 +314,7 @@ class PlotVelocity(GraphScene):
         self.revert_to_original_skipping_status()
         self.play(ShowCreation(graph, run_time = 3))
         self.play(Write(graph_label))
-        self.dither()
+        self.wait()
 
     ##
 
@@ -354,7 +326,7 @@ class PlotVelocity(GraphScene):
             color = VELOCITY_COLOR
         )
         graph_label = TexMobject("v(t)", "=t(8-t)")
-        graph_label.highlight_by_tex("v(t)", VELOCITY_COLOR)
+        graph_label.set_color_by_tex("v(t)", VELOCITY_COLOR)
         graph_label.next_to(
             graph.point_from_proportion(7./8.),
             UP+RIGHT
@@ -371,12 +343,12 @@ class Chapter2Wrapper(Scene):
         title = TextMobject(self.title)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = WHITE)
-        rect.scale_to_fit_height(1.5*SPACE_HEIGHT)
+        rect.set_height(1.5*FRAME_Y_RADIUS)
         rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither(3)
+        self.wait(3)
 
 class GivenDistanceWhatIsVelocity(GraphCarTrajectory):
     def construct(self):
@@ -417,8 +389,8 @@ class AskAboutAntiderivative(PlotVelocity):
 
     def write_s_formula(self):
         ds_dt = TexMobject("ds", "\\over\\,", "dt")
-        ds_dt.highlight_by_tex("ds", DISTANCE_COLOR)
-        ds_dt.highlight_by_tex("dt", TIME_COLOR)
+        ds_dt.set_color_by_tex("ds", DISTANCE_COLOR)
+        ds_dt.set_color_by_tex("dt", TIME_COLOR)
         ds_dt.next_to(self.graph_label, UP, LARGE_BUFF)
 
         v_t = self.graph_label.get_part_by_tex("v(t)")
@@ -431,7 +403,7 @@ class AskAboutAntiderivative(PlotVelocity):
             Write(ds_dt, run_time = 2),
             ShowCreation(arrow)
         )
-        self.dither()
+        self.wait()
 
     def write_antiderivative(self):
         randy = Randolph()
@@ -440,9 +412,9 @@ class AskAboutAntiderivative(PlotVelocity):
         words = TexMobject(
             "{d(", "???", ") \\over \\,", "dt}", "=", "t(8-t)"
         )
-        words.highlight_by_tex("t(8-t)", VELOCITY_COLOR)
-        words.highlight_by_tex("???", DISTANCE_COLOR)
-        words.highlight_by_tex("dt", TIME_COLOR)
+        words.set_color_by_tex("t(8-t)", VELOCITY_COLOR)
+        words.set_color_by_tex("???", DISTANCE_COLOR)
+        words.set_color_by_tex("dt", TIME_COLOR)
         words.scale(0.7)
 
         self.play(FadeIn(randy))
@@ -452,7 +424,7 @@ class AskAboutAntiderivative(PlotVelocity):
             bubble_kwargs = {"height" : 3, "width" : 4},
         ))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class Antiderivative(PiCreatureScene):
     def construct(self):
@@ -463,19 +435,19 @@ class Antiderivative(PiCreatureScene):
         group = VGroup(functions, arcs, derivative, antiderivative)
 
         self.add(functions, top_arc, derivative)
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(bottom_arc),
             Write(antiderivative),
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither(2)
-        for pair in reversed(zip(functions, alt_functions)):
+        self.wait(2)
+        for pair in reversed(list(zip(functions, alt_functions))):
             self.play(
                 Transform(*pair),
                 self.pi_creature.change_mode, "pondering"
             )
-        self.dither(2)
+        self.wait(2)
 
         self.pi_creature_says(
             "But first!", 
@@ -484,15 +456,15 @@ class Antiderivative(PiCreatureScene):
             added_anims = [group.to_edge, LEFT],
             run_time = 1,
         )
-        self.dither()
+        self.wait()
 
     def get_functions(self, left_tex, right_tex):
         left = TexMobject(left_tex)
         left.shift(2*LEFT)
-        left.highlight(DISTANCE_COLOR)
+        left.set_color(DISTANCE_COLOR)
         right = TexMobject(right_tex)
         right.shift(2*RIGHT)
-        right.highlight(VELOCITY_COLOR)
+        right.set_color(VELOCITY_COLOR)
         result = VGroup(left, right)
         result.shift(UP)
         return result
@@ -505,12 +477,12 @@ class Antiderivative(PiCreatureScene):
         bottom_arc = top_arc.copy()
         bottom_arc.rotate(np.pi)
         arcs = VGroup(top_arc, bottom_arc)
-        arcs.scale_to_fit_width(top_line.get_width())
+        arcs.set_width(top_line.get_width())
         for arc in arcs:
             arc.add_tip()
         top_arc.next_to(top_line, UP)
         bottom_arc.next_to(bottom_line, DOWN)
-        bottom_arc.highlight(MAROON_B)
+        bottom_arc.set_color(MAROON_B)
 
         return arcs
 
@@ -520,7 +492,7 @@ class Antiderivative(PiCreatureScene):
         derivative.next_to(top_arc, UP)
         antiderivative = TextMobject("``Antiderivative''")
         antiderivative.next_to(bottom_arc, DOWN)
-        antiderivative.highlight(bottom_arc.get_color())
+        antiderivative.set_color(bottom_arc.get_color())
 
         return VGroup(derivative, antiderivative)
 
@@ -550,9 +522,9 @@ class AreaUnderVGraph(PlotVelocity):
             self.play(Transform(
                 rects, new_rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
-        self.dither()
+        self.wait()
 
 class ConstantVelocityCar(Scene):
     def construct(self):
@@ -560,13 +532,13 @@ class ConstantVelocityCar(Scene):
         car.move_to(5*LEFT + 3*DOWN)
 
         self.add(car)
-        self.dither()
+        self.wait()
         self.play(MoveCar(
             car, 7*RIGHT+3*DOWN,
             run_time = 5,
-            rate_func = None,
+            rate_func=linear,
         ))
-        self.dither()
+        self.wait()
 
 class ConstantVelocityPlot(PlotVelocity):
     CONFIG = {
@@ -589,8 +561,8 @@ class ConstantVelocityPlot(PlotVelocity):
             color = VELOCITY_COLOR
         )
 
-        self.play(ShowCreation(graph, rate_func = None, run_time = 3))
-        self.dither()
+        self.play(ShowCreation(graph, rate_func=linear, run_time = 3))
+        self.wait()
 
         self.graph = graph
 
@@ -610,15 +582,15 @@ class ConstantVelocityPlot(PlotVelocity):
         v_label = right_brace.get_text(
             "$10 \\frac{\\text{meters}}{\\text{second}}$",
         )
-        v_label.highlight(VELOCITY_COLOR)
+        v_label.set_color(VELOCITY_COLOR)
         t_label = top_brace.get_text(
             "8 seconds"
         )
-        t_label.highlight(TIME_COLOR)
+        t_label.set_color(TIME_COLOR)
 
         s_label = TexMobject("10", "\\times",  "8", "\\text{ meters}")
-        s_label.highlight_by_tex("10", VELOCITY_COLOR)
-        s_label.highlight_by_tex("8", TIME_COLOR)
+        s_label.set_color_by_tex("10", VELOCITY_COLOR)
+        s_label.set_color_by_tex("8", TIME_COLOR)
         s_label.move_to(rect)
 
         self.play(
@@ -634,7 +606,7 @@ class ConstantVelocityPlot(PlotVelocity):
             Write(s_label),
             Animation(self.graph)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.area_rect = rect
         self.s_label = s_label
@@ -656,8 +628,8 @@ class ConstantVelocityPlot(PlotVelocity):
         self.play(FadeIn(randy))
         self.play(randy.change_mode, "pondering")
         self.play(
-            self.area_rect.highlight, YELLOW,
-            *map(Animation, self.get_mobjects()),
+            self.area_rect.set_color, YELLOW,
+            *list(map(Animation, self.get_mobjects())),
             rate_func = there_and_back
         )
         self.play(Blink(randy))
@@ -667,9 +639,9 @@ class ConstantVelocityPlot(PlotVelocity):
             ShowCreation(bubble), 
             Write(bubble.content),
         )
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             randy.change_mode, "pondering",
             FadeOut(bubble),
@@ -680,10 +652,10 @@ class ConstantVelocityPlot(PlotVelocity):
 
     def note_units(self):
         x_line, y_line  = lines = VGroup(*[
-            axis.main_line.copy()
-            for axis in self.x_axis, self.y_axis
+            axis.copy()
+            for axis in (self.x_axis, self.y_axis)
         ])
-        lines.highlight(TIME_COLOR)
+        lines.set_color(TIME_COLOR)
         square = Square(
             stroke_color = BLACK,
             stroke_width = 1,
@@ -693,7 +665,7 @@ class ConstantVelocityPlot(PlotVelocity):
         square.replace(
             VGroup(*[
                 VectorizedPoint(self.coords_to_point(i, i))
-                for i in 0, 1
+                for i in (0, 1)
             ]),
             stretch = True
         )
@@ -720,14 +692,14 @@ class ConstantVelocityPlot(PlotVelocity):
             self.play(
                 FadeClass(
                     units_of_area, 
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                     run_time = 3
                 ),
                 Animation(self.s_label),
                 self.randy.look_at, self.area_rect
             )
         self.play(Blink(self.randy))
-        self.dither()
+        self.wait()
 
 class PiecewiseConstantCar(Scene):
     def construct(self):
@@ -736,19 +708,19 @@ class PiecewiseConstantCar(Scene):
         car.move_to(start_point)
 
         self.add(car)
-        self.dither()
+        self.wait()
         for shift in 2, 6, 12:
             car.randy.rotate_in_place(np.pi/8)
             anim = MoveCar(
                 car, start_point+shift*RIGHT,
-                rate_func = None
+                rate_func=linear
             )
 
             anim.target_mobject[0].rotate_in_place(-np.pi/8)
             # for mob in anim.starting_mobject, anim.mobject:
             #     mob.randy.rotate_in_place(np.pi/6)
             self.play(anim)
-        self.dither()
+        self.wait()
 
 class PiecewiseConstantPlot(PlotVelocity):
     CONFIG = {
@@ -814,19 +786,19 @@ class PiecewiseConstantPlot(PlotVelocity):
             rate_func = there_and_back,
             run_time = 5
         ))
-        self.dither()
+        self.wait()
         self.play(FadeOut(group))
 
     def show_piecewise_constant_graph(self):
         pw_constant_graph = self.get_pw_constant_graph()
         alt_lines = [
-            line.copy().highlight(YELLOW)
+            line.copy().set_color(YELLOW)
             for line in pw_constant_graph[:4]
         ]
         for line in alt_lines:
             line.start_dot = Dot(line.get_start())
             line.end_dot = Dot(line.get_end())
-            VGroup(line.start_dot, line.end_dot).highlight(line.get_color())
+            VGroup(line.start_dot, line.end_dot).set_color(line.get_color())
         line = alt_lines[0]
 
         faders = [self.v_graph, self.v_graph_label]
@@ -835,11 +807,11 @@ class PiecewiseConstantPlot(PlotVelocity):
             mob.generate_target()
             mob.target.fade(0.7)
 
-        self.play(*map(MoveToTarget, faders))
+        self.play(*list(map(MoveToTarget, faders)))
         self.play(ShowCreation(pw_constant_graph, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
         for new_line in alt_lines[1:]:
             for mob in line.end_dot, new_line.start_dot, new_line:
                 self.play(Transform(
@@ -848,7 +820,7 @@ class PiecewiseConstantPlot(PlotVelocity):
                 ))
             self.remove(line)
             self.add(new_line)
-            self.dither(2)
+            self.wait(2)
             line = new_line
         self.play(FadeOut(line))
 
@@ -883,17 +855,17 @@ class PiecewiseConstantPlot(PlotVelocity):
                 Write(brace.label, run_time = 1),
             )
             brace.add(brace.label)
-            self.dither()
+            self.wait()
         self.play(
             ReplacementTransform(
                 flat_rects, rects,
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             Animation(right_brace)
         )
-        self.play(*map(FadeOut, [top_brace, right_brace]))
-        self.dither()
+        self.play(*list(map(FadeOut, [top_brace, right_brace])))
+        self.wait()
 
         self.rects = rects
         self.rect_list = rect_list
@@ -904,12 +876,12 @@ class PiecewiseConstantPlot(PlotVelocity):
             FadeOut(self.pw_constant_graph),
             *[
                 m.restore 
-                for m in self.v_graph, self.v_graph_label
+                for m in (self.v_graph, self.v_graph_label)
             ]+[Animation(self.rects)]
         )
         for new_rects in self.rect_list[1:]:
             self.transform_between_riemann_rects(rects, new_rects)
-            self.dither()
+            self.wait()
 
     def revert_to_specific_approximation(self):
         rects = self.rects
@@ -927,15 +899,15 @@ class PiecewiseConstantPlot(PlotVelocity):
             "$dt$", "$=0.25$"
         )
         example_text.to_corner(UP+RIGHT)
-        example_text.highlight_by_tex("dt", YELLOW)
+        example_text.set_color_by_tex("dt", YELLOW)
 
         self.play(ReplacementTransform(
             rects, target_rects,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         rects.restore()
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(ticks),
             FadeOut(self.x_axis.numbers)
@@ -944,19 +916,19 @@ class PiecewiseConstantPlot(PlotVelocity):
             GrowFromCenter(brace),
             Write(dt_label)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(
                 example_text, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             ReplacementTransform(
                 dt_label.copy(),
                 example_text.get_part_by_tex("dt")
             )
         )
-        self.dither()
+        self.wait()
 
         self.rects = rects = target_rects
         self.ticks = ticks
@@ -1015,30 +987,30 @@ class PiecewiseConstantPlot(PlotVelocity):
             rects.set_fill, None, 0.25,
             Animation(rect)
         )
-        self.dither()
+        self.wait()
         for label in t_labels:
             self.play(FadeIn(label))
-        self.dither()
+        self.wait()
         for v_line, h_line, label in zip(v_lines, h_lines, height_labels):
             self.play(ShowCreation(v_line))
             self.play(ShowCreation(h_line))
             self.play(Write(label, run_time = 1))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         t_label_copy = t_labels[0].copy()
         self.play(
             t_label_copy.scale, 1./0.7,
             t_label_copy.next_to, self.v_graph_label, DOWN+LEFT, 0
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(t_label_copy))
-        self.dither()
+        self.wait()
 
         self.play(ShowCreation(circle))
         self.play(ShowCreation(rect_top))
         self.play(FadeOut(circle))
         rect.add(rect_top)
-        self.dither()
+        self.wait()
         for x in range(2):
             self.play(
                 rect.stretch_to_fit_height, v_lines[1].get_height(),
@@ -1048,15 +1020,15 @@ class PiecewiseConstantPlot(PlotVelocity):
                 rate_func = there_and_back
             )
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             group[1]
-            for group in v_lines, h_lines, height_labels
-        ]))
+            for group in (v_lines, h_lines, height_labels)
+        ])))
         self.play(
-            v_lines[0].highlight, RED,
+            v_lines[0].set_color, RED,
             rate_func = there_and_back,
         )
-        self.dither()
+        self.wait()
 
         area = TextMobject(
             "7$\\frac{\\text{m}}{\\text{s}}$",
@@ -1077,12 +1049,12 @@ class PiecewiseConstantPlot(PlotVelocity):
             Write(area),
             ShowCreation(arrow)
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [
+        self.wait(2)
+        self.play(*list(map(FadeOut, [
             area, arrow, 
             v_lines[0], h_lines[0], height_labels[0],
             rect, t_labels
-        ]))
+        ])))
 
     def show_v_dt_for_all_rectangles(self):
         dt_brace_group = VGroup(self.dt_brace, self.dt_label)
@@ -1109,7 +1081,7 @@ class PiecewiseConstantPlot(PlotVelocity):
                     Write(v_t)
                 ]
             self.play(*anims)
-            self.dither()
+            self.wait()
 
             last_rect = rect
             last_brace = brace
@@ -1124,7 +1096,7 @@ class PiecewiseConstantPlot(PlotVelocity):
         )
         integral.to_corner(UP+RIGHT)
         int_copy = integral.get_part_by_tex("int").copy()
-        bounds = map(integral.get_part_by_tex, ["0", "8"])
+        bounds = list(map(integral.get_part_by_tex, ["0", "8"]))
 
         sum_word = TextMobject("``Sum''")
         sum_word.next_to(integral, DOWN, MED_LARGE_BUFF, LEFT)
@@ -1135,16 +1107,16 @@ class PiecewiseConstantPlot(PlotVelocity):
 
         self.play(FadeOut(self.dt_example_text))
         self.play(Write(integral.get_part_by_tex("int")))
-        self.dither()
+        self.wait()
         self.play(Transform(int_copy, int_symbol))
         self.play(Write(alt_sum_word), Animation(int_copy))
         self.remove(int_copy)
         self.play(ReplacementTransform(alt_sum_word, sum_word))
-        self.dither()
+        self.wait()
 
         for bound in bounds:
             self.play(Write(bound))
-        self.dither()
+        self.wait()
         for bound, num in zip(bounds, [0, 8]):
             bound_copy = bound.copy()
             point = self.coords_to_point(num, 0)
@@ -1153,15 +1125,15 @@ class PiecewiseConstantPlot(PlotVelocity):
                 bound_copy.next_to, point, DOWN, MED_LARGE_BUFF
             )
         self.play(ApplyWave(self.ticks, direction = UP))
-        self.dither()
+        self.wait()
 
         for mob, tex in (self.v_t, "v(t)"), (self.dt_label, "dt"):
             self.play(ReplacementTransform(
-                mob.copy().highlight(YELLOW), 
+                mob.copy().set_color(YELLOW), 
                 integral.get_part_by_tex(tex),
                 run_time = 2
             ))
-        self.dither()
+        self.wait()
 
         self.integral = integral
         self.sum_word = sum_word
@@ -1180,7 +1152,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             morty.change_mode, "raise_right_hand",
             morty.look, UP+RIGHT,
             dt_copy.next_to, morty.get_corner(UP+RIGHT), UP,
-            dt_copy.highlight, YELLOW
+            dt_copy.set_color, YELLOW
         )
         self.play(Blink(morty))
         self.play(
@@ -1190,7 +1162,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             ),
             morty.look_at, int_dt
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ReplacementTransform(dt_copy.copy(), self.dt_label),
             morty.look_at, self.dt_label
@@ -1209,15 +1181,15 @@ class PiecewiseConstantPlot(PlotVelocity):
                 np.linspace(0, 0.8, len(self.ticks))
             )
         ])
-        self.dither()
+        self.wait()
 
         #Shrink dt just a bit
         self.play(
             morty.change_mode, "pondering",
             rects.set_fill, None, 0.75,
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 dt_copy, self.v_t, self.v_t_brace
-            ])
+            ]))
         )
         rects.align_submobjects(next_rects)
         for every_other_rect in rects[::2]:
@@ -1228,16 +1200,16 @@ class PiecewiseConstantPlot(PlotVelocity):
             ReplacementTransform(
                 rects, next_rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             Transform(
                 self.ticks, self.get_ticks(next_rects),
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
         )
         self.rects = rects = next_rects
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
         self.play(*[
             ApplyFunction(
@@ -1256,7 +1228,7 @@ class PiecewiseConstantPlot(PlotVelocity):
         ]+[
             morty.change_mode, "thinking",
         ])
-        self.dither()
+        self.wait()
 
         self.morty = morty
 
@@ -1266,7 +1238,7 @@ class PiecewiseConstantPlot(PlotVelocity):
 
         cross = TexMobject("\\times")
         cross.replace(self.sum_word, stretch = True)
-        cross.highlight(RED)
+        cross.set_color(RED)
         brace = Brace(self.integral, DOWN)
         dt_to_0 = brace.get_text("$dt \\to 0$")
 
@@ -1285,15 +1257,15 @@ class PiecewiseConstantPlot(PlotVelocity):
             target_mode = "sassy"
         ))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(Write(cross))
-        self.dither()
+        self.wait()
         self.play(
             RemovePiCreatureBubble(morty, target_mode = "plain"),
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 cross, self.sum_word, self.ticks,
                 self.dt_brace, self.dt_label,
-            ])
+            ]))
         )
         self.play(FadeIn(brace), FadeIn(dt_to_0))
         for new_rects in self.rect_list[4:]:
@@ -1304,11 +1276,11 @@ class PiecewiseConstantPlot(PlotVelocity):
                 Transform(
                     rects, new_rects, 
                     run_time = 2,
-                    submobject_mode = "lagged_start"
+                    lag_ratio = 0.5
                 ),
                 morty.look_at, rects,
             )
-            self.dither()
+            self.wait()
 
         self.play(
             Write(distance_words),
@@ -1316,9 +1288,9 @@ class PiecewiseConstantPlot(PlotVelocity):
             morty.change_mode, "pondering",
             morty.look_at, distance_words,
         )
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
         self.area_arrow = arrow
 
@@ -1333,7 +1305,7 @@ class PiecewiseConstantPlot(PlotVelocity):
         self.play(Indicate(self.integral))
         self.play(Write(words, run_time = 2))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyFunction(
                 lambda r : r.shift(0.2*UP).set_fill(None, 1),
@@ -1353,7 +1325,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             self.morty.change_mode, "happy",
             self.morty.look_at, self.rects,
         ])
-        self.dither()
+        self.wait()
 
     #####
 
@@ -1366,7 +1338,7 @@ class PiecewiseConstantPlot(PlotVelocity):
                 self.coords_to_point(x, y)
                 for x in xs
             ])
-            line.highlight(self.v_graph.get_color())
+            line.set_color(self.v_graph.get_color())
             result.add(line)
         return result
 
@@ -1379,7 +1351,7 @@ class PiecewiseConstantPlot(PlotVelocity):
             for t in np.linspace(0, 8, len(rects)+1)
             for point in [self.coords_to_point(t, 0)]
         ])
-        ticks.highlight(YELLOW)
+        ticks.set_color(YELLOW)
         return ticks
 
 class DontKnowHowToHandleNonConstant(TeacherStudentsScene):
@@ -1388,7 +1360,7 @@ class DontKnowHowToHandleNonConstant(TeacherStudentsScene):
             ApplyMethod(pi.change, "maybe", UP)
             for pi in self.get_pi_creatures()
         ])
-        self.dither(3)
+        self.wait(3)
 
 class CarJourneyApproximation(Scene):
     CONFIG = {
@@ -1396,18 +1368,18 @@ class CarJourneyApproximation(Scene):
         "bottom_words" : "Approximated motion (5 jumps)",
     }
     def construct(self):
-        points = [5*LEFT + v for v in UP, 2*DOWN]
+        points = [5*LEFT + v for v in (UP, 2*DOWN)]
         cars = [Car().move_to(point) for point in points]
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         words = [
             TextMobject("Real motion (smooth)").shift(3*UP),
             TextMobject(self.bottom_words).shift(0.5*DOWN),
         ]
-        words[1].highlight(GREEN)
+        words[1].set_color(GREEN)
 
 
         self.add(h_line, *cars + words)
-        self.dither()
+        self.wait()
         self.play(*[
             MoveCar(
                 car, point+10*RIGHT,
@@ -1419,7 +1391,7 @@ class CarJourneyApproximation(Scene):
                 self.get_approximated_rate_func(self.n_jumps)
             ])
         ])
-        self.dither()
+        self.wait()
 
     def get_approximated_rate_func(self, n):
         new_v_rate_func = lambda t : v_rate_func(np.floor(t*n)/n)
@@ -1444,7 +1416,7 @@ class TellMeThatsNotSurprising(TeacherStudentsScene):
             target_mode = "hooray",
             run_time = 1
         )
-        self.dither(3)
+        self.wait(3)
 
 class HowDoesThisHelp(TeacherStudentsScene):
     def construct(self):
@@ -1456,14 +1428,14 @@ class HowDoesThisHelp(TeacherStudentsScene):
         self.change_student_modes(
             "confused", "angry", "confused",
         )
-        self.dither(2)
+        self.wait(2)
         self.teacher_says(
             "You're right.",
             target_mode = "shruggie",
             run_time = 1
         )
         self.change_student_modes(*["sassy"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class AreaUnderACurve(GraphScene):
     CONFIG = {
@@ -1489,9 +1461,9 @@ class AreaUnderACurve(GraphScene):
             self.play(Transform(
                 rects, new_rects,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ))
-        self.dither()
+        self.wait()
 
 
     def func(self, x):
@@ -1529,7 +1501,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         self.add(*self.get_v_graph_and_label())
         self.x_axis_label_mob.shift(MED_LARGE_BUFF*DOWN)
         self.v_graph_label.shift(MED_LARGE_BUFF*DOWN)
-        self.foreground_mobjects = []        
+        self.foreground_mobjects = []
 
     def construct(self):
         self.introduce_variable_area()
@@ -1549,7 +1521,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
             rate_func = there_and_back,
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
     def write_integral(self):
         integral = TexMobject("\\int", "^T", "_0", "v(t)", "\\,dt")
@@ -1559,7 +1531,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         moving_T = self.T_label_group[0]
 
         s_T = TexMobject("s(T)", "= ")
-        s_T.highlight_by_tex("s", DISTANCE_COLOR)
+        s_T.set_color_by_tex("s", DISTANCE_COLOR)
         s_T.next_to(integral, LEFT)
 
         int_arrow, s_arrow = [
@@ -1567,7 +1539,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
                 mob.get_left(), self.area.get_center(),
                 color = WHITE
             )
-            for mob in integral, s_T
+            for mob in (integral, s_T)
         ]
 
         distance_word = TextMobject("Distance")
@@ -1576,7 +1548,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         self.play(Write(integral))
         self.play(ShowCreation(int_arrow))
         self.foreground_mobjects.append(int_arrow)
-        self.dither()
+        self.wait()
         self.change_area_bounds(
             new_t_max = 8,
             rate_func = there_and_back,
@@ -1591,23 +1563,23 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
             rate_func = there_and_back,
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.play(Write(distance_word, run_time = 2))
         self.play(
             ReplacementTransform(int_arrow, s_arrow),
             FadeIn(s_T)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(distance_word))
         self.change_area_bounds(new_t_max = 0, run_time = 2)
         self.change_area_bounds(
             new_t_max = 8, 
-            rate_func = None,
+            rate_func=linear,
             run_time = 7.9,
         )
-        self.dither()
+        self.wait()
         self.change_area_bounds(new_t_max = 5)
-        self.dither()
+        self.wait()
 
     def nudge_input(self):
         dark_area = self.area.copy()
@@ -1634,9 +1606,9 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
 
         ds_label = TexMobject("ds")
         ds_label.next_to(rect, RIGHT, LARGE_BUFF, UP)
-        ds_label.highlight(DISTANCE_COLOR)
+        ds_label.set_color(DISTANCE_COLOR)
         ds_arrow = Arrow(ds_label.get_left(), rect.get_left())
-        ds_arrow.highlight(WHITE)
+        ds_arrow.set_color(WHITE)
 
         v_brace = Brace(rect, LEFT, buff = SMALL_BUFF)
         v_T_label = v_brace.get_text("$v(T)$", buff = SMALL_BUFF)
@@ -1644,25 +1616,25 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         self.change_area_bounds(new_t_max = new_T)
         self.play(
             FadeIn(dark_area),
-            *map(Animation, self.foreground_mobjects)
+            *list(map(Animation, self.foreground_mobjects))
         )
         self.play(
             FadeOut(self.T_label_group),
             FadeIn(dT_label_group)
         )
-        self.dither()
+        self.wait()
         self.play(Write(ds_label))
         self.play(ShowCreation(ds_arrow))
-        self.dither(2)
+        self.wait(2)
         self.play(GrowFromCenter(v_brace))
         self.play(ReplacementTransform(
             self.v_graph_label.get_part_by_tex("v").copy(),
             v_T_label,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
         self.play(Indicate(dT_label))
-        self.dither()
+        self.wait()
 
         self.rect = rect
         self.dT_label_group = dT_label_group
@@ -1676,13 +1648,13 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
         formula2 = TexMobject("{ds", "\\over\\,", "dT}", "=", "v(T)")
         for formula in formula1, formula2:
             formula.next_to(self.v_graph_label, UP, LARGE_BUFF)
-            formula.highlight_by_tex("ds", DISTANCE_COLOR)
+            formula.set_color_by_tex("ds", DISTANCE_COLOR)
 
         self.play(
             DrawBorderThenFill(self.rect),
             Animation(self.ds_arrow)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 mob, formula1.get_part_by_tex(tex),
@@ -1695,29 +1667,29 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
                 (self.dT_label_group[0].copy(), "dT"),
             ]
         ])
-        self.dither()
+        self.wait()
         self.transition_to_alt_config(
             dT = self.dT/5.0,
             transformation_kwargs = {"run_time" : 2},
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 formula1.get_part_by_tex(tex),
                 formula2.get_part_by_tex(tex),
             )
-            for tex in "ds", "=", "v(T)", "dT"
+            for tex in ("ds", "=", "v(T)", "dT")
         ] + [
             Write(formula2.get_part_by_tex("over"))
         ])
-        self.dither()
+        self.wait()
 
 
     ####
 
     def add_T_label(self, x_val, **kwargs):
         triangle = RegularPolygon(n=3, start_angle = np.pi/2)
-        triangle.scale_to_fit_height(MED_SMALL_BUFF)
+        triangle.set_height(MED_SMALL_BUFF)
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
         triangle.set_fill(WHITE, 1)
         triangle.set_stroke(width = 0)
@@ -1766,7 +1738,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
             new_v_line = self.get_vertical_line_to_graph(
                 t_max, self.v_graph
             )
-            new_v_line.highlight(v_line.get_color())
+            new_v_line.set_color(v_line.get_color())
             T_label.move_to(new_v_line.get_bottom(), UP)
 
             #Fade close to 0
@@ -1778,7 +1750,7 @@ class AreaIsDerivative(PlotVelocity, ReconfigurableScene):
 
         self.play(
             UpdateFromAlphaFunc(group, update_group),
-            *map(Animation, self.foreground_mobjects),
+            *list(map(Animation, self.foreground_mobjects)),
             **kwargs
         )
 
@@ -1788,21 +1760,21 @@ class DirectInterpretationOfDsDt(TeacherStudentsScene):
         ds, over, dt, of_T, equals, v = equation
         equation.next_to(self.get_pi_creatures(), UP, LARGE_BUFF)
         equation.shift(RIGHT)
-        v.highlight(VELOCITY_COLOR)
+        v.set_color(VELOCITY_COLOR)
 
         s_words = TextMobject("Tiny change in", "distance")
         s_words.next_to(ds, UP+LEFT, LARGE_BUFF)
         s_words.shift_onto_screen()
         s_arrow = Arrow(s_words[1].get_bottom(), ds.get_left())
         s_words.add(s_arrow)
-        s_words.highlight(DISTANCE_COLOR)
+        s_words.set_color(DISTANCE_COLOR)
 
         t_words = TextMobject("Tiny change in", "time")
         t_words.next_to(dt, DOWN+LEFT)
         t_words.to_edge(LEFT)
         t_arrow = Arrow(t_words[1].get_top(), dt.get_left())
         t_words.add(t_arrow)
-        t_words.highlight(TIME_COLOR)
+        t_words.set_color(TIME_COLOR)
 
         self.add(ds, over, dt, of_T)
         for words, part in (s_words, ds), (t_words, dt):
@@ -1810,15 +1782,15 @@ class DirectInterpretationOfDsDt(TeacherStudentsScene):
                 FadeIn(
                     words, 
                     run_time = 2,
-                    submobject_mode = "lagged_start",
+                    lag_ratio = 0.5,
                 ),
                 self.students[1].change_mode, "raise_right_hand"
             )
-            self.play(part.highlight, words.get_color())
-        self.dither()
+            self.play(part.set_color, words.get_color())
+        self.wait()
         self.play(Write(VGroup(equals, v)))
         self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class FindAntiderivative(Antiderivative):
     def construct(self):
@@ -1832,7 +1804,7 @@ class FindAntiderivative(Antiderivative):
         q_marks, rhs = functions = self.get_functions("???", "t(8-t)")
         expanded_rhs = TexMobject("8t - t^2")
         expanded_rhs.move_to(rhs, LEFT)
-        expanded_rhs.highlight(rhs.get_color())
+        expanded_rhs.set_color(rhs.get_color())
         self.v_part1 = VGroup(*expanded_rhs[:2])
         self.v_part2 = VGroup(*expanded_rhs[2:])
         for part in self.v_part1, self.v_part2:
@@ -1842,12 +1814,12 @@ class FindAntiderivative(Antiderivative):
         derivative, antiderivative = words = self.get_arc_labels(arcs)
 
         self.add(functions)
-        self.play(*map(ShowCreation, arcs))
+        self.play(*list(map(ShowCreation, arcs)))
         for word in words:
-            self.play(FadeIn(word, submobject_mode = "lagged_start"))
-        self.dither()
+            self.play(FadeIn(word, lag_ratio = 0.5))
+        self.wait()
         self.change_mode("confused")
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             ReplacementTransform(
                 rhs[i], expanded_rhs[j],
@@ -1858,7 +1830,7 @@ class FindAntiderivative(Antiderivative):
         ]+[
             self.pi_creature.change_mode, "hesitant"
         ])
-        self.dither()
+        self.wait()
 
         self.q_marks = q_marks
         self.arcs = arcs
@@ -1881,7 +1853,7 @@ class FindAntiderivative(Antiderivative):
             direction = UP, 
             amplitude = SMALL_BUFF
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(self.q_marks),
             FadeIn(t_squared),
@@ -1893,16 +1865,16 @@ class FindAntiderivative(Antiderivative):
                 run_time = 2,
                 path_arc = -np.pi/6.
             )
-            for i in 0, 1
+            for i in (0, 1)
         ])
         self.change_mode("thinking")
-        self.dither()
+        self.wait()
         self.play(four.set_fill, YELLOW, 1)
         self.play(four.shift, DOWN)
         self.play(FadeOut(two_t))
         self.play(self.v_part1.restore)
-        self.play(four.highlight, DISTANCE_COLOR)
-        self.dither(2)
+        self.play(four.set_color, DISTANCE_COLOR)
+        self.wait(2)
 
         self.s_part1 = four_t_squared
 
@@ -1934,7 +1906,7 @@ class FindAntiderivative(Antiderivative):
             self.v_part2.shift, LEFT
         )
         self.play(FadeIn(self.q_marks))
-        self.dither()
+        self.wait()
 
         self.play(
             FadeOut(self.q_marks),
@@ -1947,18 +1919,18 @@ class FindAntiderivative(Antiderivative):
                 path_arc = -np.pi/6,
                 run_time = 2,
             )
-            for i, j in (0, 1), (1, 0), (1, 2)
+            for i, j in [(0, 1), (1, 0), (1, 2)]
         ])
-        self.dither()
+        self.wait()
         self.play(FadeIn(third))
         self.play(FadeOut(three))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(neg))
         self.play(
             FadeOut(t_squared),
             self.v_part2.shift, UP+LEFT
         )
-        self.dither(2)
+        self.wait(2)
 
         self.s_part2 = neg_third_t_cubed
 
@@ -1973,7 +1945,7 @@ class FindAntiderivative(Antiderivative):
             run_time = 2,
         )
         self.change_mode("happy")
-        self.dither(2)
+        self.wait(2)
 
     def add_plus_C(self):
         s_group = VGroup(self.s_part1, self.s_part2)
@@ -1982,20 +1954,20 @@ class FindAntiderivative(Antiderivative):
             for d in range(1, 8)
         ]
         for plus_C in plus_Cs:
-            plus_C.highlight(YELLOW)
+            plus_C.set_color(YELLOW)
             plus_C.move_to(s_group, RIGHT)
         plus_C = plus_Cs[0]
 
         self.change_mode("sassy")
-        self.dither()
+        self.wait()
         self.play(
             s_group.next_to, plus_C.copy(), LEFT,
             GrowFromCenter(plus_C),
         )
-        self.dither()
+        self.wait()
         for new_plus_C in plus_Cs[1:]:
             self.play(Transform(plus_C, new_plus_C))
-            self.dither()
+            self.wait()
 
 class GraphSPlusC(GraphDistanceVsTime):
     CONFIG = {
@@ -2016,17 +1988,17 @@ class GraphSPlusC(GraphDistanceVsTime):
             6, graph, line_class = DashedLine
         )
         v_line.scale_in_place(2)
-        v_line.highlight(WHITE)
+        v_line.set_color(WHITE)
         graph_label, plus_C = full_label = TexMobject(
             "s(t) = 4t^2 - \\frac{1}{3}t^3", "+C"
         )
-        plus_C.highlight(YELLOW)
+        plus_C.set_color(YELLOW)
         full_label.next_to(graph.points[-1], DOWN)
         full_label.to_edge(RIGHT)
 
         self.play(ShowCreation(graph))
         self.play(FadeIn(graph_label))
-        self.dither()
+        self.wait()
         self.play(
             graph.shift, UP,
             run_time = 2,
@@ -2046,7 +2018,7 @@ class GraphSPlusC(GraphDistanceVsTime):
             rate_func = there_and_back,
             run_time = 4,
         )
-        self.dither()
+        self.wait()
 
 class LowerBound(AreaIsDerivative):
     CONFIG = {
@@ -2082,13 +2054,13 @@ class LowerBound(AreaIsDerivative):
             zero_label.next_to, self.graph_origin, DOWN, MED_LARGE_BUFF,
             FadeOut(circle)
         )
-        self.dither()
+        self.wait()
 
         self.zero_label = zero_label
 
     def drag_right_endpoint_to_zero(self):
         zero_integral = self.get_integral("0", "0")
-        zero_integral[1].highlight(YELLOW)
+        zero_integral[1].set_color(YELLOW)
         zero_int_bounds = list(reversed(
             zero_integral.get_parts_by_tex("0")
         ))
@@ -2100,14 +2072,14 @@ class LowerBound(AreaIsDerivative):
         self.integral.save_state()
         equals_zero = TexMobject("=0")
         equals_zero.next_to(zero_integral, RIGHT)
-        equals_zero.highlight(GREEN)
+        equals_zero.set_color(GREEN)
 
         self.change_area_bounds(0, 0, run_time = 3)
         self.play(ReplacementTransform(
             self.zero_label.copy(), equals_zero
         ))
         self.play(Transform(self.integral, zero_integral))
-        self.dither(2)
+        self.wait(2)
         for bound in zero_int_bounds:
             self.play(ShowCreation(bound.circle))
             self.play(FadeOut(bound.circle))
@@ -2117,7 +2089,7 @@ class LowerBound(AreaIsDerivative):
             )
             for bound in zero_int_bounds
         ])
-        self.dither(2)
+        self.wait(2)
         self.change_area_bounds(0, 5)
         self.play(
             self.integral.restore,
@@ -2138,7 +2110,7 @@ class LowerBound(AreaIsDerivative):
             part.brace.save_state()
 
         antideriv_text = at_T.brace.get_text("Antiderivative", buff = SMALL_BUFF)
-        antideriv_text.highlight(MAROON_B)
+        antideriv_text.set_color(MAROON_B)
         value_at_eight = at_eight.brace.get_text(
             "%.2f"%s_func(8)
         )
@@ -2150,29 +2122,29 @@ class LowerBound(AreaIsDerivative):
         big_brace = Brace(VGroup(at_T, at_zero))
         cancel_text = big_brace.get_text("Cancels when $T=0$")
 
-        self.play(*map(Write, [equals, at_T]))
+        self.play(*list(map(Write, [equals, at_T])))
         self.play(
             GrowFromCenter(at_T.brace),
             Write(antideriv_text, run_time = 2)
         )
         self.change_area_bounds(0, 5.5, rate_func = there_and_back)
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(at_T.copy(), at_zero),
             Write(minus)
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(at_T.brace, big_brace),
             ReplacementTransform(antideriv_text, cancel_text)
         )
         self.change_area_bounds(0, 0, run_time = 4)
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(big_brace, at_zero.brace),
             ReplacementTransform(cancel_text, happens_to_be_zero),
         )
-        self.dither(2)
+        self.wait(2)
         self.change_area_bounds(0, 8, run_time = 2)
         self.play(
             Transform(self.integral, integral_at_eight),
@@ -2184,11 +2156,11 @@ class LowerBound(AreaIsDerivative):
             GrowFromCenter(at_eight.brace),
             Write(value_at_eight)
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [
+        self.wait(2)
+        self.play(*list(map(FadeOut, [
             at_eight.brace, value_at_eight,
             at_zero.brace, happens_to_be_zero,
-        ]))
+        ])))
 
         self.antideriv_diff = antideriv_diff
 
@@ -2200,32 +2172,32 @@ class LowerBound(AreaIsDerivative):
                 self.coords_to_point(d, 0), 
                 DOWN, MED_LARGE_BUFF
             )
-            for d in 1, 7
+            for d in (1, 7)
         ]
         tex_mobs = [new_integral]+new_antideriv_diff[1::2]+numbers
         for tex_mob in tex_mobs:
-            tex_mob.highlight_by_tex("1", RED)
-            tex_mob.highlight_by_tex("7", GREEN)
-            tex_mob.highlight_by_tex("\\frac{1}{3}", WHITE)
+            tex_mob.set_color_by_tex("1", RED)
+            tex_mob.set_color_by_tex("7", GREEN)
+            tex_mob.set_color_by_tex("\\frac{1}{3}", WHITE)
 
         self.change_area_bounds(1, 7, run_time = 2)
         self.play(
             self.T_label_group[0].set_fill, None, 0,
-            *map(FadeIn, numbers)
+            *list(map(FadeIn, numbers))
         )
         self.play(
             Transform(self.integral, new_integral),
             Transform(self.antideriv_diff, new_antideriv_diff),
         )
-        self.dither(3)
+        self.wait(3)
         for part in self.antideriv_diff[1::2]:
             self.play(Indicate(part, scale_factor = 1.1))
-            self.dither()
+            self.wait()
 
     def add_constant_to_antiderivative(self):
         antideriv_diff = self.antideriv_diff
         plus_fives = VGroup(*[TexMobject("+5") for i in range(2)])
-        plus_fives.highlight(YELLOW)
+        plus_fives.set_color(YELLOW)
         for five, part in zip(plus_fives, antideriv_diff[1::2]):
             five.next_to(part, DOWN)
         group = VGroup(
@@ -2235,14 +2207,14 @@ class LowerBound(AreaIsDerivative):
         )
 
         self.play(Write(plus_fives, run_time = 2))
-        self.dither(2)
+        self.wait(2)
         self.play(
-            group.arrange_submobjects,
+            group.arrange,
             group.next_to, antideriv_diff, DOWN, MED_LARGE_BUFF
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(group, run_time = 2))
-        self.dither()
+        self.wait()
 
     #####
 
@@ -2270,14 +2242,14 @@ class LowerBound(AreaIsDerivative):
                 "4", s, "^2", "-", "\\frac{1}{3}", s, "^3"
                 "\\right))"
             )
-            part.highlight_by_tex(s, YELLOW, substring = False)
+            part.set_color_by_tex(s, YELLOW, substring = False)
             parts.append(part)
         result = VGroup(
             TexMobject("="), parts[0], 
             TexMobject("-"), parts[1],
         )
         result.left_part, result.right_part = parts
-        result.arrange_submobjects(RIGHT)
+        result.arrange(RIGHT)
         result.scale(0.9)
         result.next_to(self.integral, RIGHT)
         return result
@@ -2305,8 +2277,8 @@ class FundamentalTheorem(GraphScene):
         integral = TexMobject("\\int", "^b", "_a", "f(x)", "\\,dx")
         integral.next_to(ORIGIN, LEFT)
         integral.to_edge(UP)
-        integral.highlight_by_tex("a", self.lower_bound_color)
-        integral.highlight_by_tex("b", self.upper_bound_color)
+        integral.set_color_by_tex("a", self.lower_bound_color)
+        integral.set_color_by_tex("b", self.upper_bound_color)
         graph = self.get_graph(
             lambda x : -0.01*x*(x-3)*(x-6)*(x-12) + 3,
         )
@@ -2368,28 +2340,28 @@ class FundamentalTheorem(GraphScene):
             for rect in rects
         ])
         self.play(*it.chain(
-            map(GrowFromCenter, [f_brace, dx_brace]),
-            map(Write, [f_brace.label, dx_brace.label]),
+            list(map(GrowFromCenter, [f_brace, dx_brace])),
+            list(map(Write, [f_brace.label, dx_brace.label])),
         ))
-        self.dither()
+        self.wait()
         for i in range(start_rect_index+1, last_rect_index):
             self.play(
                 rects[i-1].set_fill, None, low_opacity,
                 rects[i].set_fill, None, 1,
-                f_brace.scale_to_fit_height, rects[i].get_height(),
+                f_brace.set_height, rects[i].get_height(),
                 f_brace.next_to, rects[i], LEFT, 0,
                 dx_brace.next_to, rects[i], DOWN, 0,
                 *[
                     MaintainPositionRelativeTo(brace.label, brace)
-                    for brace in f_brace, dx_brace
+                    for brace in (f_brace, dx_brace)
                 ]
             )
-        self.dither()
+        self.wait()
         self.play(*it.chain(
-            map(FadeOut, [
+            list(map(FadeOut, [
                 f_brace, dx_brace, 
                 f_brace.label, dx_brace.label
-            ]),
+            ])),
             [rects.set_fill, None, kwargs["fill_opacity"]]
         ))
 
@@ -2406,12 +2378,12 @@ class FundamentalTheorem(GraphScene):
         deriv_F = deriv.get_part_by_tex("F")
         deriv.next_to(self.integral, DOWN, MED_LARGE_BUFF)
         rhs = TexMobject(*"=F(b)-F(a)")
-        rhs.highlight_by_tex("a", self.lower_bound_color)
-        rhs.highlight_by_tex("b", self.upper_bound_color)
+        rhs.set_color_by_tex("a", self.lower_bound_color)
+        rhs.set_color_by_tex("b", self.upper_bound_color)
         rhs.next_to(self.integral, RIGHT)
 
         self.play(Write(deriv))
-        self.dither(2)
+        self.wait(2)
         self.play(*it.chain(
             [
                 ReplacementTransform(deriv_F.copy(), part)
@@ -2427,8 +2399,8 @@ class FundamentalTheorem(GraphScene):
                 self.integral.get_part_by_tex(tex).copy(),
                 rhs.get_part_by_tex(tex)
             ))
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
         self.deriv = deriv
         self.rhs = rhs
@@ -2441,20 +2413,20 @@ class FundamentalTheorem(GraphScene):
         """)
         words.to_edge(RIGHT)
 
-        self.play(Write(words, lag_factor = 3))
-        self.dither()
+        self.play(Write(words))
+        self.wait()
 
     def show_integral_considering_continuum(self):
         self.play(*[
             ApplyMethod(mob.set_fill, None, 0.2)
-            for mob in self.deriv, self.rhs
+            for mob in (self.deriv, self.rhs)
         ])
         self.play(
             self.rects.restore,
             run_time = 3,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
         for x in range(2):
             self.play(*[
                 ApplyFunction(
@@ -2471,7 +2443,7 @@ class FundamentalTheorem(GraphScene):
                     np.linspace(0, 0.8, len(self.rects))
                 )
             ])
-        self.dither()
+        self.wait()
 
     def show_antiderivative_considering_bounds(self):
         self.play(
@@ -2479,17 +2451,17 @@ class FundamentalTheorem(GraphScene):
             self.deriv.set_fill, None, 1,
             self.rhs.set_fill, None, 1,
         )
-        for label, line in reversed(zip(self.bound_labels, self.v_lines)):
-            new_line = line.copy().highlight(YELLOW)
+        for label, line in reversed(list(zip(self.bound_labels, self.v_lines))):
+            new_line = line.copy().set_color(YELLOW)
             label.save_state()
-            self.play(label.highlight, YELLOW)
+            self.play(label.set_color, YELLOW)
             self.play(ShowCreation(new_line))
             self.play(ShowCreation(line))
             self.remove(new_line)
             self.play(label.restore)
-        self.dither()
+        self.wait()
         self.play(self.integral.set_fill, None, 1)
-        self.dither(3)
+        self.wait(3)
 
 class LetsRecap(TeacherStudentsScene):
     def construct(self):
@@ -2498,7 +2470,7 @@ class LetsRecap(TeacherStudentsScene):
             target_mode = "hesitant",
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class NegativeArea(GraphScene):
     CONFIG = {
@@ -2543,7 +2515,7 @@ class NegativeArea(GraphScene):
             FadeIn(
                 area, 
                 run_time = 2,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             )
         )
 
@@ -2552,7 +2524,7 @@ class NegativeArea(GraphScene):
 
     def write_negative_area(self):
         words = TextMobject("Negative area")
-        words.highlight(RED)
+        words.set_color(RED)
         words.next_to(
             self.coords_to_point(7, -2),
             RIGHT,
@@ -2565,8 +2537,8 @@ class NegativeArea(GraphScene):
             Write(words, run_time = 2),
             ShowCreation(arrow)
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [self.area, arrow]))
+        self.wait(2)
+        self.play(*list(map(FadeOut, [self.area, arrow])))
 
         self.negative_area_words = words
 
@@ -2576,7 +2548,7 @@ class NegativeArea(GraphScene):
             color = RED
         )
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
         self.v_line = v_line
 
     def show_car_going_backwards(self):
@@ -2596,7 +2568,7 @@ class NegativeArea(GraphScene):
             moving_forward = False,
             run_time = 3
         ))
-        self.dither()
+        self.wait()
         ghost_car = car.copy().fade()
         right_nose_line = self.get_car_nose_line(car)
         self.play(ShowCreation(right_nose_line))
@@ -2616,11 +2588,11 @@ class NegativeArea(GraphScene):
         brace = Brace(self.nose_lines, DOWN, buff = 0)
         equation = TexMobject("ds", "=", "v(t)", "dt")
         equation.next_to(brace, DOWN, SMALL_BUFF, LEFT)
-        equation.highlight_by_tex("ds", DISTANCE_COLOR)
-        equation.highlight_by_tex("dt", TIME_COLOR)
+        equation.set_color_by_tex("ds", DISTANCE_COLOR)
+        equation.set_color_by_tex("dt", TIME_COLOR)
 
         negative = TextMobject("Negative")
-        negative.highlight(RED)
+        negative.set_color(RED)
         negative.next_to(equation.get_corner(UP+RIGHT), UP, LARGE_BUFF)
         ds_arrow, v_arrow = arrows = VGroup(*[
             Arrow(
@@ -2628,22 +2600,22 @@ class NegativeArea(GraphScene):
                 equation.get_part_by_tex(tex).get_top(),
                 color = RED,
             )
-            for tex in "ds", "v(t)"
+            for tex in ("ds", "v(t)")
         ])
 
         self.play(
             GrowFromCenter(brace),
             Write(equation)
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(negative))
         self.play(ShowCreation(v_arrow))
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             v_arrow.copy(),
             ds_arrow
         ))
-        self.dither(2)
+        self.wait(2)
 
         self.ds_equation = equation
         self.negative_word = negative
@@ -2663,7 +2635,7 @@ class NegativeArea(GraphScene):
         dt_brace = Brace(rect, UP, buff = 0)
         v_brace = Brace(rect, LEFT, buff = 0)
         dt_label = dt_brace.get_text("$dt$", buff = SMALL_BUFF)
-        dt_label.highlight(YELLOW)
+        dt_label.set_color(YELLOW)
         v_label = v_brace.get_text("$v(t)$", buff = SMALL_BUFF)
         v_label.add_background_rectangle()
 
@@ -2674,17 +2646,17 @@ class NegativeArea(GraphScene):
             Write(dt_label),
             Write(v_label),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*it.chain(
             [FadeIn(r) for r in rects if r is not rect],
-            map(FadeOut, [
+            list(map(FadeOut, [
                 dt_brace, v_brace, dt_label, v_label
-            ])
+            ]))
         ))
-        self.dither()
+        self.wait()
         for new_rects in rect_list[1:]:
             self.transform_between_riemann_rects(rects, new_rects)
-        self.dither()
+        self.wait()
 
     def write_signed_area(self):
         words = TextMobject("``Signed area''")
@@ -2699,7 +2671,7 @@ class NegativeArea(GraphScene):
         ])
         self.play(Write(words))
         self.play(Write(symbols))
-        self.dither()
+        self.wait()
 
     ####
 
@@ -2716,14 +2688,14 @@ class NextVideo(TeacherStudentsScene):
         integral = TexMobject("\\int")
         integral.next_to(next_video, DOWN, LARGE_BUFF)
 
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.play(
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             next_video.shift, next_video.get_height()*DOWN/2,
             self.teacher.change_mode, "raise_right_hand"
         )
         self.play(Write(integral))
-        self.dither(5)
+        self.wait(5)
 
 class Chapter8PatreonThanks(PatreonThanks):
     CONFIG = {
@@ -2784,7 +2756,7 @@ class Thumbnail(Chapter1Thumbnail):
             dx = 0.25,
         )
         words = TextMobject("Integrals")
-        words.scale_to_fit_width(8)
+        words.set_width(8)
         words.to_edge(UP)
 
         self.add(graph, rects, words)

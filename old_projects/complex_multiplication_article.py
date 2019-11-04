@@ -5,16 +5,12 @@ import itertools as it
 from copy import deepcopy
 import sys
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
-from topics.complex_numbers import *
+from manimlib.imports import *
+from functools import reduce
 
 DEFAULT_PLANE_CONFIG = {
-    "stroke_width" : 2*DEFAULT_POINT_THICKNESS
+    "stroke_width" : 2*DEFAULT_STROKE_WIDTH
+    }
 
 
 class SuccessiveComplexMultiplications(ComplexMultiplication):
@@ -30,16 +26,16 @@ class SuccessiveComplexMultiplications(ComplexMultiplication):
     @staticmethod
     def string_to_args(arg_string):
         args_string.replac("i", "j")
-        return map(copmlex, arg_string.split())
+        return list(map(copmlex, arg_string.split()))
 
     def construct(self, *multipliers):
         norm = abs(reduce(op.mul, multipliers, 1))
-        shrink_factor = SPACE_WIDTH/max(SPACE_WIDTH, norm)
+        shrink_factor = FRAME_X_RADIUS/max(FRAME_X_RADIUS, norm)
         plane_config = {
             "density" : norm*DEFAULT_POINT_DENSITY_1D,
             "unit_to_spatial_width" : shrink_factor,
-            "x_radius" : shrink_factor*SPACE_WIDTH,
-            "y_radius" : shrink_factor*SPACE_HEIGHT,
+            "x_radius" : shrink_factor*FRAME_X_RADIUS,
+            "y_radius" : shrink_factor*FRAME_Y_RADIUS,
         }
         ComplexMultiplication.construct(self, multipliers[0], **plane_config)
 
@@ -114,14 +110,14 @@ class ConjugateDivisionExample(ComplexMultiplication):
     ]
 
     def construct(self, num):
-        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*SPACE_WIDTH)
+        ComplexMultiplication.construct(self, np.conj(num), radius = 2.5*FRAME_X_RADIUS)
         self.draw_dot("1", 1, True)
         self.draw_dot("\\bar z", self.multiplier)
         self.apply_multiplication()
         self.multiplier = 1./(abs(num)**2)
         self.anim_config["path_func"] = straight_path
         self.apply_multiplication()
-        self.dither()
+        self.wait()
 
 class DrawSolutionsToZToTheNEqualsW(Scene):
     @staticmethod
@@ -139,7 +135,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
         norm = abs(w)
         theta = np.log(w).imag
         radius = norm**(1./n)
-        zoom_value = (SPACE_HEIGHT-0.5)/radius
+        zoom_value = (FRAME_Y_RADIUS-0.5)/radius
         plane_config["unit_to_spatial_width"] = zoom_value
         plane = ComplexPlane(**plane_config)
         circle = Circle(
@@ -150,7 +146,7 @@ class DrawSolutionsToZToTheNEqualsW(Scene):
             radius*np.exp(complex(0, 1)*(2*np.pi*k + theta)/n)
             for k in range(n)
         ]
-        points = map(plane.number_to_point, solutions)
+        points = list(map(plane.number_to_point, solutions))
         dots = [
             Dot(point, color = BLUE_B, radius = 0.1)
             for point in points
@@ -180,7 +176,7 @@ class DrawComplexAngleAndMagnitude(Scene):
         radius = max([abs(n.imag) for r, n in reps_and_nums]) + 1
         plane_config = {
             "color" : "grey",
-            "unit_to_spatial_width" : SPACE_HEIGHT / radius,
+            "unit_to_spatial_width" : FRAME_Y_RADIUS / radius,
         }
         plane_config.update(DEFAULT_PLANE_CONFIG)
         self.plane = ComplexPlane(**plane_config)
@@ -198,14 +194,14 @@ class DrawComplexAngleAndMagnitude(Scene):
         label = TexMobject(tex_representation)
         max_width = 0.8*self.plane.unit_to_spatial_width
         if label.get_width() > max_width:
-            label.scale_to_fit_width(max_width)
+            label.set_width(max_width)
         dot_to_label_dir = RIGHT if point[0] > 0 else LEFT
         edge = label.get_edge_center(-dot_to_label_dir)
         buff = 0.1
         label.shift(point - edge + buff*dot_to_label_dir)
-        label.highlight(YELLOW)
+        label.set_color(YELLOW)
 
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
 
     def add_angle_label(self, number):
@@ -214,7 +210,7 @@ class DrawComplexAngleAndMagnitude(Scene):
             radius = 0.2
         )
 
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 
     def add_lines(self, tex_representation, number):
         point = self.plane.number_to_point(number)
@@ -237,10 +233,10 @@ class DrawComplexAngleAndMagnitude(Scene):
         #     tex_parts = tex_representation.split("-")
         # x_label, y_label = map(TexMobject, tex_parts)
         # for label in x_label, y_label:
-        #     label.scale_to_fit_height(0.5)
+        #     label.set_height(0.5)
         # x_label.next_to(x_line, point[1]*DOWN/abs(point[1]))
         # y_label.next_to(y_line, point[0]*RIGHT/abs(point[0]))
-        norm = np.linalg.norm(point)
+        norm = get_norm(point)
         brace = Underbrace(ORIGIN, ORIGIN+norm*RIGHT)
         if point[1] > 0:
             brace.rotate(np.pi, RIGHT)
@@ -250,5 +246,5 @@ class DrawComplexAngleAndMagnitude(Scene):
         axis = OUT if point[1] > 0 else IN
         norm_label.next_to(brace, rotate_vector(point, np.pi/2, axis))
 
-        self.add_mobjects_among(locals().values())
+        self.add_mobjects_among(list(locals().values()))
 

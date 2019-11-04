@@ -1,3 +1,5 @@
+from manimlib.imports import *
+
 class NumberLineScene(Scene):
     def construct(self, **number_line_config):
         self.number_line = NumberLine(**number_line_config)
@@ -7,7 +9,7 @@ class NumberLineScene(Scene):
 
     def zoom_in_on(self, number, zoom_factor, run_time = 2.0):
         unit_length_to_spatial_width = self.number_line.unit_length_to_spatial_width*zoom_factor
-        radius = SPACE_WIDTH/unit_length_to_spatial_width
+        radius = FRAME_X_RADIUS/unit_length_to_spatial_width
         tick_frequency = 10**(np.floor(np.log10(radius)))
         left_tick = tick_frequency*(np.ceil((number-radius)/tick_frequency))
         new_number_line = NumberLine(
@@ -18,7 +20,7 @@ class NumberLineScene(Scene):
             number_at_center = number
         )
         new_displayed_numbers = new_number_line.default_numbers_to_display()
-        new_number_mobs = new_number_line.get_number_mobjects(*new_displayed_numbers)        
+        new_number_mobs = new_number_line.get_number_mobjects(*new_displayed_numbers)
 
         transforms = []
         additional_mobjects = []
@@ -73,11 +75,3 @@ class NumberLineScene(Scene):
             ApplyMethod(mob.shift, (num-1)*mob.get_center()[0]*RIGHT, **kwargs)
             for mob in self.number_mobs
         ])
-
-
-
-
-
-
-
-

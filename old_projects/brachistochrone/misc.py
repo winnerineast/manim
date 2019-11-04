@@ -1,31 +1,14 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import ParametricFunction, FunctionGraph
-from topics.number_line import *
-from mobject.region import  Region, region_from_polygon_vertices
-from topics.three_dimensions import Stars
-from scene import Scene
-
-from brachistochrone.curves import Cycloid
+from manimlib.imports import *
+from old_projects.brachistochrone.curves import Cycloid
 
 class PhysicalIntuition(Scene):
     def construct(self):
         n_terms = 4
-        def func((x, y, ignore)):
+        def func(xxx_todo_changeme):
+            (x, y, ignore) = xxx_todo_changeme
             z = complex(x, y)                                    
             if (np.abs(x%1 - 0.5)<0.01 and y < 0.01) or np.abs(z)<0.01:
                 return ORIGIN
@@ -35,7 +18,7 @@ class PhysicalIntuition(Scene):
             Arrow(ORIGIN, np.sqrt(2)*point)
             for point in compass_directions(4, RIGHT+UP)
         ])
-        arrows.highlight(YELLOW)
+        arrows.set_color(YELLOW)
         arrows.ingest_submobjects()
         all_arrows = Mobject(*[
             arrows.copy().scale(0.3/(x)).shift(x*RIGHT)
@@ -48,11 +31,11 @@ class PhysicalIntuition(Scene):
         terms.shift(2*UP)
         plane = NumberPlane(color = BLUE_E)
         axes = Mobject(NumberLine(), NumberLine().rotate(np.pi/2))
-        axes.highlight(WHITE)
+        axes.set_color(WHITE)
 
         for term in terms.split():
             self.play(ShimmerIn(term, run_time = 0.5))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(plane), ShowCreation(axes))
         self.play(*[
             Transform(*pair)
@@ -83,11 +66,11 @@ class TimeLine(Scene):
         speical_dates = [2016] + [
             obj["date"] for obj in dated_events
         ]
-        centuries = range(1600, 2100, 100)
+        centuries = list(range(1600, 2100, 100))
         timeline = NumberLine(
             numerical_radius = 300,
             number_at_center = 1800,
-            unit_length_to_spatial_width = SPACE_WIDTH/100,
+            unit_length_to_spatial_width = FRAME_X_RADIUS/100,
             tick_frequency = 10,
             numbers_with_elongated_ticks = centuries
         )
@@ -100,15 +83,15 @@ class TimeLine(Scene):
         timeline.shift(-centers[0].get_center())
 
         self.add(timeline)
-        self.dither()
+        self.wait()
         run_times = iter([3, 1])
         for point, event in zip(centers[1:], dated_events):
             self.play(ApplyMethod(
                 timeline.shift, -point.get_center(), 
-                run_time = run_times.next()
+                run_time = next(run_times)
             ))
             picture = ImageMobject(event["picture"], invert = False)
-            picture.scale_to_fit_width(2)
+            picture.set_width(2)
             picture.to_corner(UP+RIGHT)
             event_mob = TextMobject(event["text"])
             event_mob.shift(2*LEFT+2*UP)
@@ -122,8 +105,8 @@ class TimeLine(Scene):
                 ShimmerIn(date_mob)
             )
             self.play(FadeIn(picture))
-            self.dither(3)
-            self.play(*map(FadeOut, [event_mob, date_mob, line, picture]))
+            self.wait(3)
+            self.play(*list(map(FadeOut, [event_mob, date_mob, line, picture])))
 
 
 class StayedUpAllNight(Scene):
@@ -147,8 +130,8 @@ class StayedUpAllNight(Scene):
             use_cache = False
         )
         solution.stroke_width = 3
-        solution.highlight(GREY)
-        solution.scale_to_fit_width(5)
+        solution.set_color(GREY)
+        solution.set_width(5)
         solution.to_corner(UP+RIGHT)
         newton = ImageMobject("Old_Newton", invert = False)
         newton.scale(0.8)
@@ -156,13 +139,13 @@ class StayedUpAllNight(Scene):
         rect = Rectangle(height = 6, width = 4.5, color = WHITE)
         rect.to_corner(UP+RIGHT)
         rect.shift(DOWN)
-        phil_trans.scale_to_fit_width(0.8*rect.get_width())
+        phil_trans.set_width(0.8*rect.get_width())
         phil_trans.next_to(Point(rect.get_top()), DOWN)
         new_solution = solution.copy()
-        new_solution.scale_to_fit_width(phil_trans.get_width())
+        new_solution.set_width(phil_trans.get_width())
         new_solution.next_to(phil_trans, DOWN, buff = 1)
         not_newton = TextMobject("-Totally not by Newton")
-        not_newton.scale_to_fit_width(2.5)
+        not_newton.set_width(2.5)
         not_newton.next_to(new_solution, DOWN, aligned_edge = RIGHT)
         phil_trans.add(rect)
 
@@ -173,7 +156,7 @@ class StayedUpAllNight(Scene):
         ], size = "\\small")
         newton_complaint.to_edge(UP, buff = 0.2)
         dunned = newton_complaint.split()[1]
-        dunned.highlight()
+        dunned.set_color()
         dunned_def = TextMobject("(old timey term for making \\\\ demands on someone)")
         dunned_def.scale(0.7)
         dunned_def.next_to(phil_trans, LEFT)
@@ -198,29 +181,29 @@ class StayedUpAllNight(Scene):
             Rotating(minute_hand, radians = -12*2*np.pi, **kwargs),
             run_time = 5
         )
-        self.dither()
+        self.wait()
         self.clear()
         self.add(newton)
         clock.ingest_submobjects()
         self.play(Transform(clock, solution))
         self.remove(clock)
         self.add(solution)
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(phil_trans),
             Transform(solution, new_solution)
         )
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(not_newton))
         phil_trans.add(solution, not_newton)
-        self.dither()
-        self.play(*map(ShimmerIn, newton_complaint.split()))
-        self.dither()
+        self.wait()
+        self.play(*list(map(ShimmerIn, newton_complaint.split())))
+        self.wait()
         self.play(
             ShimmerIn(dunned_def),
             ShowCreation(dunned_arrow)
         )
-        self.dither()
+        self.wait()
         self.remove(dunned_def, dunned_arrow)
         self.play(FadeOut(newton_complaint))
         self.remove(newton_complaint)
@@ -229,9 +212,9 @@ class StayedUpAllNight(Scene):
             GrowFromCenter(johann)
         )
         self.remove(newton)        
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(johann_quote))
-        self.dither()
+        self.wait()
 
 
 class ThetaTGraph(Scene):
@@ -270,14 +253,14 @@ class ThetaTGraph(Scene):
             ShimmerIn(q_mark),
             ShowCreation(graph)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(q_mark, stars),
             Transform(graph, line)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(graph, squiggle))
-        self.dither()
+        self.wait()
 
 
 class SolutionsToTheBrachistochrone(Scene):
@@ -318,7 +301,7 @@ class SolutionsToTheBrachistochrone(Scene):
         self.play(ShowCreation(x_axis), ShimmerIn(x_label))
         self.play(ShowCreation(y_axis), ShimmerIn(y_label))
         self.play(ShowCreation(cycloids))
-        self.dither()
+        self.wait()
         self.play(
             Transform(cycloids, lines),
             Transform(x_axis, t_axis),
@@ -326,9 +309,9 @@ class SolutionsToTheBrachistochrone(Scene):
             Transform(y_label, theta_label),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
 
 
 class VideoLayout(Scene):
@@ -354,16 +337,16 @@ class VideoLayout(Scene):
             ),
             UP
         )
-        left_brace.words = map(TextMobject, [
+        left_brace.words = list(map(TextMobject, [
             "Problem statement", 
             "History",
             "Johann Bernoulli's cleverness"
-        ])
+        ]))
         curr = left_brace
-        right_brace.words = map(TextMobject, [
+        right_brace.words = list(map(TextMobject, [
             "Challenge",
             "Mark Levi's cleverness",            
-        ])
+        ]))
         for brace in left_brace, right_brace:
             curr = brace
             direction = DOWN if brace is left_brace else UP
@@ -376,10 +359,10 @@ class VideoLayout(Scene):
         self.play(ShowCreation(line))
         for brace in left_brace, right_brace:
             self.play(GrowFromCenter(brace))
-            self.dither()
+            self.wait()
             for word in brace.words:
                 self.play(ShimmerIn(word))
-                self.dither()
+                self.wait()
 
 
 
@@ -402,21 +385,21 @@ class ShortestPathProblem(Scene):
         )
         path.scale(6/(2*np.pi))
         path.shift(point_a - path.points[0])
-        path.highlight(RED)
+        path.set_color(RED)
         line = Line(point_a, point_b)
         words = TextMobject("Shortest path from $A$ to $B$")
         words.to_edge(UP)
 
         self.play(
             ShimmerIn(words),
-            *map(GrowFromCenter, dots)
+            *list(map(GrowFromCenter, dots))
         )
         self.play(ShowCreation(path))
         self.play(Transform(
             path, line,
             path_func = path_along_arc(np.pi)
         ))
-        self.dither()
+        self.wait()
 
 
 class MathBetterThanTalking(Scene):
@@ -430,7 +413,7 @@ class MathBetterThanTalking(Scene):
         self.add(mathy)
         self.play(ShowCreation(bubble))
         self.play(ShimmerIn(bubble.content))
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             mathy.blink, 
             rate_func = squish_rate_func(there_and_back, 0.4, 0.6)
@@ -447,7 +430,7 @@ class DetailsOfProofBox(Scene):
             ShowCreation(rect),
             ShimmerIn(words)
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -479,7 +462,7 @@ class TalkedAboutSnellsLaw(Scene):
                 talker.blink, 
                 rate_func = squish_rate_func(there_and_back)
             ))
-            self.dither()
+            self.wait()
             self.remove(talker.bubble, talker.bubble.content)
 
 
@@ -488,12 +471,12 @@ class YetAnotherMarkLevi(Scene):
         words = TextMobject("Yet another bit of Mark Levi cleverness")
         words.to_edge(UP)
         levi = ImageMobject("Mark_Levi", invert = False)
-        levi.scale_to_fit_width(6)
+        levi.set_width(6)
         levi.show()
 
         self.add(levi)
         self.play(ShimmerIn(words))
-        self.dither(2)
+        self.wait(2)
 
 
 

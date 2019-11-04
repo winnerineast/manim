@@ -1,46 +1,14 @@
-from mobject import Mobject, Point, Mobject1D
-from mobject.tex_mobject import \
-    TexMobject, TextMobject, Brace
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromRegion
-
-from scene import Scene
-
-from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction, \
-    ShrinkToCenter, ShimmerIn, FadeOut, FadeIn
-from animation.simple_animations import \
-    ShowCreation, Homotopy
-from animation.meta_animations import \
-    DelayByOrder, TransformAnimations
-from animation.playground import Vibrate
-
-from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point, Circle
-from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician
-from topics.number_line import UnitInterval, NumberLine
-from topics.three_dimensions import Stars
-from topics.functions import ParametricFunction
-
-from mobject.region import  region_from_polygon_vertices, Region
-
+from manimlib.imports import *
 import displayer as disp
-
 from hilbert.curves import \
     TransformOverIncreasingOrders, FlowSnake, HilbertCurve, \
     SnakeCurve, PeanoCurve
 from hilbert.section1 import get_mathy_and_bubble
-
 from scipy.spatial.distance import cdist
-
-from helpers import *
 
 
 def get_time_line():
-    length = 5.2*SPACE_WIDTH
+    length = 2.6*FRAME_WIDTH
     year_range = 400
     time_line = NumberLine(
         numerical_radius = year_range/2,
@@ -48,15 +16,15 @@ def get_time_line():
         tick_frequency = 10,
         leftmost_tick = 1720,
         number_at_center = 1870,
-        numbers_with_elongated_ticks = range(1700, 2100, 100)
+        numbers_with_elongated_ticks = list(range(1700, 2100, 100))
     )
     time_line.sort_points(lambda p : p[0])        
-    time_line.gradient_highlight(
+    time_line.set_color_by_gradient(
         PeanoCurve.CONFIG["start_color"], 
         PeanoCurve.CONFIG["end_color"]
     )
     time_line.add_numbers(
-        2020, *range(1800, 2050, 50)
+        2020, *list(range(1800, 2050, 50))
     )
     return time_line
 
@@ -64,12 +32,12 @@ def get_time_line():
 class SectionTwo(Scene):
     def construct(self):
         self.add(TextMobject("Section 2: Filling space"))
-        self.dither()
+        self.wait()
 
 class HilbertCurveIsPerfect(Scene):
     def construct(self):
         curve = HilbertCurve(order = 6)
-        curve.highlight(WHITE)
+        curve.set_color(WHITE)
         colored_curve = curve.copy()
         colored_curve.thin_out(3)
         lion = ImageMobject("lion", invert = False)
@@ -92,9 +60,9 @@ class HilbertCurveIsPerfect(Scene):
             Transform(curve, colored_curve),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.play(Transform(curve, line, run_time = 5))
-        self.dither()
+        self.wait()
 
 
 class AskMathematicianFriend(Scene):
@@ -103,18 +71,18 @@ class AskMathematicianFriend(Scene):
         bubble.sort_points(lambda p : np.dot(p, UP+RIGHT))
 
         self.add(mathy)
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             mathy.blink, 
             rate_func = squish_rate_func(there_and_back)
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(bubble))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(mathy.shift, 3*(DOWN+LEFT)),
             ApplyPointwiseFunction(
-                lambda p : 15*p/np.linalg.norm(p),
+                lambda p : 15*p/get_norm(p),
                 bubble
             ),
             run_time = 3
@@ -123,8 +91,8 @@ class AskMathematicianFriend(Scene):
 class TimeLineAboutSpaceFilling(Scene):
     def construct(self):
         curve = PeanoCurve(order = 5)
-        curve.stretch_to_fit_width(2*SPACE_WIDTH)
-        curve.stretch_to_fit_height(2*SPACE_HEIGHT)
+        curve.stretch_to_fit_width(FRAME_WIDTH)
+        curve.stretch_to_fit_height(FRAME_HEIGHT)
         curve_start = curve.copy()
         curve_start.apply_over_attr_arrays(
             lambda arr : arr[:200]
@@ -155,7 +123,7 @@ class TimeLineAboutSpaceFilling(Scene):
             GrowFromCenter(brace),
             ShimmerIn(words)
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(time_line, curve_start),
             FadeOut(brace),
@@ -164,9 +132,9 @@ class TimeLineAboutSpaceFilling(Scene):
         self.play(ShowCreation(
             curve, 
             run_time = 5,
-            rate_func = None
+            rate_func=linear
         ))
-        self.dither()
+        self.wait()
 
 
 
@@ -177,9 +145,9 @@ class NotPixelatedSpace(Scene):
         space_mobject = MobjectFromRegion(space_region, DARK_GREY)
         curve = PeanoCurve(order = 5).replace(space_mobject)
         line = Line(5*LEFT, 5*RIGHT)
-        line.gradient_highlight(curve.start_color, curve.end_color)
+        line.set_color_by_gradient(curve.start_color, curve.end_color)
         for mob in grid, space_mobject:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
         infinitely = TextMobject("Infinitely")
         detailed = TextMobject("detailed")
         extending = TextMobject("extending")
@@ -193,18 +161,18 @@ class NotPixelatedSpace(Scene):
         ])
 
         self.add(grid)
-        self.dither()
+        self.wait()
         self.play(Transform(grid, space_mobject, run_time = 5))
         self.remove(grid)
-        self.highlight_region(space_region, DARK_GREY)
-        self.dither()
+        self.set_color_region(space_region, DARK_GREY)
+        self.wait()
         self.add(infinitely, detailed)
-        self.dither()
+        self.wait()
         self.play(DelayByOrder(Transform(detailed, extending)))
         self.play(ShowCreation(arrows))
-        self.dither()
+        self.wait()
         self.clear()
-        self.highlight_region(space_region, DARK_GREY)
+        self.set_color_region(space_region, DARK_GREY)
         self.play(ShowCreation(line))
         self.play(Transform(line, curve, run_time = 5))
 
@@ -222,12 +190,12 @@ class HistoryOfDiscover(Scene):
         peano_curve.to_corner(UP+LEFT)
         squares = Mobject(*[
             Square(side_length=3, color=WHITE).replace(curve)
-            for curve in hilbert_curve, peano_curve
+            for curve in (hilbert_curve, peano_curve)
         ])
 
 
         self.add(time_line)
-        self.dither()
+        self.wait()
         for year, curve, vect, text in [
             (1890, peano_curve, UP, "Peano Curve"), 
             (1891, hilbert_curve, DOWN, "Hilbert Curve"),
@@ -235,7 +203,7 @@ class HistoryOfDiscover(Scene):
             point = time_line.number_to_point(year)
             point[1] = 0.2
             arrow = Arrow(point+2*vect, point, buff = 0.1)
-            arrow.gradient_highlight(curve.start_color, curve.end_color)
+            arrow.set_color_by_gradient(curve.start_color, curve.end_color)
             year_mob = TexMobject(str(year))
             year_mob.next_to(arrow, vect)
             words = TextMobject(text)
@@ -247,9 +215,9 @@ class HistoryOfDiscover(Scene):
                 ShimmerIn(words)
             )
             self.play(ShowCreation(curve))
-            self.dither()
+            self.wait()
         self.play(ShowCreation(squares))
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             Mobject(*self.mobjects).shift, 20*(DOWN+RIGHT)
         ))
@@ -289,21 +257,21 @@ class DefinitionOfCurve(Scene):
         self.play(
             ApplyMethod(start_words.shift, 2*(DOWN+RIGHT))
         )
-        self.dither()
+        self.wait()
         self.play(Transform(start_words, end_words))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(curve))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(
             dots, 
             run_time = 3,
         ))
-        self.dither()
+        self.wait()
         self.clear()
         self.play(ShowCreation(fine_curve, run_time = 5))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(space_filling_fractal))
-        self.dither()
+        self.wait()
 
 
 class PseudoHilbertCurvesDontFillSpace(Scene):
@@ -312,7 +280,7 @@ class PseudoHilbertCurvesDontFillSpace(Scene):
         grid = Grid(2, 2, stroke_width=1)
         self.add(grid, curve)
         for order in range(2, 6):
-            self.dither()
+            self.wait()
             new_grid = Grid(2**order, 2**order, stroke_width=1)
             self.play(
                 ShowCreation(new_grid),
@@ -331,7 +299,7 @@ class PseudoHilbertCurvesDontFillSpace(Scene):
         square.corner.add_line(ORIGIN, 3*RIGHT)
         square.digest_mobject_attrs()
         square.scale(2**(-5))
-        square.corner.highlight(
+        square.corner.set_color(
             Color(rgb = curve.rgbas[curve.get_num_points()/3])
         )
         square.shift(
@@ -340,7 +308,7 @@ class PseudoHilbertCurvesDontFillSpace(Scene):
         )
 
 
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(grid), 
             FadeOut(curve),
@@ -349,7 +317,7 @@ class PseudoHilbertCurvesDontFillSpace(Scene):
         self.play(
             ApplyMethod(square.replace, grid)
         )
-        self.dither()
+        self.wait()
 
 
 class HilbertCurveIsLimit(Scene):
@@ -361,7 +329,7 @@ class HilbertCurveIsLimit(Scene):
 
         self.add(mathy, bubble)
         self.play(ShimmerIn(bubble.content))
-        self.dither()
+        self.wait()
 
 
 class DefiningCurves(Scene):
@@ -389,21 +357,21 @@ class DefiningCurves(Scene):
         low_arrow = Arrow(number_line, grid)
 
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(words),
             ApplyMethod(curves1.replace, curves2),
             ShimmerIn(top_words.split()[1])
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(number))
         self.play(ShowCreation(arrow))
         self.play(FadeIn(pair))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(number_line))
         self.play(ShowCreation(low_arrow))
         self.play(ShowCreation(grid))
-        self.dither()
+        self.wait()
 
 
 class PseudoHilbertCurveAsFunctionExample(Scene):
@@ -453,16 +421,16 @@ class PseudoHilbertCurveAsFunctionExample(Scene):
             ShimmerIn(function),
             ShowCreation(function_arrow)
         )
-        self.dither()
+        self.wait()
         self.remove(function_arrow, function)
         self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(arg),
             ShowCreation(arrow1),
             ShowCreation(dot1)
         )
-        self.dither()
+        self.wait()
         self.remove(arrow1)
         self.play(
             FadeIn(grid),            
@@ -470,12 +438,12 @@ class PseudoHilbertCurveAsFunctionExample(Scene):
             Transform(dot1, dot2),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(result),
             ShowCreation(arrow2)
         )
-        self.dither()
+        self.wait()
 
 
 
@@ -486,9 +454,9 @@ class ContinuityRequired(Scene):
             "\\emph{continuous}", 
             "if it is to represent a curve."
         ])
-        words.split()[1].highlight(YELLOW_C)
+        words.split()[1].set_color(YELLOW_C)
         self.add(words)
-        self.dither()
+        self.wait()
 
 
 
@@ -522,27 +490,27 @@ class FormalDefinitionOfContinuity(Scene):
         Mobject.align_data(self.spiril1, self.spiril2)
         self.output = Mobject(self.spiril1, self.spiril2)
         self.output.ingest_submobjects()
-        self.output.highlight(GREEN_A)
+        self.output.set_color(GREEN_A)
 
         self.interval = UnitInterval()
-        self.interval.scale_to_fit_width(SPACE_WIDTH-1)
+        self.interval.set_width(FRAME_X_RADIUS-1)
         self.interval.to_edge(LEFT)
 
         self.input_dot = Dot(color = self.input_color)
-        self.output_dot = self.input_dot.copy().highlight(self.output_color)
+        self.output_dot = self.input_dot.copy().set_color(self.output_color)
         left, right = self.interval.get_left(), self.interval.get_right()
-        self.input_homotopy = lambda (x, y, z, t) : (x, y, t) + interpolate(left, right, t)
+        self.input_homotopy = lambda x_y_z_t : (x_y_z_t[0], x_y_z_t[1], x_y_z_t[3]) + interpolate(left, right, x_y_z_t[3])
         output_size = self.output.get_num_points()-1
         output_points = self.output.points        
-        self.output_homotopy = lambda (x, y, z, t) : (x, y, z) + output_points[int(t*output_size)]
+        self.output_homotopy = lambda x_y_z_t1 : (x_y_z_t1[0], x_y_z_t1[1], x_y_z_t1[2]) + output_points[int(x_y_z_t1[3]*output_size)]
 
     def get_circles_and_points(self, min_input, max_input):
         input_left, input_right = [
             self.interval.number_to_point(num)
-            for num in min_input, max_input
+            for num in (min_input, max_input)
         ]
         input_circle = Circle(
-            radius = np.linalg.norm(input_left-input_right)/2,
+            radius = get_norm(input_left-input_right)/2,
             color = WHITE
         )
         input_circle.shift((input_left+input_right)/2)
@@ -557,7 +525,7 @@ class FormalDefinitionOfContinuity(Scene):
             self.output.points[int(min_input*n):int(max_input*n)]
         )
         output_center = output_points.points[int(0.5*output_points.get_num_points())]
-        max_distance = np.linalg.norm(output_center-output_points.points[-1])
+        max_distance = get_norm(output_center-output_points.points[-1])
         output_circle = Circle(
             radius = max_distance, 
             color = WHITE
@@ -574,12 +542,12 @@ class FormalDefinitionOfContinuity(Scene):
     def label_spaces(self):
         input_space = TextMobject("Input Space")
         input_space.to_edge(UP)        
-        input_space.shift(LEFT*SPACE_WIDTH/2)
+        input_space.shift(LEFT*FRAME_X_RADIUS/2)
         output_space = TextMobject("Output Space")
         output_space.to_edge(UP)
-        output_space.shift(RIGHT*SPACE_WIDTH/2)
+        output_space.shift(RIGHT*FRAME_X_RADIUS/2)
         line = Line(
-            UP*SPACE_HEIGHT, DOWN*SPACE_HEIGHT, 
+            UP*FRAME_Y_RADIUS, DOWN*FRAME_Y_RADIUS, 
             color = WHITE
         )
         self.play(
@@ -588,7 +556,7 @@ class FormalDefinitionOfContinuity(Scene):
             ShowCreation(line),
             ShowCreation(self.interval),
         )
-        self.dither()
+        self.wait()
 
     def move_dot(self):
         kwargs = {
@@ -600,7 +568,7 @@ class FormalDefinitionOfContinuity(Scene):
             Homotopy(self.output_homotopy, self.output_dot, **kwargs),
             ShowCreation(self.output, **kwargs)
         )
-        self.dither()
+        self.wait()
 
     def label_jump(self):
         jump_points = Mobject(
@@ -614,7 +582,7 @@ class FormalDefinitionOfContinuity(Scene):
             GrowFromCenter(self.brace),
             ShimmerIn(self.jump)
         )
-        self.dither()
+        self.wait()
         self.remove(self.brace, self.jump)
 
 
@@ -631,7 +599,7 @@ class FormalDefinitionOfContinuity(Scene):
             Homotopy(self.output_homotopy, self.output_dot, **kwargs)
         )
 
-        A, B = map(Mobject.get_center, [self.input_dot, self.output_dot])
+        A, B = list(map(Mobject.get_center, [self.input_dot, self.output_dot]))
         A_text = TextMobject("A")
         A_text.shift(A+2*(LEFT+UP))
         A_arrow = Arrow(
@@ -655,21 +623,21 @@ class FormalDefinitionOfContinuity(Scene):
                 ShimmerIn(text),
                 ShowCreation(arrow)
             )
-            self.dither()
+            self.wait()
         self.remove(A_text, A_arrow, B_text, B_arrow)
         self.play(ShowCreation(input_circle))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(input_points))
-        self.dither()
+        self.wait()
         input_points_copy = input_points.copy()
         self.play(
             Transform(input_points_copy, output_points),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(output_circle))
-        self.dither()
-        self.dither()
+        self.wait()
+        self.wait()
         self.remove(*[
             input_circle, input_points, 
             output_circle, input_points_copy
@@ -684,7 +652,7 @@ class FormalDefinitionOfContinuity(Scene):
             run_time = 5,
         )
         self.play(vary_circles)
-        self.dither()
+        self.wait()
         text = TextMobject("Function is ``Continuous at A''")
         text.shift(2*UP).to_edge(LEFT)
         arrow = Arrow(text, self.input_dot)
@@ -692,7 +660,7 @@ class FormalDefinitionOfContinuity(Scene):
             ShimmerIn(text),
             ShowCreation(arrow)
         )
-        self.dither()
+        self.wait()
         self.remove(vary_circles.mobject, text, arrow)
 
     def discontinuous_point(self):
@@ -739,7 +707,7 @@ class FormalDefinitionOfContinuity(Scene):
             ShimmerIn(point_description),
             ShowCreation(arrow)
         )
-        self.dither()
+        self.wait()
         self.remove(point_description, arrow)
 
         tup = self.get_circles_and_points(
@@ -755,16 +723,16 @@ class FormalDefinitionOfContinuity(Scene):
             run_time = 2
         )
         self.play(ShowCreation(output_circle))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(text))
         self.remove(input_circle, input_points, output_circle, input_points_copy)
         self.play(vary_circles)
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(discontinuous_at_A),
             ShowCreation(discontinuous_arrow)
         )
-        self.dither(3)
+        self.wait(3)
         self.remove(vary_circles.mobject, discontinuous_at_A, discontinuous_arrow)
 
     def continuous_point(self):
@@ -777,7 +745,7 @@ class VaryCircles(Animation):
         digest_locals(self)
         Animation.__init__(self, Mobject(), **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         radius = self.radius + 0.9*self.radius*np.sin(1.5*np.pi*alpha)
         self.mobject = Mobject(*self.scene.get_circles_and_points(
             self.input_value-radius,
@@ -796,7 +764,7 @@ class FunctionIsContinuousText(Scene):
         self.play(ShimmerIn(all_points))
         self.play(ShowCreation(arrow))
         self.play(ShimmerIn(continuous))
-        self.dither()
+        self.wait()
 
 
 class DefineActualHilbertCurveText(Scene):
@@ -804,7 +772,7 @@ class DefineActualHilbertCurveText(Scene):
         self.add(TextMobject("""
             Finally define a Hilbert Curve\\dots
         """))
-        self.dither()
+        self.wait()
 
 
 class ReliesOnWonderfulProperty(Scene):
@@ -813,7 +781,7 @@ class ReliesOnWonderfulProperty(Scene):
             \\dots which relies on a certain property
             of Pseudo-Hilbert-curves.
         """))
-        self.dither()
+        self.wait()
 
 
 class WonderfulPropertyOfPseudoHilbertCurves(Scene):
@@ -838,12 +806,12 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
             ShowCreation(arrow),
             ShowCreation(dot)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(arrow),
             *[
                 FadeIn(func_parts[i])
-                for i in 0, 1, 2, 4
+                for i in (0, 1, 2, 4)
             ]
         )
         for num in range(2,9):
@@ -856,12 +824,12 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
                 Transform(dot, new_dot),
                 Transform(num_str, new_num_str)
             )
-            self.dither()
+            self.wait()
 
         text.to_edge(UP)
         text_parts = text.split()
         for index in 1, -1:
-            text_parts[index].highlight()
+            text_parts[index].set_color()
         starters = Mobject(*func_parts + [
             Point(mob.get_center(), stroke_width=1)
             for mob in text_parts[5:]
@@ -869,7 +837,7 @@ class WonderfulPropertyOfPseudoHilbertCurves(Scene):
         self.play(Transform(starters, text))
         arrow = Arrow(text_parts[-2].get_bottom(), dot, buff = 0.1)
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
 
 class FollowManyPoints(Scene):
     def construct(self):
@@ -880,10 +848,10 @@ class FollowManyPoints(Scene):
         ])
         parts = text.split()
         parts[-1].next_to(Mobject(*parts[:-1]), DOWN)
-        parts[-1].highlight(BLUE)
-        parts[3].highlight(BLUE)
-        parts[1].highlight()
-        parts[-2].highlight()
+        parts[-1].set_color(BLUE)
+        parts[3].set_color(BLUE)
+        parts[1].set_color()
+        parts[-2].set_color()
         text.to_edge(UP)
         curve = UnitInterval()
         curve.sort_points(lambda p : p[0])
@@ -897,9 +865,9 @@ class FollowManyPoints(Scene):
         starter_dots.shift(2*UP)
 
         self.add(curve, text)
-        self.dither()
+        self.wait()
         self.play(DelayByOrder(ApplyMethod(starter_dots.shift, 2*DOWN)))
-        self.dither()
+        self.wait()
         self.remove(starter_dots)
         self.add(dots)
         for num in range(1, 10):
@@ -913,7 +881,7 @@ class FollowManyPoints(Scene):
                 Transform(curve, new_curve),
                 Transform(dots, new_dots),
             )
-            # self.dither()
+            # self.wait()
 
 
 class FormalDefinitionOfHilbertCurve(Scene):
@@ -926,7 +894,7 @@ class FormalDefinitionOfHilbertCurve(Scene):
         text.to_edge(UP)
         x1 = text.split()[1]
         x2 = text.split()[-2]
-        x2.highlight(BLUE)
+        x2.set_color(BLUE)
         explanation = TextMobject("Actual Hilbert curve function")
         exp_arrow = Arrow(explanation, text.split()[0])
         curve = UnitInterval()
@@ -940,15 +908,15 @@ class FormalDefinitionOfHilbertCurve(Scene):
             ShimmerIn(explanation),
             ShowCreation(exp_arrow)
         )
-        self.dither()
+        self.wait()
         self.remove(explanation, exp_arrow)
         self.play(ShowCreation(curve))
         self.play(
-            ApplyMethod(x1.highlight, BLUE),
+            ApplyMethod(x1.set_color, BLUE),
             ShowCreation(x_arrow), 
             ShowCreation(dot)
         )
-        self.dither()
+        self.wait()
         self.remove(x_arrow)
         limit = Mobject(*text.split()[3:]).ingest_submobjects()
         limit.stroke_width = 1
@@ -969,7 +937,7 @@ class CouldNotDefineForSnakeCurve(Scene):
             You could not define a limit curve from
             snake curves.
         """))
-        self.dither()
+        self.wait()
 
 class ThreeThingsToProve(Scene):
     def construct(self):
@@ -978,8 +946,8 @@ class ThreeThingsToProve(Scene):
             "=\\lim_{n \\to \\infty}\\text{PHC}_n(", "x", ")"
         ])
         definition.to_edge(UP)
-        definition.split()[1].highlight(BLUE)
-        definition.split()[-2].highlight(BLUE)
+        definition.split()[1].set_color(BLUE)
+        definition.split()[-2].set_color(BLUE)
         intro = TextMobject("Three things need to be proven")
         prove_that = TextMobject("Prove that HC is $\\dots$")
         prove_that.scale(0.7)
@@ -994,25 +962,25 @@ class ThreeThingsToProve(Scene):
             "Each point in the unit square is an output of HC",
             "\\end{enumerate}",
         ]).split()
-        items[1].highlight(GREEN)
-        items[3].highlight(YELLOW_C)
-        items[5].highlight(MAROON)
+        items[1].set_color(GREEN)
+        items[3].set_color(YELLOW_C)
+        items[5].set_color(MAROON)
         Mobject(*items).to_edge(RIGHT)
 
         self.add(definition)
         self.play(ShimmerIn(intro))
-        self.dither()
+        self.wait()
         self.play(Transform(intro, prove_that))
         for item in items[1:-1]:
             self.play(ShimmerIn(item))
-            self.dither()
+            self.wait()
 
 
 
 class TilingSpace(Scene):
     def construct(self):
         coords_set = [ORIGIN]
-        for n in range(int(2*SPACE_WIDTH)):
+        for n in range(int(FRAME_WIDTH)):
             for vect in UP, RIGHT:
                 for k in range(n):
                     new_coords = coords_set[-1]+((-1)**n)*vect
@@ -1034,7 +1002,7 @@ class TilingSpace(Scene):
         all_curves.thin_out(10)
         self.play(ShowCreation(
             all_curves,
-            rate_func = None,
+            rate_func=linear,
             run_time = 15
         ))
 
@@ -1062,7 +1030,7 @@ class ColorIntervals(Scene):
                 brace_anim = ApplyMethod(brace.shift, 2*RIGHT)
             self.play(
                 ApplyMethod(
-                    number_line.highlight,
+                    number_line.set_color,
                     RED,
                     lambda p : p[0] > n-6.2 and p[0] < n-4 and p[1] > -0.4
                 ),

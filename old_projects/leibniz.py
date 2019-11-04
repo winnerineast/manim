@@ -1,32 +1,5 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from topics.complex_numbers import *
-from scene import Scene
-from scene.reconfigurable_scene import ReconfigurableScene
-from scene.zoomed_scene import *
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.common_scenes import PatreonThanks
+from manimlib.imports import *
+from functools import reduce
 
 # revert_to_original_skipping_status
 
@@ -54,14 +27,14 @@ class LatticePointScene(Scene):
     }
     def setup(self):
         if self.x_radius is None:
-            self.x_radius = self.y_radius*SPACE_WIDTH/SPACE_HEIGHT
+            self.x_radius = self.y_radius*FRAME_X_RADIUS/FRAME_Y_RADIUS
         plane = ComplexPlane(
             y_radius = self.y_radius,
             x_radius = self.x_radius,
             secondary_line_ratio = self.secondary_line_ratio,
             radius = self.plane_color
         )
-        plane.scale_to_fit_height(2*SPACE_HEIGHT)
+        plane.set_height(FRAME_HEIGHT)
         plane.shift(self.plane_center)
         self.add(plane)
         self.plane = plane
@@ -70,7 +43,7 @@ class LatticePointScene(Scene):
 
     def setup_lattice_points(self):
         M = self.max_lattice_point_radius
-        int_range = range(-M, M+1)
+        int_range = list(range(-M, M+1))
         self.lattice_points = VGroup()
         for x, y in it.product(*[int_range]*2):
             r_squared = x**2 + y**2
@@ -83,8 +56,8 @@ class LatticePointScene(Scene):
             )
             dot.r_squared = r_squared
             self.lattice_points.add(dot)
-        self.lattice_points.sort_submobjects(
-            lambda p : np.linalg.norm(p - self.plane_center)
+        self.lattice_points.sort(
+            lambda p : get_norm(p - self.plane_center)
         )
 
     def get_circle(self, radius = None, color = None):
@@ -118,11 +91,8 @@ class LatticePointScene(Scene):
         return radial_line, root_label
 
     def get_lattice_points_on_r_squared_circle(self, r_squared):
-        points = VGroup(*filter(
-            lambda dot : dot.r_squared == r_squared,
-            self.lattice_points
-        ))
-        points.sort_submobjects(
+        points = VGroup(*[dot for dot in self.lattice_points if dot.r_squared == r_squared])
+        points.sort(
             lambda p : angle_of_vector(p-self.plane_center)%(2*np.pi)
         )
         return points
@@ -147,10 +117,10 @@ class LatticePointScene(Scene):
         ])
 
     def add_axis_labels(self, spacing = 2):
-        x_max = int(self.plane.point_to_coords(SPACE_WIDTH*RIGHT)[0])
-        y_max = int(self.plane.point_to_coords(SPACE_HEIGHT*UP)[1])
-        x_range = range(spacing, x_max, spacing)
-        y_range = range(spacing, y_max, spacing)
+        x_max = int(self.plane.point_to_coords(FRAME_X_RADIUS*RIGHT)[0])
+        y_max = int(self.plane.point_to_coords(FRAME_Y_RADIUS*UP)[1])
+        x_range = list(range(spacing, x_max, spacing))
+        y_range = list(range(spacing, y_max, spacing))
         for r in x_range, y_range:
             r += [-n for n in r]
         tick = Line(ORIGIN, MED_SMALL_BUFF*UP)
@@ -214,27 +184,27 @@ class Introduction(PiCreatureScene):
 
         morty = self.get_primary_pi_creature()
         video = VideoIcon()
-        video.highlight(TEAL)
+        video.set_color(TEAL)
         video.next_to(morty.get_corner(UP+LEFT), UP)
 
         self.play(
             morty.change_mode, "raise_right_hand",
             DrawBorderThenFill(video)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(primes, run_time = 2),
             morty.change_mode, "happy",
-            video.scale_to_fit_height, 2*SPACE_WIDTH,
+            video.set_height, FRAME_WIDTH,
             video.center,
             video.set_fill, None, 0
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(plane, run_time = 2),
             morty.change, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
         self.remove(morty)
         morty = morty.copy()
         self.add(morty)
@@ -247,9 +217,9 @@ class Introduction(PiCreatureScene):
             FadeOut(VGroup(morty.eyes, morty.mouth)),
             Write(VGroup(*pi_group[1:]))
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
-            plane.scale_to_fit_width, pi_group.get_width(),
+            plane.set_width, pi_group.get_width(),
             plane.next_to, pi_group, DOWN, MED_LARGE_BUFF
         )
 
@@ -262,15 +232,15 @@ class Introduction(PiCreatureScene):
         )
         for title in titles:
             title.next_to(screen, UP)
-            title.highlight(YELLOW)
+            title.set_color(YELLOW)
         self.play(
             ShowCreation(screen),
             FadeIn(titles[0])
         )
         self.show_frame()
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(*titles))
-        self.dither(3)
+        self.wait(3)
 
     def get_primes(self):
         return TexMobject("2, 3, 5, 7, 11, 13, \\dots")
@@ -286,7 +256,7 @@ class Introduction(PiCreatureScene):
         label = TexMobject("1 + 2i")
         label.add_background_rectangle()
         label.next_to(dot, UP+RIGHT, buff = SMALL_BUFF)
-        label.highlight(YELLOW)
+        label.set_color(YELLOW)
         plane.label = label
         plane.add(dot, label)
         return plane
@@ -295,7 +265,7 @@ class Introduction(PiCreatureScene):
         result = TexMobject("\\pi", "=", "%.8f\\dots"%np.pi)
         pi = result.get_part_by_tex("pi")
         pi.scale(2, about_point = pi.get_right())
-        pi.highlight(MAROON_B)
+        pi.set_color(MAROON_B)
         return result
 
 class ShowSum(TeacherStudentsScene):
@@ -311,7 +281,7 @@ class ShowSum(TeacherStudentsScene):
         self.change_student_modes(
             "hooray", "sassy", "angry"
         )
-        self.dither(2)
+        self.wait(2)
 
     def show_sum(self):
         line = UnitInterval()
@@ -324,11 +294,11 @@ class ShowSum(TeacherStudentsScene):
             for n in range(self.num_terms_to_add)
         ]
         partial_sums = np.cumsum(numbers)
-        points = map(line.number_to_point, partial_sums)
+        points = list(map(line.number_to_point, partial_sums))
         arrows = [
             Arrow(
                 p1, p2, 
-                tip_length = 0.2*min(1, np.linalg.norm(p1-p2)),
+                tip_length = 0.2*min(1, get_norm(p1-p2)),
                 buff = 0
             )
             for p1, p2 in zip(points, points[1:])
@@ -346,7 +316,7 @@ class ShowSum(TeacherStudentsScene):
             "\\frac{\\pi}{4}", "=", 
         )
         lhs.next_to(sum_mob, LEFT)
-        lhs.highlight_by_tex("pi", YELLOW)
+        lhs.set_color_by_tex("pi", YELLOW)
         sum_arrow = Arrow(
             lhs.get_part_by_tex("pi").get_bottom(),
             sum_point
@@ -354,7 +324,7 @@ class ShowSum(TeacherStudentsScene):
         fading_terms = [
             TexMobject(sign + "\\frac{1}{%d}"%(2*n + 1))
             for n, sign in zip(
-                range(self.num_terms_to_add),
+                list(range(self.num_terms_to_add)),
                 it.cycle("+-")
             )
         ]
@@ -395,7 +365,7 @@ class ShowSum(TeacherStudentsScene):
             anims.append(FadeIn(fading_term))
             self.play(*anims, run_time = run_time)
             if term:
-                self.dither()
+                self.wait()
             else:
                 run_time *= 0.8
         self.play(
@@ -404,10 +374,10 @@ class ShowSum(TeacherStudentsScene):
             dot.move_to, sum_point
         )
         self.play(ShowCreation(sum_arrow))
-        self.dither()
+        self.wait()
         self.change_student_modes("erm", "confused", "maybe")
         self.play(self.teacher.change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class FermatsDreamExcerptWrapper(Scene):
     def construct(self):
@@ -417,7 +387,7 @@ class FermatsDreamExcerptWrapper(Scene):
         words.scale(0.8)
         words.to_edge(UP)
         self.add(words)
-        self.dither()
+        self.wait()
 
 class ShowCalculus(PiCreatureScene):
     def construct(self):
@@ -436,7 +406,7 @@ class ShowCalculus(PiCreatureScene):
         frac_sum.to_corner(UP+LEFT)
         frac_sum.shift(RIGHT)
         rhs_group = VGroup(int1, int2, arctan, pi_fourths)
-        rhs_group.arrange_submobjects(
+        rhs_group.arrange(
             DOWN, buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
         )
@@ -452,18 +422,18 @@ class ShowCalculus(PiCreatureScene):
                 FadeIn(rhs),
                 self.pi_creature.change, mode
             )
-            self.dither()
+            self.wait()
         self.change_mode("maybe")
-        self.dither()
+        self.wait()
         self.look_at(rhs_group[-1])
-        self.dither()
+        self.wait()
         self.pi_creature_says(
             "Where's the \\\\ circle?",
             bubble_kwargs = {"width" : 4, "height" : 3},
             target_mode = "maybe"
         )
         self.look_at(rhs_group[0])
-        self.dither()
+        self.wait()
 
     def create_pi_creature(self):
         return Randolph(color = BLUE_C).to_corner(DOWN+LEFT)
@@ -489,7 +459,7 @@ class CertainRegularityInPrimes(LatticePointScene):
             "+", "\\frac{1}{5}", "-", "\\frac{1}{7}",
             "+\\cdots"
         )
-        formula.highlight_by_tex("pi", YELLOW)
+        formula.set_color_by_tex("pi", YELLOW)
         formula.add_background_rectangle()
         formula.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         self.add_foreground_mobject(formula)
@@ -500,7 +470,7 @@ class CertainRegularityInPrimes(LatticePointScene):
             self.get_radial_line_with_label(np.sqrt(p))
             for p in primes
         ]
-        lines, labels = zip(*lines_and_labels)
+        lines, labels = list(zip(*lines_and_labels))
         circles = [
             self.get_circle(np.sqrt(p))
             for p in primes
@@ -516,10 +486,10 @@ class CertainRegularityInPrimes(LatticePointScene):
 
         curr_group = groups[0]
         self.play(Write(curr_group, run_time = 2))
-        self.dither()
+        self.wait()
         for group in groups[1:]:
             self.play(Transform(curr_group, group))
-            self.dither(2)
+            self.wait(2)
 
 class Outline(PiCreatureScene):
     def construct(self):
@@ -540,10 +510,10 @@ class Outline(PiCreatureScene):
             TextMobject("5. Shift perspective"),
         )
         for step in steps[1:3]:
-            step.highlight_by_tex("1", RED, substring = False)
-            step.highlight_by_tex("i", RED, substring = False)
-            step.highlight_by_tex("4", GREEN, substring = False)
-        steps.arrange_submobjects(
+            step.set_color_by_tex("1", RED, substring = False)
+            step.set_color_by_tex("i", RED, substring = False)
+            step.set_color_by_tex("4", GREEN, substring = False)
+        steps.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -556,7 +526,7 @@ class Outline(PiCreatureScene):
         question = TexMobject("\\pi", "=???")
         pi = question.get_part_by_tex("pi")
         pi.scale(2, about_point = pi.get_right())
-        pi.highlight(YELLOW)
+        pi.set_color(YELLOW)
         question.next_to(self.pi_creature.body, LEFT, aligned_edge = UP)
         self.think(
             "Who am I really?",
@@ -565,7 +535,7 @@ class Outline(PiCreatureScene):
                 FadeIn(question)
             ]
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(self.pi_creature),
             question.to_corner, UP+RIGHT
@@ -581,12 +551,12 @@ class Outline(PiCreatureScene):
             secondary_line_ratio = 0,
             color = BLUE_E,
         )
-        plane.scale_to_fit_height(6)
+        plane.set_height(6)
         plane.next_to(step, DOWN)
         plane.to_edge(LEFT)
         circle = Circle(
             color = YELLOW,
-            radius = np.linalg.norm(
+            radius = get_norm(
                 plane.coords_to_point(10, 0) - \
                 plane.coords_to_point(0, 0)
             )
@@ -603,8 +573,8 @@ class Outline(PiCreatureScene):
             for b in range(-10, 11)
             if a**2 + b**2 <= 10**2
         ])
-        lattice_points.sort_submobjects(
-            lambda p : np.linalg.norm(p - plane_center)
+        lattice_points.sort(
+            lambda p : get_norm(p - plane_center)
         )
         lattice_group = VGroup(plane, circle, lattice_points)
 
@@ -630,9 +600,9 @@ class Outline(PiCreatureScene):
         self.play(
             FadeIn(step)
         )
-        self.dither()
+        self.wait()
         self.play(
-            lattice_group.scale_to_fit_height, 2.5,
+            lattice_group.set_height, 2.5,
             lattice_group.next_to, self.question, DOWN,
             lattice_group.to_edge, RIGHT
         )
@@ -640,16 +610,16 @@ class Outline(PiCreatureScene):
     def write_steps_2_and_3(self):
         for step in self.steps[1:3]:
             self.play(FadeIn(step))
-            self.dither(2)
-        self.dither()
+            self.wait(2)
+        self.wait()
 
     def show_chi(self):
-        input_range = range(1, 7)
+        input_range = list(range(1, 7))
         chis = VGroup(*[
             TexMobject("\\chi(%d)"%n)
             for n in input_range
         ])
-        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.arrange(RIGHT, buff = LARGE_BUFF)
         chis.set_stroke(WHITE, width = 1)
         numerators = VGroup()
         arrows = VGroup()
@@ -658,12 +628,12 @@ class Outline(PiCreatureScene):
             arrow.next_to(chi, DOWN, SMALL_BUFF)
             arrows.add(arrow)
             value = TexMobject(str(chi_func(n)))
-            value.highlight_by_tex("1", BLUE)
-            value.highlight_by_tex("-1", GREEN)
+            value.set_color_by_tex("1", BLUE)
+            value.set_color_by_tex("-1", GREEN)
             value.next_to(arrow, DOWN)
             numerators.add(value)
         group = VGroup(chis, arrows, numerators)
-        group.scale_to_fit_width(1.3*SPACE_WIDTH)
+        group.set_width(1.3*FRAME_X_RADIUS)
         group.to_corner(DOWN+LEFT)
 
         self.play(FadeIn(self.steps[3]))
@@ -671,12 +641,12 @@ class Outline(PiCreatureScene):
             FadeIn(
                 mob, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in [chis, arrows, numerators]
         ])
         self.change_mode("pondering")
-        self.dither()
+        self.wait()
 
         self.chis = chis
         self.arrows = arrows
@@ -701,7 +671,7 @@ class Outline(PiCreatureScene):
             Write(rhs)
         )
         self.change_mode("confused")
-        self.dither(2)
+        self.wait(2)
 
         self.complicated_formula = rhs
 
@@ -738,7 +708,7 @@ class Outline(PiCreatureScene):
             Write(expression),
             self.pi_creature.change_mode, "pondering"
         )
-        self.dither(3)
+        self.wait(3)
 
     ########
     def create_pi_creature(self):
@@ -800,13 +770,13 @@ class CountLatticePoints(LatticePointScene):
             DrawBorderThenFill(example_dot),
             run_time = 2,
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [label, lines, example_dot]))
+        self.wait(2)
+        self.play(*list(map(FadeOut, [label, lines, example_dot])))
 
     def draw_lattice_points_in_circle(self):
         circle = self.get_circle()
         radius = Line(ORIGIN, circle.get_right())
-        radius.highlight(RED)
+        radius.set_color(RED)
         brace = Brace(radius, DOWN, buff = SMALL_BUFF)
         radius_label = brace.get_text(
             str(self.max_lattice_point_radius),
@@ -824,8 +794,8 @@ class CountLatticePoints(LatticePointScene):
         self.play(FadeIn(brace))
         self.add_foreground_mobject(brace)
         self.draw_lattice_points()
-        self.dither()
-        self.play(*map(FadeOut, [brace, radius]))
+        self.wait()
+        self.play(*list(map(FadeOut, [brace, radius])))
 
         self.circle = circle
 
@@ -835,12 +805,12 @@ class CountLatticePoints(LatticePointScene):
             self.plane.coords_to_point(0, 0),
             self.plane.coords_to_point(1, 0),
         )
-        square.scale_to_fit_width(unit_line.get_width())
+        square.set_width(unit_line.get_width())
         squares = VGroup(*[
             square.copy().move_to(point)
             for point in self.lattice_points
         ])
-        squares.gradient_highlight(BLUE_E, GREEN_E)
+        squares.set_color_by_gradient(BLUE_E, GREEN_E)
         squares.set_stroke(WHITE, 1)
         point_copies = self.lattice_points.copy()
 
@@ -848,12 +818,11 @@ class CountLatticePoints(LatticePointScene):
             ReplacementTransform(
                 point_copies, squares,
                 run_time = 3,
-                submobject_mode = "lagged_start",
-                lag_factor = 4,
+                lag_ratio = 0.5,
             ),
             Animation(self.lattice_points)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(squares), Animation(self.lattice_points))
 
     def write_pi_R_squared(self):
@@ -867,19 +836,19 @@ class CountLatticePoints(LatticePointScene):
                 TexMobject(
                     "\\approx \\pi", "(", R, ")^2"
                 )
-            ).arrange_submobjects(RIGHT)
-            for R in "10", "1{,}000{,}000", "R"
+            ).arrange(RIGHT)
+            for R in ("10", "1{,}000{,}000", "R")
         ])
         radius_10_eq, radius_million_eq, radius_R_eq = equations
         for eq in equations:
             for tex_mob in eq:
-                tex_mob.highlight_by_tex("0", BLUE)
+                tex_mob.set_color_by_tex("0", BLUE)
         radius_10_eq.to_corner(UP+LEFT)
         radius_million_eq.next_to(radius_10_eq, DOWN, LARGE_BUFF)
         radius_million_eq.to_edge(LEFT)
         brace = Brace(radius_million_eq, DOWN)
         brace.add(brace.get_text("More accurate"))
-        brace.highlight(YELLOW)
+        brace.set_color(YELLOW)
 
         background = FullScreenFadeRectangle(opacity = 0.9)
 
@@ -887,13 +856,13 @@ class CountLatticePoints(LatticePointScene):
             FadeIn(background),
             Write(radius_10_eq)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             radius_10_eq.copy(),
             radius_million_eq
         ))
         self.play(FadeIn(brace))
-        self.dither(3)
+        self.wait(3)
 
         self.radius_10_eq = radius_10_eq
         self.million_group = VGroup(radius_million_eq, brace)
@@ -905,7 +874,7 @@ class CountLatticePoints(LatticePointScene):
             arg_separator = ""
         )
         alt_count.to_corner(UP+LEFT)
-        alt_count.highlight_by_tex("something", MAROON_B)
+        alt_count.set_color_by_tex("something", MAROON_B)
         self.radius_R_eq.next_to(alt_count, RIGHT)
 
         final_group = VGroup(
@@ -921,14 +890,14 @@ class CountLatticePoints(LatticePointScene):
                 self.radius_R_eq
             )
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
-            final_group.arrange_submobjects, RIGHT,
+            final_group.arrange, RIGHT,
             final_group.next_to, ORIGIN, UP
         )
         rect = BackgroundRectangle(final_group)
         self.play(FadeIn(rect), Animation(final_group))
-        self.dither(2)
+        self.wait(2)
 
 class SoYouPlay(TeacherStudentsScene):
     def construct(self):
@@ -937,9 +906,9 @@ class SoYouPlay(TeacherStudentsScene):
             run_time = 2
         )
         self.change_student_modes("happy", "thinking", "hesitant")
-        self.dither()
+        self.wait()
         self.look_at(Dot().to_corner(UP+LEFT))
-        self.dither(3)
+        self.wait(3)
 
 class CountThroughRings(LatticePointScene):
     CONFIG = {
@@ -976,13 +945,13 @@ class CountThroughRings(LatticePointScene):
     
         self.add_foreground_mobject(self.lattice_points)
         self.play(FadeIn(circles))
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             circles,
             arg_creator = lambda m : (m.set_stroke, PINK, 4),
             rate_func = there_and_back,
         ))
-        self.dither()
+        self.wait()
         self.remove_foreground_mobject(self.lattice_points)
 
         digest_locals(self, ["circles", "radii"])
@@ -1002,7 +971,7 @@ class CountThroughRings(LatticePointScene):
             self.lattice_points.set_fill, GREY, 0.5,
             Animation(points_on_example_circle)
         )
-        self.dither()
+        self.wait()
 
         digest_locals(self, ["points_on_example_circle", "example_circle"])
 
@@ -1023,9 +992,9 @@ class CountThroughRings(LatticePointScene):
         x_spot = self.plane.coords_to_point(x, 0)
         radial_line = Line(self.plane_center, dot)
         h_line = Line(self.plane_center, x_spot)
-        h_line.highlight(GREEN)
+        h_line.set_color(GREEN)
         v_line = Line(x_spot, dot)
-        v_line.highlight(RED)
+        v_line.set_color(RED)
 
         distance = TexMobject("\\sqrt{a^2 + b^2}")
         distance_num = TexMobject("\\sqrt{%d}"%(x**2 + y**2))
@@ -1047,7 +1016,7 @@ class CountThroughRings(LatticePointScene):
         )
         self.play(ShowCreation(radial_line))
         self.play(Write(distance))
-        self.dither(2)
+        self.wait(2)
 
         a_num, b_num = [
             TexMobject(str(coord))[0]
@@ -1060,15 +1029,15 @@ class CountThroughRings(LatticePointScene):
             Transform(a, a_num),
             Transform(b, b_num),
         )
-        self.dither()
+        self.wait()
         self.play(Transform(distance, distance_num))
-        self.dither(3)
-        self.play(*map(FadeOut, [
+        self.wait(3)
+        self.play(*list(map(FadeOut, [
             self.example_circle, self.points_on_example_circle,
             distance, a, b,
             radial_line, h_line, v_line,
             label
-        ]))
+        ])))
 
     def count_through_rings(self):
         counts = [
@@ -1080,19 +1049,19 @@ class CountThroughRings(LatticePointScene):
                 "\\sqrt{%d} \\Rightarrow"%n, str(count)
             )
             for n, count in zip(
-                range(self.num_rings_to_show_explicitly),
+                list(range(self.num_rings_to_show_explicitly)),
                 counts
             )
         ])
         left_counts = VGroup()
         left_roots = VGroup()
         for mob in left_list:
-            mob[1].highlight(YELLOW)
+            mob[1].set_color(YELLOW)
             left_counts.add(VGroup(mob[1]))
             mob.add_background_rectangle()
             left_roots.add(VGroup(mob[0], mob[1][0]))
 
-        left_list.arrange_submobjects(
+        left_list.arrange(
             DOWN,
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
@@ -1103,9 +1072,9 @@ class CountThroughRings(LatticePointScene):
             TexMobject("%d, "%count)
             for count in counts
         ])
-        top_list.highlight(YELLOW)
-        top_list.arrange_submobjects(RIGHT, aligned_edge = DOWN)
-        top_list.scale_to_fit_width(2*SPACE_WIDTH - MED_LARGE_BUFF)
+        top_list.set_color(YELLOW)
+        top_list.arrange(RIGHT, aligned_edge = DOWN)
+        top_list.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         top_list.to_edge(UP, buff = SMALL_BUFF)
         top_rect = BackgroundRectangle(top_list)
 
@@ -1115,7 +1084,7 @@ class CountThroughRings(LatticePointScene):
                 count_mob,
                 added_anims = [FadeIn(root)]
             )
-            self.dither(2)
+            self.wait(2)
         self.play(
             FadeOut(left_roots),
             FadeIn(top_rect),
@@ -1131,7 +1100,7 @@ class CountThroughRings(LatticePointScene):
             self.show_ring_count(
                 r_squared, top_list[r_squared],
             )
-        self.dither(3)
+        self.wait(3)
 
 
     def show_ring_count(
@@ -1150,7 +1119,7 @@ class CountThroughRings(LatticePointScene):
         )
         root = TexMobject("\\sqrt{%d}"%radius_squared)
         root.add_background_rectangle()
-        root.scale_to_fit_width(
+        root.set_width(
             min(0.7*radial_line.get_width(), root.get_width())
         )
         root.next_to(radial_line, DOWN, SMALL_BUFF)
@@ -1188,7 +1157,7 @@ class CountThroughRings(LatticePointScene):
             *added_anims,
             run_time = run_time
         )
-        self.dither(run_time)
+        self.wait(run_time)
         if len(points) > 0:
             mover = points.copy()  
         else:
@@ -1220,8 +1189,8 @@ class LookAtExampleRing(LatticePointScene):
         for label in labels:
             label.x = label[1]
             label.y = label[3]
-            label.x.highlight(x_color)
-            label.y.highlight(y_color)
+            label.x.set_color(x_color)
+            label.y.set_color(y_color)
             label.add_background_rectangle()
 
         for label, point in zip(labels, points):
@@ -1243,8 +1212,8 @@ class LookAtExampleRing(LatticePointScene):
         for tex_mob in sums_of_squares:
             tex_mob.x = tex_mob[0]
             tex_mob.y = tex_mob[3]
-            tex_mob.x.highlight(x_color)
-            tex_mob.y.highlight(y_color)
+            tex_mob.x.set_color(x_color)
+            tex_mob.y.set_color(y_color)
             tex_mob.add_background_rectangle()
             tex_mob.to_corner(UP+RIGHT)
 
@@ -1259,16 +1228,16 @@ class LookAtExampleRing(LatticePointScene):
                 about_point = self.plane_center,
                 rate_func = smooth, 
             ),
-            FadeIn(points, submobject_mode = "lagged_start"),
+            FadeIn(points, lag_ratio = 0.5),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
 
         curr_label = labels[0]
         curr_sum_of_squares = sums_of_squares[0]
         self.play(
             Write(curr_label),
-            curr_label.point.highlight, PINK
+            curr_label.point.set_color, PINK
         )
         x, y = curr_label.x.copy(), curr_label.y.copy()
         self.play(
@@ -1280,13 +1249,13 @@ class LookAtExampleRing(LatticePointScene):
             Animation(VGroup(x, y))
         )
         self.remove(x, y)
-        self.dither()
+        self.wait()
 
         for label, sum_of_squares in zip(labels, sums_of_squares)[1:]:
             self.play(
                 ReplacementTransform(curr_label, label),
-                label.point.highlight, PINK,
-                curr_label.point.highlight, self.dot_color
+                label.point.set_color, PINK,
+                curr_label.point.set_color, self.dot_color
             )
             curr_label = label
             self.play(
@@ -1295,7 +1264,7 @@ class LookAtExampleRing(LatticePointScene):
                 )
             )
             curr_sum_of_squares = sum_of_squares
-            self.dither()
+            self.wait()
 
         points.save_state()
         points.generate_target()
@@ -1309,22 +1278,22 @@ class LookAtExampleRing(LatticePointScene):
             points, 
             run_time = 2,
         ))
-        self.dither()
+        self.wait()
         self.play(points.restore, run_time = 2)
-        self.dither()
-        self.play(*map(FadeOut, [
+        self.wait()
+        self.play(*list(map(FadeOut, [
             curr_label, curr_sum_of_squares, 
             circle, points,
             radius, root_label
-        ]))
+        ])))
 
     def analyze_11(self):
         R = np.sqrt(11)
         circle = self.get_circle(radius = R)
         radius, root_label = self.get_radial_line_with_label(R)
         equation = TexMobject("11 \\ne ", "a", "^2", "+", "b", "^2")
-        equation.highlight_by_tex("a", GREEN)
-        equation.highlight_by_tex("b", RED)
+        equation.set_color_by_tex("a", GREEN)
+        equation.set_color_by_tex("b", RED)
         equation.add_background_rectangle()
         equation.to_corner(UP+RIGHT)
 
@@ -1342,24 +1311,24 @@ class LookAtExampleRing(LatticePointScene):
             ),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         self.play(Write(equation))
-        self.dither(3)
+        self.wait(3)
 
 class Given2DThinkComplex(TeacherStudentsScene):
     def construct(self):
         tex = TextMobject("2D $\\Leftrightarrow$ Complex numbers")
         plane = ComplexPlane(
-            x_radius = 0.6*SPACE_WIDTH,
-            y_radius = 0.6*SPACE_HEIGHT,
+            x_radius = 0.6*FRAME_X_RADIUS,
+            y_radius = 0.6*FRAME_Y_RADIUS,
         )
         plane.add_coordinates()
-        plane.scale_to_fit_height(SPACE_HEIGHT)
+        plane.set_height(FRAME_Y_RADIUS)
         plane.to_corner(UP+LEFT)
 
         self.teacher_says(tex)
         self.change_student_modes("pondering", "confused", "erm")
-        self.dither()
+        self.wait()
         self.play(
             Write(plane),
             RemovePiCreatureBubble(
@@ -1371,7 +1340,7 @@ class Given2DThinkComplex(TeacherStudentsScene):
             *["thinking"]*3,
             look_at_arg = plane
         )
-        self.dither(3)
+        self.wait(3)
 
 class IntroduceComplexConjugate(LatticePointScene):
     CONFIG = {
@@ -1410,30 +1379,30 @@ class IntroduceComplexConjugate(LatticePointScene):
         x_point = self.plane.coords_to_point(x, 0)
         h_arrow = Arrow(self.plane_center, x_point, buff = 0)
         v_arrow = Arrow(x_point, point, buff = 0)
-        h_arrow.highlight(x_color)
-        v_arrow.highlight(y_color)
+        h_arrow.set_color(x_color)
+        v_arrow.set_color(y_color)
         x_coord = TexMobject(str(x))
         x_coord.next_to(h_arrow, DOWN, SMALL_BUFF)
-        x_coord.highlight(x_color)
+        x_coord.set_color(x_color)
         x_coord.add_background_rectangle()
         y_coord = TexMobject(str(y))
         imag_y_coord = TexMobject(str(y) + "i")
         for coord in y_coord, imag_y_coord:
             coord.next_to(v_arrow, RIGHT, SMALL_BUFF)
-            coord.highlight(y_color)
+            coord.set_color(y_color)
             coord.add_background_rectangle()
 
         tuple_label = TexMobject(str((x, y)))
-        tuple_label[1].highlight(x_color)
-        tuple_label[3].highlight(y_color)
+        tuple_label[1].set_color(x_color)
+        tuple_label[3].set_color(y_color)
         complex_label = TexMobject("%d+%di"%(x, y))
-        complex_label[0].highlight(x_color)
-        complex_label[2].highlight(y_color)
+        complex_label[0].set_color(x_color)
+        complex_label[2].set_color(y_color)
         for label in tuple_label, complex_label:
             label.add_background_rectangle()
             label.next_to(dot, UP+RIGHT, buff = 0)
 
-        y_range = range(-9, 10, 3)
+        y_range = list(range(-9, 10, 3))
         ticks = VGroup(*[
             Line(
                 ORIGIN, MED_SMALL_BUFF*RIGHT
@@ -1466,15 +1435,15 @@ class IntroduceComplexConjugate(LatticePointScene):
             Write(y_coord)
         )
         self.play(FadeIn(tuple_label))
-        self.dither()
-        self.play(*map(FadeOut, [tuple_label, y_coord]))
-        self.play(*map(FadeIn, [complex_label, imag_y_coord]))
-        self.play(*map(Write, [imag_coords, ticks]))
-        self.dither()
-        self.play(*map(FadeOut, [
+        self.wait()
+        self.play(*list(map(FadeOut, [tuple_label, y_coord])))
+        self.play(*list(map(FadeIn, [complex_label, imag_y_coord])))
+        self.play(*list(map(Write, [imag_coords, ticks])))
+        self.wait()
+        self.play(*list(map(FadeOut, [
             v_arrow, h_arrow, 
             x_coord, imag_y_coord,
-        ]))
+        ])))
 
         self.complex_label = complex_label
         self.example_dot = dot
@@ -1486,7 +1455,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             TexMobject("(", str(x), "+", str(y), "i", ")"),
             TexMobject("(", str(x), "-", str(y), "i", ")"),
         )
-        equation.arrange_submobjects(
+        equation.arrange(
             RIGHT, buff = SMALL_BUFF,
         )
         VGroup(*equation[-2:]).shift(0.5*SMALL_BUFF*DOWN)
@@ -1494,8 +1463,8 @@ class IntroduceComplexConjugate(LatticePointScene):
         equation.to_corner(UP+RIGHT, buff = MED_SMALL_BUFF)
         equation.shift(MED_LARGE_BUFF*DOWN)
         for tex_mob in equation:
-            tex_mob.highlight_by_tex(str(x), self.x_color)
-            tex_mob.highlight_by_tex(str(y), self.y_color)
+            tex_mob.set_color_by_tex(str(x), self.x_color)
+            tex_mob.set_color_by_tex(str(y), self.y_color)
             tex_mob.add_background_rectangle()
 
         dot = Dot(
@@ -1503,8 +1472,8 @@ class IntroduceComplexConjugate(LatticePointScene):
             color = self.dot_color
         )
         label = TexMobject("%d-%di"%(x, y))
-        label[0].highlight(self.x_color)
-        label[2].highlight(self.y_color)
+        label[0].set_color(self.x_color)
+        label[2].set_color(self.y_color)
         label.add_background_rectangle()
         label.next_to(dot, DOWN+RIGHT, buff = 0)
 
@@ -1517,14 +1486,14 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.play(FadeIn(
             equation,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             GrowFromCenter(brace),
             Write(conjugate_words, run_time = 2)
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(m1.copy(), m2)
             for m1, m2 in [
@@ -1532,7 +1501,7 @@ class IntroduceComplexConjugate(LatticePointScene):
                 (self.complex_label, label),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
 
         self.conjugate_label = VGroup(brace, conjugate_words)
         self.equation = equation
@@ -1543,13 +1512,13 @@ class IntroduceComplexConjugate(LatticePointScene):
         morty = Mortimer().to_edge(DOWN)
         randy.make_eye_contact(morty)
 
-        self.play(*map(FadeIn, [randy, morty]))
+        self.play(*list(map(FadeIn, [randy, morty])))
         self.play(PiCreatureSays(
             randy, "Wait \\dots why?",
             target_mode = "confused",
         ))
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(
                 randy, target_mode = "erm",
@@ -1567,7 +1536,7 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.play(Blink(morty))
         self.play(randy.change_mode, "pondering")
         self.play(RemovePiCreatureBubble(morty))
-        self.play(*map(FadeOut, [randy, morty]))
+        self.play(*list(map(FadeOut, [randy, morty])))
 
     def expand_algebraically(self):
         x, y = self.example_coords
@@ -1575,7 +1544,7 @@ class IntroduceComplexConjugate(LatticePointScene):
             TexMobject(str(x), "^2"),
             TexMobject("-", "(", str(y), "i", ")^2")
         )
-        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expansion.arrange(RIGHT, buff = SMALL_BUFF)
         expansion.next_to(
             VGroup(*self.equation[-2:]), 
             DOWN, LARGE_BUFF
@@ -1583,8 +1552,8 @@ class IntroduceComplexConjugate(LatticePointScene):
         alt_y_term = TexMobject("+", str(y), "^2")
         alt_y_term.move_to(expansion[1], LEFT)
         for tex_mob in list(expansion) + [alt_y_term]:
-            tex_mob.highlight_by_tex(str(x), self.x_color)
-            tex_mob.highlight_by_tex(str(y), self.y_color)
+            tex_mob.set_color_by_tex(str(x), self.x_color)
+            tex_mob.set_color_by_tex(str(y), self.y_color)
             tex_mob.rect = BackgroundRectangle(tex_mob)
 
         x1 = self.equation[-2][1][1]
@@ -1603,44 +1572,44 @@ class IntroduceComplexConjugate(LatticePointScene):
         self.play(group.shift, vect)
         group = VGroup(x1, y2)
         self.play(group.shift, -vect)
-        self.dither()
+        self.wait()
         self.play(group.shift, vect)
         group = VGroup(x2, y1)
         self.play(group.shift, -vect)
-        self.dither()
+        self.wait()
         self.play(group.shift, vect)
         group = VGroup(*it.chain(y1, y2))
         self.play(group.shift, -vect)
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(expansion[1].rect),
             ReplacementTransform(group.copy(), expansion[1]),
         )
         self.play(group.shift, vect)
-        self.dither(2)
+        self.wait(2)
         self.play(
             Transform(expansion[1].rect, alt_y_term.rect),
             Transform(expansion[1], alt_y_term),
         )
-        self.dither()
-        self.play(*map(FadeOut, [
+        self.wait()
+        self.play(*list(map(FadeOut, [
             expansion[0].rect,
             expansion[1].rect,
             expansion
-        ]))
+        ])))
 
     def discuss_geometry(self):
         randy = Randolph(color = BLUE_C)
         randy.scale(0.8)
         randy.to_corner(DOWN+LEFT)
         morty = Mortimer()
-        morty.scale_to_fit_height(randy.get_height())
+        morty.set_height(randy.get_height())
         morty.next_to(randy, RIGHT)
         randy.make_eye_contact(morty)
         screen = ScreenRectangle(height = 3.5)
         screen.to_corner(DOWN+RIGHT, buff = MED_SMALL_BUFF)
 
-        self.play(*map(FadeIn, [randy, morty]))
+        self.play(*list(map(FadeIn, [randy, morty])))
         self.play(PiCreatureSays(
             morty, "More geometry!",
             target_mode = "hooray",
@@ -1665,8 +1634,8 @@ class IntroduceComplexConjugate(LatticePointScene):
         )
         self.play(Blink(morty))
         self.play(RemovePiCreatureBubble(randy, target_mode = "pondering"))
-        self.dither()
-        self.play(*map(FadeOut, [randy, morty, screen]))
+        self.wait()
+        self.play(*list(map(FadeOut, [randy, morty, screen])))
 
     def show_geometrically(self):
         dots = [self.example_dot, self.conjugate_dot]
@@ -1706,16 +1675,16 @@ class IntroduceComplexConjugate(LatticePointScene):
 
         self.play(ShowCreation(top_dot.line))
         mover = VGroup(
-            top_dot.line.copy().highlight(PINK), 
+            top_dot.line.copy().set_color(PINK), 
             top_dot.copy()
         )
         self.play(FadeIn(
             top_dot.magnitude_word,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(top_dot.arc))
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(low_dot.line))
         self.play(
             ReplacementTransform(
@@ -1741,9 +1710,9 @@ class IntroduceComplexConjugate(LatticePointScene):
             mover[1].move_to, self.plane.coords_to_point(25, 0),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(Write(twenty_five_label))
-        self.dither(3)
+        self.wait(3)
 
 class NameGaussianIntegers(LatticePointScene):
     CONFIG = {
@@ -1766,8 +1735,8 @@ class NameGaussianIntegers(LatticePointScene):
         )
         a = label.get_part_by_tex("a")
         b = label.get_part_by_tex("b")
-        a.highlight(GREEN)
-        b.highlight(RED)
+        a.set_color(GREEN)
+        b.set_color(RED)
         label.add_background_rectangle()
         label.to_corner(UP+RIGHT)
         integers = TextMobject("Integers")
@@ -1775,7 +1744,7 @@ class NameGaussianIntegers(LatticePointScene):
         integers.add_background_rectangle()
         arrows = VGroup(*[
             Arrow(integers.get_top(), mob, tip_length = 0.15)
-            for mob in a, b
+            for mob in (a, b)
         ])
         self.add_foreground_mobjects(label, integers, arrows)
 
@@ -1800,9 +1769,9 @@ class NameGaussianIntegers(LatticePointScene):
         self.play(FadeIn(
             gauss_name,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(3)
+        self.wait(3)
         self.play(FadeOut(gauss_name))
 
         self.gaussian_integers = gaussian_integers
@@ -1822,10 +1791,10 @@ class NameGaussianIntegers(LatticePointScene):
                 run_time = 1, rate_func = smooth,
                 about_point = self.plane_center
             ),
-            *map(GrowFromCenter, dots)
+            *list(map(GrowFromCenter, dots))
         )
         self.play(Write(root_label))
-        self.dither()
+        self.wait()
 
         self.circle_dots = dots
 
@@ -1855,8 +1824,8 @@ class NameGaussianIntegers(LatticePointScene):
             dot.equation = equation
 
             for mob in label, equation:
-                mob.highlight_by_tex(x_str, GREEN, substring = False)
-                mob.highlight_by_tex(y_str, RED, substring = False)
+                mob.set_color_by_tex(x_str, GREEN, substring = False)
+                mob.set_color_by_tex(y_str, RED, substring = False)
 
             dot.line_pair = VGroup(*[
                 Line(
@@ -1864,37 +1833,37 @@ class NameGaussianIntegers(LatticePointScene):
                     self.plane.coords_to_point(x, u*y),
                     color = PINK,
                 )
-                for u in 1, -1
+                for u in (1, -1)
             ])
             dot.conjugate_dot = self.circle_dots[-i]
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.a_plus_bi, self.integers_label,
             self.gaussian_integers,
-        ]))
+        ])))
 
         last_dot = None
         for dot in self.circle_dots:
             anims = [
-                dot.highlight, PINK,
-                dot.conjugate_dot.highlight, PINK,
+                dot.set_color, PINK,
+                dot.conjugate_dot.set_color, PINK,
             ]
             if last_dot is None:
                 anims += [
                     FadeIn(dot.equation),
                     FadeIn(dot.label),
                 ]
-                anims += map(ShowCreation, dot.line_pair)
+                anims += list(map(ShowCreation, dot.line_pair))
             else:
                 anims += [
-                    last_dot.highlight, self.dot_color,
-                    last_dot.conjugate_dot.highlight, self.dot_color,
+                    last_dot.set_color, self.dot_color,
+                    last_dot.conjugate_dot.set_color, self.dot_color,
                     ReplacementTransform(last_dot.equation, dot.equation),
                     ReplacementTransform(last_dot.label, dot.label),
                     ReplacementTransform(last_dot.line_pair, dot.line_pair),
                 ]
             self.play(*anims)
-            self.dither()
+            self.wait()
             last_dot = dot
 
 class FactorOrdinaryNumber(TeacherStudentsScene):
@@ -1913,21 +1882,21 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
         ]))
         for alt_rhs in alt_rhs_list:
             if "\\ne" in alt_rhs.get_tex_string():
-                alt_rhs.highlight(RED)
+                alt_rhs.set_color(RED)
             else:
-                alt_rhs.highlight(GREEN)
+                alt_rhs.set_color(GREEN)
             alt_rhs.move_to(equation.get_right())
         number.save_state()
         number.next_to(self.teacher, UP+LEFT)
         title = TextMobject("Almost", "Unique factorization")
-        title.highlight_by_tex("Almost", YELLOW)
+        title.set_color_by_tex("Almost", YELLOW)
         title.to_edge(UP)
 
         self.play(
             self.teacher.change_mode, "raise_right_hand",
             Write(number)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             number.restore,
             Write(VGroup(*equation[1:])),
@@ -1938,7 +1907,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             look_at_arg = equation,
             added_anims = [self.teacher.change_mode, "happy"]
         )
-        self.dither()
+        self.wait()
         last_alt_rhs = None
         for alt_rhs in alt_rhs_list:
             equation.generate_target()
@@ -1955,7 +1924,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
                     look_at_arg = alt_rhs,
                     added_anims = [Write(title[0])]
                 )
-            self.dither(2)
+            self.wait(2)
             last_alt_rhs = alt_rhs
 
         self.play(
@@ -1967,7 +1936,7 @@ class FactorOrdinaryNumber(TeacherStudentsScene):
             )
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
     CONFIG = {
@@ -1999,15 +1968,15 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             ]
         ]
         five_dot = dots[0]
-        five_dot.highlight(YELLOW)
+        five_dot.set_color(YELLOW)
         p_dots = VGroup(*dots[1:])
         p1_dot, p2_dot, p3_dot, p4_dot, p5_dot, p6_dot = p_dots
-        VGroup(p1_dot, p3_dot, p5_dot).highlight(PINK)
-        VGroup(p2_dot, p4_dot, p6_dot).highlight(RED)
+        VGroup(p1_dot, p3_dot, p5_dot).set_color(PINK)
+        VGroup(p2_dot, p4_dot, p6_dot).set_color(RED)
 
         labels = [
             TexMobject(tex).add_background_rectangle()
-            for tex in "5", "2+i", "2-i", "-1+2i", "-1-2i", "-2-i", "-2+i"
+            for tex in ("5", "2+i", "2-i", "-1+2i", "-1-2i", "-2-i", "-2+i")
         ]
         five_label, p1_label, p2_label, p3_label, p4_label, p5_label, p6_label = labels
         vects = [
@@ -2042,7 +2011,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
         )
         VGroup(
             times_i, times_neg_i, times_i_arc, times_neg_i_arc
-        ).highlight(MAROON_B)
+        ).set_color(MAROON_B)
 
         gaussian_prime = TextMobject("$\\Rightarrow$ ``Gaussian prime''")
         gaussian_prime.add_background_rectangle()
@@ -2076,17 +2045,17 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             DrawBorderThenFill(five_dot), 
             FadeIn(five_label)
         )
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 VGroup(five_dot).copy(),
                 VGroup(p1_dot, p2_dot)
             )
         )
-        self.play(*map(Write, [p1_label, p2_label]))
-        self.dither()
+        self.play(*list(map(Write, [p1_label, p2_label])))
+        self.wait()
         self.play(Write(gaussian_prime))
-        self.dither()
+        self.wait()
 
         #Show morty
         self.play(FadeIn(morty))
@@ -2094,7 +2063,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             morty, "\\emph{Almost} unique",
             bubble_kwargs = {"height" : 2, "width" : 5},
         ))
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(morty, target_mode = "pondering"))
 
         #Show neg_alternate expression 
@@ -2110,12 +2079,12 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
             Transform(p2_label, p6_label),
         )
         self.play(Write(neg_alt_factorization))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(neg_alt_factorization),
             *[m.restore for m in movers]
         )
-        self.dither()
+        self.wait()
 
         ##Show i_alternate expression
         self.play(
@@ -2132,7 +2101,7 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
                 ]
             ]
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(times_neg_i_arc),
             FadeIn(times_neg_i),
@@ -2147,10 +2116,10 @@ class IntroduceGaussianPrimes(LatticePointScene, PiCreatureScene):
                 ]
             ]
         )
-        self.dither()
+        self.wait()
         self.play(Write(i_alt_factorization))
         self.change_mode("hesitant")
-        self.dither(3)
+        self.wait(3)
 
 class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
     def construct(self):
@@ -2160,13 +2129,13 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
         expression.shift(2*UP)
         two = expression.get_part_by_tex("2")
         five = expression.get_part_by_tex("5")
-        two.highlight(BLUE)
-        five.highlight(GREEN)
+        two.set_color(BLUE)
+        five.set_color(GREEN)
         two.factors = TexMobject("(1+i)", "(1-i)")
         five.factors = TexMobject("(2+i)", "(2-i)")
         for mob, vect in (two, DOWN), (five, UP):
             mob.factors.next_to(mob, vect, LARGE_BUFF)
-            mob.factors.highlight(mob.get_color())
+            mob.factors.set_color(mob.get_color())
             mob.arrows = VGroup(*[
                 Arrow(
                     mob.get_edge_center(vect),
@@ -2184,14 +2153,14 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
                     mob.copy(),
                     mob.factors
                 ),
-                *map(ShowCreation, mob.arrows)
+                *list(map(ShowCreation, mob.arrows))
             )
-            self.dither()
+            self.wait()
         self.play(*[
             ApplyMethod(pi.change, "pondering", expression)
             for pi in self.get_pi_creatures()
         ])
-        self.dither(5)
+        self.wait(5)
         group = VGroup(
             expression, 
             two.arrows, two.factors,
@@ -2201,7 +2170,7 @@ class FromIntegerFactorsToGaussianFactors(TeacherStudentsScene):
             "Now for a \\\\ surprising fact...",
             added_anims = [FadeOut(group)]
         )
-        self.dither(2)
+        self.wait(2)
 
 class FactorizationPattern(Scene):
     def construct(self):
@@ -2218,8 +2187,8 @@ class FactorizationPattern(Scene):
             x_min = 0,
             x_max = 36,
             unit_size = 0.4,
-            numbers_to_show = range(0, 33, 4),
-            numbers_with_elongated_ticks = range(0, 33, 4),
+            numbers_to_show = list(range(0, 33, 4)),
+            numbers_with_elongated_ticks = list(range(0, 33, 4)),
         )
         line.shift(2*DOWN)
         line.to_edge(LEFT)
@@ -2234,14 +2203,14 @@ class FactorizationPattern(Scene):
             Dot(self.number_line.number_to_point(prime))
             for prime in primes
         ])
-        dots.highlight(GREEN)
-        prime_mobs = VGroup(*map(TexMobject, map(str, primes)))
+        dots.set_color(GREEN)
+        prime_mobs = VGroup(*list(map(TexMobject, list(map(str, primes)))))
         arrows = VGroup()
         for prime_mob, dot in zip(prime_mobs, dots):
             prime_mob.next_to(dot, UP, LARGE_BUFF)
-            prime_mob.highlight(dot.get_color())
+            prime_mob.set_color(dot.get_color())
             arrow = Arrow(prime_mob, dot, buff = SMALL_BUFF)
-            arrow.highlight(dot.get_color())
+            arrow.set_color(dot.get_color())
             arrows.add(arrow)
 
         factorizations = VGroup(*[
@@ -2249,7 +2218,7 @@ class FactorizationPattern(Scene):
             for x, y in [(2, 1), (3, 2), (4, 1), (5, 2)]
             for y_str in [str(y) if y is not 1 else ""]
         ])
-        factorizations.arrange_submobjects(DOWN, aligned_edge = LEFT)
+        factorizations.arrange(DOWN, aligned_edge = LEFT)
         factorizations.to_corner(UP+LEFT)
         factorizations.shift(RIGHT)
         movers = VGroup()
@@ -2263,11 +2232,11 @@ class FactorizationPattern(Scene):
         factorization.add(v_dots)
 
         self.play(*it.chain(
-            map(Write, prime_mobs),
-            map(ShowCreation, arrows),
-            map(DrawBorderThenFill, dots),
+            list(map(Write, prime_mobs)),
+            list(map(ShowCreation, arrows)),
+            list(map(DrawBorderThenFill, dots)),
         ))
-        self.dither()
+        self.wait()
         self.play(*[
             MoveToTarget(
                 mover,
@@ -2279,10 +2248,10 @@ class FactorizationPattern(Scene):
         self.play(FadeIn(
             factorizations, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(4)
-        self.play(*map(FadeOut, [movers, factorizations]))
+        self.wait(4)
+        self.play(*list(map(FadeOut, [movers, factorizations])))
 
     def show_three_mod_four_primes(self):
         primes = [3, 7, 11, 19, 23, 31]
@@ -2290,14 +2259,14 @@ class FactorizationPattern(Scene):
             Dot(self.number_line.number_to_point(prime))
             for prime in primes
         ])
-        dots.highlight(RED)
-        prime_mobs = VGroup(*map(TexMobject, map(str, primes)))
+        dots.set_color(RED)
+        prime_mobs = VGroup(*list(map(TexMobject, list(map(str, primes)))))
         arrows = VGroup()
         for prime_mob, dot in zip(prime_mobs, dots):
             prime_mob.next_to(dot, UP, LARGE_BUFF)
-            prime_mob.highlight(dot.get_color())
+            prime_mob.set_color(dot.get_color())
             arrow = Arrow(prime_mob, dot, buff = SMALL_BUFF)
-            arrow.highlight(dot.get_color())
+            arrow.set_color(dot.get_color())
             arrows.add(arrow)
 
         words = TextMobject("Already Gaussian primes")
@@ -2312,17 +2281,17 @@ class FactorizationPattern(Scene):
         ])
 
         self.play(*it.chain(
-            map(Write, prime_mobs),
-            map(ShowCreation, arrows),
-            map(DrawBorderThenFill, dots),
+            list(map(Write, prime_mobs)),
+            list(map(ShowCreation, arrows)),
+            list(map(DrawBorderThenFill, dots)),
         ))
-        self.dither()
+        self.wait()
         self.play(
             Write(words),
-            *map(ShowCreation, word_arrows)
+            *list(map(ShowCreation, word_arrows))
         )
-        self.dither(4)
-        self.play(*map(FadeOut, [words, word_arrows]))
+        self.wait(4)
+        self.play(*list(map(FadeOut, [words, word_arrows])))
 
     def ask_why_this_is_true(self):
         randy = Randolph(color = BLUE_C)
@@ -2344,20 +2313,20 @@ class FactorizationPattern(Scene):
             look_at_arg = self.number_line,
         ))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(FadeIn(links_text))
-        self.dither(2)
-        self.play(*map(FadeOut, [
+        self.wait(2)
+        self.play(*list(map(FadeOut, [
             randy, randy.bubble, randy.bubble.content,
             links_text
-        ]))
+        ])))
 
     def show_two(self):
         two_dot = Dot(self.number_line.number_to_point(2))
         two = TexMobject("2")
         two.next_to(two_dot, UP, LARGE_BUFF)
         arrow = Arrow(two, two_dot, buff = SMALL_BUFF)
-        VGroup(two_dot, two, arrow).highlight(YELLOW)
+        VGroup(two_dot, two, arrow).set_color(YELLOW)
 
         mover = two.copy()
         mover.generate_target()
@@ -2374,7 +2343,7 @@ class FactorizationPattern(Scene):
         times_i = TexMobject("\\times i")
         # times_i.scale(1.5)
         times_i.next_to(time_i_arrow, DOWN)
-        times_i.highlight(time_i_arrow.get_color())
+        times_i.set_color(time_i_arrow.get_color())
         words = TextMobject("You'll see why this matters...")
         words.next_to(times_i, DOWN)
         words.shift_onto_screen()
@@ -2384,19 +2353,19 @@ class FactorizationPattern(Scene):
             ShowCreation(arrow),
             DrawBorderThenFill(two_dot)
         )
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(mover),
             Write(factorization)
         )
 
         self.revert_to_original_skipping_status()
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(time_i_arrow))
         self.play(Write(times_i))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
 
 class RingsWithOneModFourPrimes(CertainRegularityInPrimes):
     CONFIG = {
@@ -2418,13 +2387,13 @@ class FactorTwo(LatticePointScene):
     }
     def construct(self):
         two_dot = Dot(self.plane.coords_to_point(2, 0))
-        two_dot.highlight(YELLOW)
+        two_dot.set_color(YELLOW)
         factor_dots = VGroup(*[
             Dot(self.plane.coords_to_point(1, u))
-            for u in 1, -1
+            for u in (1, -1)
         ])
         two_label = TexMobject("2").next_to(two_dot, DOWN)
-        two_label.highlight(YELLOW)
+        two_label.set_color(YELLOW)
         two_label.add_background_rectangle()
         factor_labels = VGroup(*[
             TexMobject(tex).add_background_rectangle().next_to(dot, vect)
@@ -2432,11 +2401,11 @@ class FactorTwo(LatticePointScene):
                 ["1+i", "1-i"], factor_dots, [UP, DOWN]
             )
         ])
-        VGroup(factor_labels, factor_dots).highlight(MAROON_B)
+        VGroup(factor_labels, factor_dots).set_color(MAROON_B)
 
         for dot in it.chain(factor_dots, [two_dot]):
             line = Line(self.plane_center, dot.get_center())
-            line.highlight(dot.get_color())
+            line.set_color(dot.get_color())
             dot.add(line)
 
         self.play(
@@ -2452,12 +2421,12 @@ class FactorTwo(LatticePointScene):
                 (two_dot, factor_dots),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
         dot_copy = factor_dots[1].copy()
-        dot_copy.highlight(RED)
+        dot_copy.set_color(RED)
         for angle in np.pi/2, -np.pi/2:
             self.play(Rotate(dot_copy, angle, run_time = 2))
-            self.dither(2)
+            self.wait(2)
 
 class CountThroughRingsCopy(CountThroughRings):
     pass
@@ -2504,9 +2473,9 @@ class IntroduceRecipe(Scene):
         strings = ("a", "b", self.N_string)
         colors = (self.x_color, self.y_color, self.N_color)
         for tex, color in zip(strings, colors):
-            title.highlight_by_tex(tex, color, substring = False)
+            title.set_color_by_tex(tex, color, substring = False)
         title.to_edge(UP, buff = MED_SMALL_BUFF)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         self.add(title, h_line)
         N_mob = title.get_part_by_tex(self.N_string)
@@ -2520,9 +2489,9 @@ class IntroduceRecipe(Scene):
 
         factors = self.integer_factors
         symbols = ["="] + ["\\cdot"]*(len(factors)-1)
-        factorization = TexMobject(*it.chain(*zip(
-            symbols, map(str, factors)
-        )))
+        factorization = TexMobject(*it.chain(*list(zip(
+            symbols, list(map(str, factors))
+        ))))
         factorization.next_to(N_mob.target, RIGHT)
 
         self.play(MoveToTarget(
@@ -2531,7 +2500,7 @@ class IntroduceRecipe(Scene):
             path_arc = -np.pi/6
         ))
         self.play(Write(factorization))
-        self.dither()
+        self.wait()
 
         self.factored_N_mob = N_mob
         self.integer_factorization = factorization
@@ -2539,11 +2508,11 @@ class IntroduceRecipe(Scene):
     def subfactor_ordinary_factorization(self):
         factors = self.gaussian_factors
         factorization = TexMobject(
-            "=", *map(self.complex_number_to_tex, factors)
+            "=", *list(map(self.complex_number_to_tex, factors))
         )
-        max_width = 2*SPACE_WIDTH - 2
+        max_width = FRAME_WIDTH - 2
         if factorization.get_width() > max_width:
-            factorization.scale_to_fit_width(max_width)
+            factorization.set_width(max_width)
         factorization.next_to(
             self.integer_factorization, DOWN,
             aligned_edge = LEFT
@@ -2552,11 +2521,11 @@ class IntroduceRecipe(Scene):
             mob.underlying_number = factor
             y = complex(factor).imag
             if y == 0:
-                mob.highlight(self.i_zero_color)
+                mob.set_color(self.i_zero_color)
             elif y > 0:
-                mob.highlight(self.i_positive_color)
+                mob.set_color(self.i_positive_color)
             elif y < 0:
-                mob.highlight(self.i_negative_color)
+                mob.set_color(self.i_negative_color)
         movers = VGroup()
         mover = self.integer_factorization[0].copy()
         mover.target = factorization[0]
@@ -2575,12 +2544,12 @@ class IntroduceRecipe(Scene):
                 movers.add(mover)
             index += 1
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget,
             movers,
             replace_mobject_with_target_in_scene = True
         ))
-        self.dither()
+        self.wait()
 
         self.gaussian_factorization = factorization
 
@@ -2590,15 +2559,15 @@ class IntroduceRecipe(Scene):
         left_factors, right_factors = self.get_left_and_right_factors()
         for group in left_factors, right_factors:
             group.generate_target()
-            group.target.arrange_submobjects(DOWN)
+            group.target.arrange(DOWN)
         left_factors.target.next_to(T_chart.left_h_line, DOWN)
         right_factors.target.next_to(T_chart.right_h_line, DOWN)
 
         self.play(ShowCreation(T_chart))
-        self.dither()
+        self.wait()
         self.play(MoveToTarget(left_factors))
         self.play(MoveToTarget(right_factors))
-        self.dither()
+        self.wait()
 
         digest_locals(self, ["left_factors", "right_factors"])
 
@@ -2622,11 +2591,11 @@ class IntroduceRecipe(Scene):
         main_arrow = double_arrows[0]
 
         self.play(Write(main_arrow, run_time = 1))
-        self.dither()
+        self.wait()
         for new_arrow in double_arrows[1:]:
             self.play(Transform(main_arrow, new_arrow))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(FadeOut(main_arrow))
 
     def take_product_of_columns(self):
@@ -2639,8 +2608,8 @@ class IntroduceRecipe(Scene):
             self.play(ReplacementTransform(
                 group.copy(), VGroup(product)
             ))
-            self.dither()
-        self.dither(3)
+            self.wait()
+        self.wait(3)
 
     def mark_left_product_as_result(self):
         rect = self.get_result_surrounding_rect()
@@ -2654,15 +2623,15 @@ class IntroduceRecipe(Scene):
             Write(words, run_time = 2),
             ShowCreation(arrow)
         )
-        self.dither(3)
-        self.play(*map(FadeOut, [words, arrow]))
+        self.wait(3)
+        self.play(*list(map(FadeOut, [words, arrow])))
 
         self.output_label_group = VGroup(words, arrow)
 
     def swap_factors(self):
         for i in range(len(self.left_factors)):
             self.swap_factors_at_index(i)
-            self.dither()
+            self.wait()
 
     #########
 
@@ -2676,7 +2645,7 @@ class IntroduceRecipe(Scene):
             Line(ORIGIN, self.T_chart_width*RIGHT/2.0) 
             for x in range(2)
         ])
-        h_lines.arrange_submobjects(RIGHT, buff = 0)
+        h_lines.arrange(RIGHT, buff = 0)
         h_lines.shift(UP)
         v_line = Line(self.T_chart_height*UP, ORIGIN)
         v_line.move_to(h_lines.get_center(), UP)
@@ -2726,7 +2695,7 @@ class IntroduceRecipe(Scene):
             product_mob = TexMobject(
                 self.complex_number_to_tex(product)
             )
-            product_mob.highlight(color)
+            product_mob.set_color(color)
             product_mob.next_to(line, DOWN)
             product_mobjects.add(product_mob)
         self.product_mobjects = product_mobjects
@@ -2756,7 +2725,7 @@ class IntroduceRecipe(Scene):
         ]+[
             ReplacementTransform(rect, new_rect)
         ])
-        self.dither()
+        self.wait()
 
     def get_result_surrounding_rect(self, product = None):
         if product is None:
@@ -2782,14 +2751,14 @@ class IntroduceRecipe(Scene):
             # )
             anims += [ShowCreation(arrow)]
         self.play(*anims)
-        self.dither(2)
+        self.wait(2)
 
 class StateThreeChoices(TeacherStudentsScene):
     def construct(self):
         self.teacher_says(
             "$5^2$ gives 3 choices."
         )
-        self.dither(3)
+        self.wait(3)
 
 class ThreeOutputsAsLatticePoints(LatticePointScene):
     CONFIG = {
@@ -2843,7 +2812,7 @@ class ThreeOutputsAsLatticePoints(LatticePointScene):
                     stroke_width = 4
                 )
             )
-        self.dither(2)
+        self.wait(2)
 
         self.original_dots = dots
 
@@ -2855,7 +2824,7 @@ class LooksLikeYoureMissingSome(TeacherStudentsScene):
             student_index = 0,
         )
         self.play(self.teacher.change, "guilty")
-        self.dither(3)
+        self.wait(3)
 
 class ShowAlternateFactorizationOfTwentyFive(IntroduceRecipe):
     CONFIG = {
@@ -2891,7 +2860,7 @@ class WriteAlternateLastStep(IntroduceRecipe):
         output_words, arrow = self.output_label_group
         cross = TexMobject("\\times")
         cross.replace(output_words, stretch = True)
-        cross.highlight(RED)
+        cross.set_color(RED)
         
         self.add(output_words, arrow)
         self.play(Write(cross))
@@ -2916,29 +2885,29 @@ class ThreeOutputsAsLatticePointsContinued(ThreeOutputsAsLatticePoints):
             dot.add(line)
         words_group = VGroup(*[
             TextMobject("Multiply by $%s$"%s)
-            for s in "1", "i", "-1", "-i"
+            for s in ("1", "i", "-1", "-i")
         ])
         for words, color in zip(words_group, self.colors):
             words.add_background_rectangle()
-            words.highlight(color)
-        words_group.arrange_submobjects(DOWN, aligned_edge = LEFT)
+            words.set_color(color)
+        words_group.arrange(DOWN, aligned_edge = LEFT)
         words_group.to_corner(UP+LEFT, buff = MED_SMALL_BUFF)
         angles = [np.pi/2, np.pi, -np.pi/2]
 
         self.play(
             FadeIn(words_group[0]),
-            *map(ShowCreation, lines)
+            *list(map(ShowCreation, lines))
         )
         for words, angle, color in zip(words_group[1:], angles, self.colors[1:]):
             self.play(FadeIn(words))
             dots_copy = original_dots.copy()
             self.play(
                 dots_copy.rotate, angle,
-                dots_copy.highlight, color,
+                dots_copy.set_color, color,
                 path_arc = angle
             )
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
 class RecipeFor125(IntroduceRecipe):
     CONFIG = {
@@ -2969,7 +2938,7 @@ class StateFourChoices(TeacherStudentsScene):
         self.teacher_says(
             "$5^3$ gives 4 choices."
         )
-        self.dither(3)
+        self.wait(3)
 
 class Show125Circle(ThreeOutputsAsLatticePointsContinued):
     CONFIG = {
@@ -3039,13 +3008,13 @@ class RecipeFor375(IntroduceRecipe):
             morty.change, "angry", three.target
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         for factors in self.left_factors, self.right_factors:
             self.play(
                 three.next_to, factors, DOWN,
                 morty.change, "sassy", factors.get_bottom()
             )
-            self.dither()
+            self.wait()
         self.right_factors.add(three)
         self.play(morty.change_mode, "pondering")
 
@@ -3081,7 +3050,7 @@ class Show375Circle(LatticePointScene):
         group = VGroup(
             self.plane, radial_line, root_label, circle
         )
-        self.dither(2)
+        self.wait(2)
 
 class RecipeFor1125(IntroduceRecipe):
     CONFIG = {
@@ -3115,7 +3084,7 @@ class RecipeFor1125(IntroduceRecipe):
         product = self.product_mobjects[0]
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 class Show125CircleSimple(LatticePointScene):
     CONFIG = {
@@ -3142,7 +3111,7 @@ class Show125CircleSimple(LatticePointScene):
                 about_point = self.plane_center
             ),
             ShowCreation(circle),
-            LaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill,
                 dots,
                 stroke_width = 4,
@@ -3150,7 +3119,7 @@ class Show125CircleSimple(LatticePointScene):
             ),
             run_time = 2,
         )
-        self.dither(2)
+        self.wait(2)
 
 class Show1125Circle(Show125CircleSimple):
     CONFIG = {
@@ -3211,13 +3180,13 @@ class SummarizeCountingRule(Show125Circle):
             ShowCreation(circle),
             run_time = 2,
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill,
             dots,
             stroke_width = 4,
             stroke_color = PINK
         ))
-        self.dither(2)
+        self.wait(2)
 
     def add_full_screen_rect(self):
         rect = FullScreenFadeRectangle(
@@ -3240,7 +3209,7 @@ class SummarizeCountingRule(Show125Circle):
 
         three, five, thirteen = [
             factorization.get_part_by_tex(str(n), substring = False)
-            for n in 3, 5, 13
+            for n in (3, 5, 13)
         ]
         three_power = factorization.get_part_by_tex("^4")
         five_power = factorization.get_part_by_tex("^3")
@@ -3269,14 +3238,14 @@ class SummarizeCountingRule(Show125Circle):
 
 
         self.play(FadeIn(factorization))
-        self.dither()
+        self.wait()
         self.play(
-            five.highlight, GREEN,
-            thirteen.highlight, GREEN,
+            five.set_color, GREEN,
+            thirteen.set_color, GREEN,
             FadeIn(five_brace),
             FadeIn(thirteen_brace),
         )
-        self.dither()
+        self.wait()
         for choices, power in (five_choices, five_power), (thirteen_choices, thirteen_power):
             self.play(
                 Write(VGroup(choices[0], *choices[2:])),
@@ -3284,19 +3253,19 @@ class SummarizeCountingRule(Show125Circle):
                     power.copy(), choices[1]
                 )
             )
-        self.dither()
+        self.wait()
         self.play(
-            three.highlight, RED,
+            three.set_color, RED,
             FadeIn(three_brace)
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(VGroup(three_choices[0], three_choices[2])),
             ReplacementTransform(
                 three_power.copy(), three_choices[1]
             )
         )
-        self.dither()
+        self.wait()
 
         movers = three_power, three_choices
         for mob in movers:
@@ -3308,20 +3277,20 @@ class SummarizeCountingRule(Show125Circle):
             ),
             Transform(three_choices, alt_three_choices)
         )
-        self.dither()
+        self.wait()
         self.play(
             *[mob.restore for mob in movers],
             path_arc = -np.pi
         )
-        self.dither()
+        self.wait()
 
         equals_four = TexMobject("=", "4")
         four = equals_four.get_part_by_tex("4")
-        four.highlight(YELLOW)
+        four.set_color(YELLOW)
         final_choice_words = TextMobject(
             "Mutiply", "by $1$, $i$, $-1$ or $-i$"
         )
-        final_choice_words.highlight(YELLOW)
+        final_choice_words.set_color(YELLOW)
         final_choice_words.next_to(four, DOWN, LARGE_BUFF, LEFT)
         final_choice_words.to_edge(RIGHT)
         final_choice_arrow = Arrow(
@@ -3334,7 +3303,7 @@ class SummarizeCountingRule(Show125Circle):
         choices_copy.generate_target()
 
         choices_copy.target.scale(1./0.75)
-        choices_copy.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        choices_copy.target.arrange(RIGHT, buff = SMALL_BUFF)
         choices_copy.target.next_to(equals_four, RIGHT, SMALL_BUFF)
         choices_copy.target.shift(0.25*SMALL_BUFF*DOWN)
         self.play(
@@ -3342,8 +3311,8 @@ class SummarizeCountingRule(Show125Circle):
             MoveToTarget(choices_copy),
             FadeIn(equals_four)
         )
-        self.play(*map(FadeIn, [final_choice_words, final_choice_arrow]))
-        self.dither()
+        self.play(*list(map(FadeIn, [final_choice_words, final_choice_arrow])))
+        self.wait()
 
     def ask_about_two(self):
         randy = Randolph(color = BLUE_C)
@@ -3359,14 +3328,14 @@ class SummarizeCountingRule(Show125Circle):
             look_at_arg = self.count_words
         ))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class ThisIsTheHardestPart(TeacherStudentsScene):
     def construct(self):
         self.change_student_modes("horrified", "confused", "pleading")
         self.teacher_says("This is the \\\\ hardest part")
         self.change_student_modes("thinking", "happy", "pondering")
-        self.dither(2)
+        self.wait(2)
 
 class RecipeFor10(IntroduceRecipe):
     CONFIG = {
@@ -3402,7 +3371,7 @@ class RecipeFor10(IntroduceRecipe):
             ShowCreation(arrow),
             Write(times_i, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(curr_product.to_edge, LEFT)
         self.swap_factors_at_index(0)
         new_arrow = Arrow(
@@ -3413,18 +3382,18 @@ class RecipeFor10(IntroduceRecipe):
             Transform(arrow, new_arrow),
             MaintainPositionRelativeTo(times_i, arrow)
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [arrow, times_i, curr_product]))
+        self.wait(2)
+        self.play(*list(map(FadeOut, [arrow, times_i, curr_product])))
 
 class FactorsOfTwoNeitherHelpNorHurt(TeacherStudentsScene):
     def construct(self):
         words = TextMobject(
             "Factors of", "$2^k$", "neither \\\\ help nor hurt"
         )
-        words.highlight_by_tex("2", YELLOW)
+        words.set_color_by_tex("2", YELLOW)
         self.teacher_says(words)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class EffectOfPowersOfTwo(LatticePointScene):
     CONFIG = {
@@ -3433,15 +3402,15 @@ class EffectOfPowersOfTwo(LatticePointScene):
         "square_radii" : [5, 10, 20, 40, 80],
     }
     def construct(self):
-        radii = map(np.sqrt, self.square_radii)
-        circles = map(self.get_circle, radii)
-        radial_lines, root_labels = zip(*map(
+        radii = list(map(np.sqrt, self.square_radii))
+        circles = list(map(self.get_circle, radii))
+        radial_lines, root_labels = list(zip(*list(map(
             self.get_radial_line_with_label, radii
-        ))
-        dots_list = map(
+        ))))
+        dots_list = list(map(
             self.get_lattice_points_on_r_squared_circle,
             self.square_radii
-        )
+        ))
         groups = [
             VGroup(*mobs)
             for mobs in zip(radial_lines, circles, root_labels, dots_list)
@@ -3449,15 +3418,15 @@ class EffectOfPowersOfTwo(LatticePointScene):
         group = groups[0]
 
         self.add(group)
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             DrawBorderThenFill, dots_list[0],
             stroke_width = 4,
             stroke_color = PINK
         ))
-        self.dither()
+        self.wait()
         for new_group in groups[1:]:
             self.play(Transform(group, new_group))
-            self.dither(2)
+            self.wait(2)
 
 class NumberTheoryAtItsBest(TeacherStudentsScene):
     def construct(self):
@@ -3467,13 +3436,13 @@ class NumberTheoryAtItsBest(TeacherStudentsScene):
             run_time = 2,
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class IntroduceChi(FactorizationPattern):
     CONFIG = {
         "numbers_list" : [
-            range(i, 36, d)
-            for i, d in (1, 4), (3, 4), (2, 2)
+            list(range(i, 36, d))
+            for i, d in [(1, 4), (3, 4), (2, 2)]
         ],
         "colors" : [GREEN, RED, YELLOW]
     }
@@ -3498,7 +3467,7 @@ class IntroduceChi(FactorizationPattern):
             )
         ])
         chi_expressions.scale(0.9)
-        chi_expressions.arrange_submobjects(
+        chi_expressions.arrange(
             DOWN, buff = MED_LARGE_BUFF, aligned_edge = LEFT
         )
         chi_expressions.to_corner(UP+RIGHT)
@@ -3521,7 +3490,7 @@ class IntroduceChi(FactorizationPattern):
         chi_expression = self.chi_expressions[index]
 
         self.introduce_dots_arrows_and_labels(dots, arrows, labels)
-        self.dither()
+        self.wait()
         self.play(
             Write(VGroup(*[
                 part 
@@ -3534,21 +3503,21 @@ class IntroduceChi(FactorizationPattern):
                 labels, chi_expression.inputs
             )
         ])
-        self.dither()
+        self.wait()
 
     def fade_out_labels(self):
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.last_dots, self.last_arrows, self.last_labels,
             self.number_line
-        ]))
+        ])))
 
     def cyclic_pattern(self):
-        input_range = range(1, 9)
+        input_range = list(range(1, 9))
         chis = VGroup(*[
             TexMobject("\\chi(%d)"%n)
             for n in input_range
         ])
-        chis.arrange_submobjects(RIGHT, buff = LARGE_BUFF)
+        chis.arrange(RIGHT, buff = LARGE_BUFF)
         chis.set_stroke(WHITE, width = 1)
         numbers = VGroup()
         arrows = VGroup()
@@ -3558,23 +3527,23 @@ class IntroduceChi(FactorizationPattern):
             arrows.add(arrow)
             value = TexMobject(str(chi_func(n)))
             for tex, color in zip(["1", "-1", "0"], self.colors):
-                value.highlight_by_tex(tex, color)
+                value.set_color_by_tex(tex, color)
             value.next_to(arrow, UP)
             numbers.add(value)
         group = VGroup(chis, arrows, numbers)
-        group.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        group.set_width(FRAME_WIDTH - LARGE_BUFF)
         group.to_edge(DOWN, buff = LARGE_BUFF)
 
         self.play(*[
             FadeIn(
                 mob, 
                 run_time = 3,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             )
             for mob in [chis, arrows, numbers]
         ])
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             ApplyMethod,
             numbers,
             lambda m : (m.shift, MED_SMALL_BUFF*UP),
@@ -3583,8 +3552,8 @@ class IntroduceChi(FactorizationPattern):
             run_time = 6
         ))
 
-        self.dither()
-        self.play(*map(FadeOut, [chis, arrows, numbers]))
+        self.wait()
+        self.play(*list(map(FadeOut, [chis, arrows, numbers])))
 
     def write_multiplicative_label(self):
         morty = Mortimer()
@@ -3611,12 +3580,12 @@ class IntroduceChi(FactorizationPattern):
             )
             braces = [
                 Brace(expression[i], UP) 
-                for i in 0, 2, 4
+                for i in (0, 2, 4)
             ]
             for brace, n in zip(braces, [x, y, x*y]):
                 output = chi_func(n)
                 label = brace.get_tex(str(output))
-                label.highlight(self.number_to_color(output))
+                label.set_color(self.number_to_color(output))
                 brace.add(label)
                 expression.add(brace)
             expressions.add(expression)
@@ -3629,10 +3598,10 @@ class IntroduceChi(FactorizationPattern):
             FadeIn(expression),
             self.morty.change, "pondering", expression
         )
-        self.dither(2)
+        self.wait(2)
         for new_expression in expressions[1:]:
             self.play(Transform(expression, new_expression))
-            self.dither(2)
+            self.wait(2)
 
 
 
@@ -3650,7 +3619,7 @@ class IntroduceChi(FactorizationPattern):
             label.scale(0.8)
             label.next_to(dot, UP, LARGE_BUFF)
             arrow = Arrow(label, dot, buff = SMALL_BUFF)
-            VGroup(dot, label, arrow).highlight(color)
+            VGroup(dot, label, arrow).set_color(color)
             dots.add(dot)
             arrows.add(arrow)
             labels.add(label)
@@ -3666,8 +3635,8 @@ class IntroduceChi(FactorizationPattern):
         else:
             self.play(
                 Write(labels),
-                FadeIn(arrows, submobject_mode = "lagged_start"),
-                LaggedStart(
+                FadeIn(arrows, lag_ratio = 0.5),
+                LaggedStartMap(
                     DrawBorderThenFill, dots,
                     stroke_width = 4,
                     stroke_color = YELLOW
@@ -3690,9 +3659,9 @@ class IntroduceChi(FactorizationPattern):
         result.inputs = VGroup()
         for n in truncated_numbers:
             num_mob = result.get_part_by_tex(str(n), substring = False)
-            num_mob.highlight(color)
+            num_mob.set_color(color)
             result.inputs.add(num_mob)
-        result.highlight_by_tex(output, color, substring = False)
+        result.set_color_by_tex(output, color, substring = False)
         return result
 
     def number_to_color(self, n):
@@ -3726,7 +3695,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             "5", "^3",
         )
         for tex, color in zip(["5", "3", "2"], self.colors):
-            factorization.highlight_by_tex(tex, color, substring = False)
+            factorization.set_color_by_tex(tex, color, substring = False)
         factorization.to_edge(UP)
         factorization.shift(LEFT)
 
@@ -3736,9 +3705,9 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             TexMobject("(", "1", ")"),
             TexMobject("(", "3+1", ")"),
         )
-        count.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        count.arrange(RIGHT, buff = SMALL_BUFF)
         for i, color in zip([3, 2, 1], self.colors):
-            count[i][1].highlight(color)
+            count[i][1].set_color(color)
         count.next_to(
             factorization.get_part_by_tex("="), DOWN,
             buff = LARGE_BUFF,
@@ -3749,7 +3718,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             FadeIn(factorization),
             self.count_words.next_to, count, LEFT
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 VGroup(factorization.get_part_by_tex(
@@ -3759,7 +3728,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             )
             for tex, part in zip(["=", "2", "3", "5"], count)
         ])
-        self.dither()
+        self.wait()
 
         self.factorization = factorization
         self.count = count
@@ -3773,11 +3742,11 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
                 args += ["\\chi(", str(n), "^%d"%i, ")", "+"]
             args[-1] = ")"
             factor = TexMobject(*args)
-            factor.highlight_by_tex(str(n), color, substring = False)
-            factor.highlight_by_tex("1", color, substring = False)
+            factor.set_color_by_tex(str(n), color, substring = False)
+            factor.set_color_by_tex("1", color, substring = False)
             factor.scale(0.8)
             expression.add(factor)
-        expression.arrange_submobjects(
+        expression.arrange(
             DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT
         )
         equals_four.next_to(expression[1], LEFT, SMALL_BUFF)
@@ -3795,12 +3764,12 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             )
             for c_part, e_part in zip(count_copy, expression)
         ])
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             count_copy, expression,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
         self.chi_expression = expression
 
@@ -3827,7 +3796,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
             chi_sum, count, base, exp = group
             brace = Brace(chi_sum, DOWN)
             evaluation = brace.get_tex(*tex)
-            evaluation.highlight(base.get_color())
+            evaluation.set_color(base.get_color())
             evaluation_rect = BackgroundRectangle(evaluation)
 
             self.play(FadeIn(rect), Animation(group))
@@ -3836,16 +3805,16 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
                 FadeIn(evaluation_rect),
                 ReplacementTransform(chi_sum.copy(), evaluation),
             )
-            self.dither(2)
+            self.wait(2)
             self.play(Indicate(count, color = PINK))
-            self.dither()
+            self.wait()
             if base.get_tex_string() is "3":
                 new_exp = TexMobject("3")
                 new_exp.replace(exp)
                 count_num = count[1]
                 new_count = TexMobject("0")
                 new_count.replace(count_num, dim_to_match = 1)
-                new_count.highlight(count_num.get_color())
+                new_count.set_color(count_num.get_color())
                 evaluation_point = VectorizedPoint(evaluation[-4].get_right())
                 chi_sum_point = VectorizedPoint(chi_sum[-7].get_right())
                 new_brace = Brace(VGroup(*chi_sum[:-6]), DOWN)
@@ -3871,7 +3840,7 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
                 )
                 self.play(Transform(count_num, new_count))
                 self.play(Indicate(count_num, color = PINK))
-                self.dither()
+                self.wait()
                 self.play(*[mob.restore for mob in to_save])
 
             self.play(
@@ -3887,13 +3856,13 @@ class WriteCountingRuleWithChi(SummarizeCountingRule):
 
         self.revert_to_original_skipping_status()
         self.play(ShowCreation(rect))
-        self.dither(3)
+        self.wait(3)
 
 class WeAreGettingClose(TeacherStudentsScene):
     def construct(self):
         self.teacher_says("We're getting close...")
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
 
 class ExpandCountWith45(SummarizeCountingRule):
     CONFIG = {
@@ -3917,7 +3886,7 @@ class ExpandCountWith45(SummarizeCountingRule):
             "45", "=", "3", "^2", "\\cdot", "5",
         )
         for tex, color in zip(["5", "3",], [GREEN, RED]):
-            factorization.highlight_by_tex(tex, color, substring = False)
+            factorization.set_color_by_tex(tex, color, substring = False)
         factorization.to_edge(UP)
         factorization.shift(1.7*LEFT)
 
@@ -3937,10 +3906,10 @@ class ExpandCountWith45(SummarizeCountingRule):
             args[-1] = ")"
             factor = TexMobject(*args)
             for part in factor[1::2]:
-                part[2].highlight(color)
+                part[2].set_color(color)
             factor.scale(0.8)
             expression.add(factor)
-        expression.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        expression.arrange(RIGHT, buff = SMALL_BUFF)
         expression.next_to(
             factorization[1], DOWN, 
             buff = LARGE_BUFF,
@@ -3952,14 +3921,14 @@ class ExpandCountWith45(SummarizeCountingRule):
         ])
         for brace, num, color in zip(braces, [1, 2], [RED, GREEN]):
             num_mob = brace.get_tex(str(num), buff = SMALL_BUFF)
-            num_mob.highlight(color)
+            num_mob.set_color(color)
             brace.add(num_mob)
 
         self.play(
             FadeIn(factorization),
             self.count_words.next_to, expression, LEFT
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 VGroup(factorization.get_part_by_tex(
@@ -3970,15 +3939,15 @@ class ExpandCountWith45(SummarizeCountingRule):
             for tex, part in zip(["=", "3", "5"], expression)
         ])
         self.play(FadeIn(braces))
-        self.dither()
+        self.wait()
 
         self.chi_expression = expression
         self.factorization = factorization
 
     def expand_expression(self):
-        equals, four, lp, rp = map(TexMobject, [
+        equals, four, lp, rp = list(map(TexMobject, [
             "=", "4", "\\big(", "\\big)"
-        ])
+        ]))
         expansion = VGroup(equals, four, lp)
         chi_pairs = list(it.product(*[
             factor[1::2]
@@ -4005,8 +3974,8 @@ class ExpandCountWith45(SummarizeCountingRule):
                 plusses.add(plus)
                 expansion.add(plus)
         expansion.add(rp)
-        expansion.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
-        expansion.scale_to_fit_width(2*SPACE_WIDTH - LARGE_BUFF)
+        expansion.arrange(RIGHT, buff = SMALL_BUFF)
+        expansion.set_width(FRAME_WIDTH - LARGE_BUFF)
         expansion.next_to(ORIGIN, UP)
         rect = BackgroundRectangle(expansion)
         rect.stretch_in_place(1.5, 1)
@@ -4027,19 +3996,19 @@ class ExpandCountWith45(SummarizeCountingRule):
             ]
         )
         for movers in mover_groups:
-            self.dither()
+            self.wait()
             self.play(movers.next_to, rect, DOWN)
-            self.play(*map(MoveToTarget, movers))
+            self.play(*list(map(MoveToTarget, movers)))
         self.play(Write(plusses))
-        self.dither()
+        self.wait()
 
         self.expansion = expansion
         self.prime_pairs = prime_pairs
 
     def show_divisor_sum(self):
-        equals, four, lp, rp = map(TexMobject, [
+        equals, four, lp, rp = list(map(TexMobject, [
             "=", "4", "\\big(", "\\big)"
-        ])
+        ]))
         divisor_sum = VGroup(equals, four, lp)
 
         num_pairs = list(it.product([1, 3, 9], [1, 5]))
@@ -4051,21 +4020,21 @@ class ExpandCountWith45(SummarizeCountingRule):
         for product in products:
             chi_mob = TexMobject("\\chi(", str(product), ")")
             product_mob = chi_mob.get_part_by_tex(str(product))
-            product_mob.highlight(color)
+            product_mob.set_color(color)
             product_mobs.add(product_mob)
             divisor_sum.add(chi_mob)
             chi_mobs.add(chi_mob)
             if product != products[-1]:
                 divisor_sum.add(TexMobject("+"))
         divisor_sum.add(rp)
-        divisor_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        divisor_sum.arrange(RIGHT, buff = SMALL_BUFF)
         divisor_sum.next_to(self.expansion, DOWN, MED_LARGE_BUFF)
         rect = BackgroundRectangle(divisor_sum)
 
         prime_pairs = self.prime_pairs.copy()
         for prime_pair, product_mob in zip(prime_pairs, product_mobs):
             prime_pair.target = product_mob.copy()
-            prime_pair.target.highlight(YELLOW)
+            prime_pair.target.set_color(YELLOW)
 
         braces = VGroup(*[Brace(m, DOWN) for m in chi_mobs])
         for brace, product in zip(braces, products):
@@ -4076,15 +4045,15 @@ class ExpandCountWith45(SummarizeCountingRule):
             FadeIn(rect),
             Write(divisor_sum, run_time = 2)
         )
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             MoveToTarget, prime_pairs, 
             run_time = 4,
             lag_ratio = 0.25,
         ))
         self.remove(prime_pairs)
-        product_mobs.highlight(YELLOW)
-        self.dither(2)
-        self.play(LaggedStart(
+        product_mobs.set_color(YELLOW)
+        self.wait(2)
+        self.play(LaggedStartMap(
             ApplyMethod,
             product_mobs,
             lambda m : (m.shift, MED_LARGE_BUFF*DOWN),
@@ -4093,9 +4062,9 @@ class ExpandCountWith45(SummarizeCountingRule):
         self.play(FadeIn(
             braces, 
             run_time = 2,
-            submobject_mode = "lagged_start",
+            lag_ratio = 0.5,
         ))
-        self.dither(2)
+        self.wait(2)
 
 class CountLatticePointsInBigCircle(LatticePointScene):
     CONFIG = {
@@ -4119,7 +4088,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
     def introduce_points(self):
         circle = self.get_circle(radius = self.max_lattice_point_radius)
         radius = Line(ORIGIN, circle.get_right())
-        radius.highlight(RED)
+        radius.set_color(RED)
         R = TexMobject("R").next_to(radius, UP)
         R_rect = BackgroundRectangle(R)
         R_group = VGroup(R_rect, R)
@@ -4129,10 +4098,10 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         pi_R_squared_rect = BackgroundRectangle(pi_R_squared)
         pi_R_squared_group = VGroup(pi_R_squared_rect, pi_R_squared)
 
-        self.play(*map(FadeIn, [circle, radius, R_group]))
+        self.play(*list(map(FadeIn, [circle, radius, R_group])))
         self.add_foreground_mobject(R_group)
         self.draw_lattice_points()
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(R_rect),
             FadeIn(pi_R_squared_rect),
@@ -4144,18 +4113,18 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         )
         self.remove(R_group)
         self.add_foreground_mobject(pi_R_squared_group)
-        self.dither()
+        self.wait()
 
         self.circle = circle
         self.radius = radius
 
     def show_rings(self):
-        N_range = range(self.max_lattice_point_radius**2)
+        N_range = list(range(self.max_lattice_point_radius**2))
         rings = VGroup(*[
             self.get_circle(radius = np.sqrt(N))
             for N in N_range
         ])
-        rings.gradient_highlight(TEAL, GREEN)
+        rings.set_color_by_gradient(TEAL, GREEN)
         rings.set_stroke(width = 2)
         dot_groups = VGroup(*[
             self.get_lattice_points_on_r_squared_circle(N)
@@ -4164,14 +4133,14 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         radicals = self.get_radicals()
 
         self.play(
-            LaggedStart(FadeIn, rings),
+            LaggedStartMap(FadeIn, rings),
             Animation(self.lattice_points),
-            LaggedStart(FadeIn, radicals),
+            LaggedStartMap(FadeIn, radicals),
             run_time = 3
         )
         self.add_foreground_mobject(radicals)
         self.play(
-            LaggedStart(
+            LaggedStartMap(
                 ApplyMethod,
                 dot_groups,
                 lambda m : (m.set_stroke, PINK, 5),
@@ -4180,7 +4149,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
                 lag_ratio = 0.1,
             ),
         )
-        self.dither()
+        self.wait()
 
         self.rings = rings
 
@@ -4203,13 +4172,13 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             if (x**2 + y**2) > self.max_lattice_point_radius**2
             if (x**2 + y**2) < new_max**2
         ])
-        new_dots.sort_submobjects(np.linalg.norm)
+        new_dots.sort(get_norm)
 
-        self.play(*map(ShowCreation, [circle, arrow]))
-        self.play(*map(FadeOut, [circle, arrow]))
+        self.play(*list(map(ShowCreation, [circle, arrow])))
+        self.play(*list(map(FadeOut, [circle, arrow])))
         self.play(FadeOut(center_dot))
         self.lattice_points.remove(center_dot)
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(m.scale, 0.5)
             for m in [
@@ -4225,9 +4194,9 @@ class CountLatticePointsInBigCircle(LatticePointScene):
         self.play(
             ApplyMethod(
                 VGroup(self.circle, self.radius).scale_in_place, 2,
-                rate_func = None,
+                rate_func=linear,
             ),
-            LaggedStart(
+            LaggedStartMap(
                 DrawBorderThenFill,
                 new_dots,
                 stroke_width = 4,
@@ -4236,7 +4205,7 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             ),
             run_time = 4,
         )
-        self.dither(2)
+        self.wait(2)
 
     #####
 
@@ -4250,8 +4219,8 @@ class CountLatticePointsInBigCircle(LatticePointScene):
             TexMobject("\\vdots"),
             TexMobject("\\sqrt{R^2}")
         )
-        radicals.arrange_submobjects(DOWN, buff = MED_SMALL_BUFF)
-        radicals.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        radicals.arrange(DOWN, buff = MED_SMALL_BUFF)
+        radicals.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         radicals.to_edge(DOWN, buff = MED_SMALL_BUFF)
         radicals.to_edge(LEFT)
         for radical in radicals:
@@ -4278,7 +4247,7 @@ class AddUpGrid(Scene):
         self.add(self.radicals)
 
     def add_row_lines(self):
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH - MED_LARGE_BUFF)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS - MED_LARGE_BUFF)
         h_line.set_stroke(WHITE, 1)
         row_lines = VGroup(*[
             h_line.copy().next_to(
@@ -4293,8 +4262,8 @@ class AddUpGrid(Scene):
             row_lines[-2].get_left()[0]*RIGHT
         )
 
-        self.play(LaggedStart(ShowCreation, row_lines))
-        self.dither()
+        self.play(LaggedStartMap(ShowCreation, row_lines))
+        self.wait()
 
         self.row_lines = row_lines
 
@@ -4305,10 +4274,10 @@ class AddUpGrid(Scene):
         fours = VGroup()
         parens = VGroup()
         arrows = VGroup()
-        for N, radical in zip(range(1, 13), self.radicals):
-            arrow, four, lp, rp = map(TexMobject, [
+        for N, radical in zip(list(range(1, 13)), self.radicals):
+            arrow, four, lp, rp = list(map(TexMobject, [
                 "\\Rightarrow", "4", "\\big(", "\\big)"
-            ])
+            ]))
             fours.add(four)
             parens.add(lp, rp)
             arrows.add(arrow)
@@ -4317,7 +4286,7 @@ class AddUpGrid(Scene):
                 if N%d != 0:
                     continue
                 chi_mob = TexMobject("\\chi(", str(d), ")")
-                chi_mob[1].highlight(YELLOW)
+                chi_mob[1].set_color(YELLOW)
                 chi_mob.d = d
                 chi_mobs.add(chi_mob)
                 chi_sum.add(chi_mob)
@@ -4327,18 +4296,18 @@ class AddUpGrid(Scene):
                     plusses.add(plus)
                     chi_sum.add(plus)
             chi_sum.add(rp)
-            chi_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+            chi_sum.arrange(RIGHT, buff = SMALL_BUFF)
             chi_sum.scale(0.7)
             chi_sum.next_to(radical, RIGHT)
             chi_sums.add(chi_sum)
             radical.chi_sum = chi_sum
 
-        self.play(LaggedStart(
+        self.play(LaggedStartMap(
             Write, chi_sums, 
             run_time = 5,
             rate_func = lambda t : t,
         ))
-        self.dither()
+        self.wait()
 
         digest_locals(self, [
             "chi_sums", "chi_mobs", "plusses", 
@@ -4378,9 +4347,9 @@ class AddUpGrid(Scene):
                 rect.copy().move_to(self.radicals[N-1], LEFT)
                 for N in numbers
             ])
-            for numbers in [6, 12], [2, 3, 5, 7, 11]
+            for numbers in ([6, 12], [2, 3, 5, 7, 11])
         ]
-        prime_rects.highlight(GREEN)
+        prime_rects.set_color(GREEN)
 
         randy = Randolph().flip()
         randy.next_to(self.chi_mobs, RIGHT)
@@ -4391,15 +4360,15 @@ class AddUpGrid(Scene):
             FadeIn(composite_rects),
             randy.look_at, composite_rects.get_bottom()
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(composite_rects),
             FadeIn(prime_rects),
             randy.look_at, prime_rects.get_top(),
         )
         self.play(Blink(randy))
-        self.dither()
-        self.play(*map(FadeOut, [prime_rects, randy]))
+        self.wait()
+        self.play(*list(map(FadeOut, [prime_rects, randy])))
 
     def organize_into_columns(self):
         left_x = self.arrows.get_right()[0] + SMALL_BUFF
@@ -4417,10 +4386,10 @@ class AddUpGrid(Scene):
             )
 
         self.play(*it.chain(
-            map(MoveToTarget, self.chi_mobs),
-            map(MoveToTarget, self.plusses),
+            list(map(MoveToTarget, self.chi_mobs)),
+            list(map(MoveToTarget, self.plusses)),
         ), run_time = 2)
-        self.dither()
+        self.wait()
 
     def add_count_words(self):
         rect = Rectangle(
@@ -4429,7 +4398,7 @@ class AddUpGrid(Scene):
             fill_color = average_color(BLUE_E, BLACK),
             fill_opacity = 1,
             height = 1.15,
-            width = 2*SPACE_WIDTH - 2*MED_SMALL_BUFF,
+            width = FRAME_WIDTH - 2*MED_SMALL_BUFF,
         )
         rect.move_to(3*LEFT, LEFT)
         rect.to_edge(UP, buff = SMALL_BUFF)
@@ -4441,8 +4410,8 @@ class AddUpGrid(Scene):
         approx.next_to(words, RIGHT, SMALL_BUFF)
         words.add(approx)
 
-        self.play(*map(FadeIn, [rect, words]))
-        self.dither()
+        self.play(*list(map(FadeIn, [rect, words])))
+        self.wait()
 
         self.count_rect = rect
         self.count_words = words
@@ -4462,22 +4431,22 @@ class AddUpGrid(Scene):
                 TexMobject("\\chi(", str(d), ")"),
                 TexMobject("+")
             )
-            term.arrange_submobjects(RIGHT, SMALL_BUFF)
-            term[1][1].highlight(YELLOW)
+            term.arrange(RIGHT, SMALL_BUFF)
+            term[1][1].set_color(YELLOW)
             full_sum.add(term)
-        full_sum.arrange_submobjects(RIGHT, SMALL_BUFF)
+        full_sum.arrange(RIGHT, SMALL_BUFF)
         full_sum.scale(0.7)
         full_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
 
         for column, term in zip(chi_mob_columns, full_sum):
             rect = SurroundingRectangle(column)
-            rect.stretch_to_fit_height(2*SPACE_HEIGHT)
+            rect.stretch_to_fit_height(FRAME_HEIGHT)
             rect.move_to(column, UP)
             rect.set_stroke(width = 0)
             rect.set_fill(YELLOW, 0.3)
 
             self.play(FadeIn(rect))
-            self.dither()
+            self.wait()
             self.play(
                 ReplacementTransform(
                     column.copy(),
@@ -4487,11 +4456,11 @@ class AddUpGrid(Scene):
                 Write(term[0]),
                 Write(term[2]),
             )
-            self.dither()
+            self.wait()
             if term is full_sum[2]:
                 vect = sum([
                     self.count_rect.get_left()[0],
-                    SPACE_WIDTH,
+                    FRAME_X_RADIUS,
                     -MED_SMALL_BUFF,
                 ])*LEFT
                 self.play(*[
@@ -4510,7 +4479,7 @@ class AddUpGrid(Scene):
         self.corner_four.generate_target()
         R_squared = TexMobject("R^2")
         dots = TexMobject("\\cdots")
-        lp, rp = map(TexMobject, ["\\big(", "\\big)"])
+        lp, rp = list(map(TexMobject, ["\\big(", "\\big)"]))
         new_sum = VGroup(
             self.corner_four.target, R_squared, lp
         )
@@ -4533,7 +4502,7 @@ class AddUpGrid(Scene):
             new_sum.add(plus)
         new_sum.add(dots)
         new_sum.add(rp)
-        new_sum.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        new_sum.arrange(RIGHT, buff = SMALL_BUFF)
         new_sum.next_to(self.count_words, RIGHT, SMALL_BUFF)
         R_squared.shift(0.5*SMALL_BUFF*UP)
         R_movers = VGroup()
@@ -4546,17 +4515,17 @@ class AddUpGrid(Scene):
             R_movers.add(mover)
 
         self.play(*it.chain(
-            map(Write, [lp, rp, dots]), 
-            map(MoveToTarget, full_sum_parts),
+            list(map(Write, [lp, rp, dots])), 
+            list(map(MoveToTarget, full_sum_parts)),
         ), run_time = 2)
         self.remove(R_movers)
         self.add(R_squared)
-        self.dither()
+        self.wait()
         self.play(
             MoveToTarget(self.corner_four, run_time = 2),
             FadeOut(self.corner_four.rect)
         )
-        self.dither(2)
+        self.wait(2)
         self.remove(self.full_sum, self.corner_four)
         self.add(new_sum)
 
@@ -4577,17 +4546,17 @@ class AddUpGrid(Scene):
         )
 
         self.play(
-            *map(FadeOut, [
+            *list(map(FadeOut, [
                 self.chi_mobs, self.plusses, self.arrows,
                 self.radicals, self.row_lines
-            ]) + [
+            ])) + [
             FadeOut(self.count_rect),
             Animation(self.new_sum),
             Animation(self.count_words),
             ]
         )
         self.play(Write(alt_rhs))
-        self.dither(2)
+        self.wait(2)
 
         self.alt_rhs = alt_rhs
 
@@ -4611,7 +4580,7 @@ class AddUpGrid(Scene):
         pi_sum.scale(0.9)
         pi = pi_sum.get_part_by_tex("pi")
         pi.scale(2, about_point = pi.get_left())
-        pi.highlight(YELLOW)
+        pi.set_color(YELLOW)
         pi_sum.shift(
             self.alt_rhs[-1].get_bottom(),
             MED_SMALL_BUFF*DOWN,
@@ -4619,9 +4588,9 @@ class AddUpGrid(Scene):
         )
 
         self.play(Write(area_rhs))
-        self.dither()
+        self.wait()
         self.play(FadeIn(brace))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(brace))
         self.play(*[
             ReplacementTransform(m.copy(), pi_sum_part)
@@ -4640,10 +4609,10 @@ class AddUpGrid(Scene):
             ApplyMethod(pi.change, "hooray", self.alt_rhs)
             for pi in creatures
         ])
-        self.dither()
+        self.wait()
         for i in 0, 2, 3:
             self.play(Blink(creatures[i]))
-            self.dither()
+            self.wait()
 
 class IntersectionOfTwoFields(TeacherStudentsScene):
     def construct(self):
@@ -4653,13 +4622,13 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
             circle.set_fill(color, opacity = 0.3)
             circle.stretch_to_fit_width(7)
             circle.stretch_to_fit_height(4)
-            circle.shift(SPACE_WIDTH*vect/3.0 + LEFT)
+            circle.shift(FRAME_X_RADIUS*vect/3.0 + LEFT)
             title = TextMobject("%s \\\\ number theory"%adj)
             title.scale(0.7)
             title.move_to(circle)
             title.to_edge(UP, buff = SMALL_BUFF)
             circle.next_to(title, DOWN, SMALL_BUFF)
-            title.highlight(color)
+            title.set_color(color)
             circle.title = title
             circles.add(circle)
         new_number_systems = TextMobject(
@@ -4671,7 +4640,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
         new_number_systems.next_to(circles[0].get_top(), DOWN, MED_SMALL_BUFF)
         new_number_systems.shift(MED_LARGE_BUFF*(DOWN+2*LEFT))
         gaussian_integers.next_to(new_number_systems, DOWN)
-        gaussian_integers.highlight(BLUE)
+        gaussian_integers.set_color(BLUE)
         circles[0].words = VGroup(new_number_systems, gaussian_integers)
 
         zeta = TexMobject("\\zeta(s) = \\sum_{n=1}^\\infty \\frac{1}{n^s}")
@@ -4683,7 +4652,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
         zeta.next_to(circles[1].get_top(), DOWN, MED_LARGE_BUFF)
         zeta.shift(MED_LARGE_BUFF*RIGHT)
         L_function.next_to(zeta, DOWN, MED_LARGE_BUFF)
-        L_function.highlight(YELLOW)
+        L_function.set_color(YELLOW)
         circles[1].words = VGroup(zeta, L_function)
 
         mid_words = TextMobject("Where\\\\ we \\\\ were")
@@ -4696,7 +4665,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
                 DrawBorderThenFill(circle, run_time = 2),
                 self.teacher.change_mode, "raise_right_hand"
             )
-        self.dither()
+        self.wait()
         for circle in circles:
             for word in circle.words:
                 self.play(
@@ -4707,7 +4676,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
                         for pi in self.get_students()
                     ]
                 )
-                self.dither()
+                self.wait()
         self.play(
             Write(mid_words),
             self.teacher.change, "raise_right_hand"
@@ -4716,7 +4685,7 @@ class IntersectionOfTwoFields(TeacherStudentsScene):
             *["thinking"]*3,
             look_at_arg = mid_words
         )
-        self.dither(3)
+        self.wait(3)
 
 class LeibnizPatreonThanks(PatreonThanks):
     CONFIG = {
@@ -4772,11 +4741,11 @@ class Sponsorship(PiCreatureScene):
         logo = SVGMobject(
             file_name = "remix_logo",
         )
-        logo.scale_to_fit_height(1)
+        logo.set_height(1)
         logo.center()
         logo.set_stroke(width = 0)
         logo.set_fill(BLUE_D, 1)
-        VGroup(*logo[6:]).gradient_highlight(BLUE_B, BLUE_E)
+        VGroup(*logo[6:]).set_color_by_gradient(BLUE_B, BLUE_E)
         logo.next_to(morty.get_corner(UP+LEFT), UP)
 
         url = TextMobject("www.remix.com")
@@ -4786,26 +4755,26 @@ class Sponsorship(PiCreatureScene):
 
         self.play(
             morty.change_mode, "raise_right_hand",
-            LaggedStart(DrawBorderThenFill, logo, run_time = 3)
+            LaggedStartMap(DrawBorderThenFill, logo, run_time = 3)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(rect),
             logo.scale, 0.8,
             logo.to_corner, UP+RIGHT,
             morty.change, "happy"
         )
-        self.dither()
+        self.wait()
         self.play(Write(url))
-        self.dither(3)
+        self.wait(3)
         for mode in "confused", "pondering", "happy":
             self.play(morty.change_mode, mode)
-            self.dither(3)
+            self.wait(3)
 
 class Thumbnail(Scene):
     def construct(self):
         randy = Randolph()
-        randy.scale_to_fit_height(5)
+        randy.set_height(5)
         body_copy = randy.body.copy()
         body_copy.set_stroke(YELLOW, width = 3)
         body_copy.set_fill(opacity = 0)
@@ -4813,7 +4782,7 @@ class Thumbnail(Scene):
 
         primes = [
             n for n in range(2, 1000)
-            if all(n%k != 0 for k in range(2, n))
+            if all(n%k != 0 for k in list(range(2, n)))
         ]
         prime_mobs = VGroup()
         x_spacing = 1.7
@@ -4827,7 +4796,7 @@ class Thumbnail(Scene):
             y = i//n_cols
             prime_mob.shift(x*x_spacing*RIGHT + y*y_spacing*DOWN)
             prime_mobs.add(prime_mob)
-            prime_mob.highlight({
+            prime_mob.set_color({
                 -1 : YELLOW,
                 0 : RED,
                 1 : BLUE_C,

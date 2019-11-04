@@ -9,27 +9,7 @@ import random
 from scipy.spatial.distance import cdist
 from scipy import ndimage
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from mobject.tex_mobject import TextMobject, TexMobject    
-
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyPointwiseFunction,\
-    FadeIn, FadeOut, GrowFromCenter, ShimmerIn, ApplyMethod
-from animation.simple_animations import \
-    ShowCreation, Homotopy, PhaseFlow, ApplyToCenters, DelayByOrder
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import \
-    Line, Circle, Square, Grid, Rectangle, Arrow, Dot, Point
-from topics.characters import Randolph, Mathematician, ThoughtBubble
-from topics.functions import ParametricFunction
-from topics.number_line import NumberPlane
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
+from manimlib.imports import *
 
 
 DEFAULT_GAUSS_BLUR_CONFIG = {
@@ -61,7 +41,7 @@ def thicken(nparray):
 
 def sort_by_color(mob):
     indices = np.argsort(np.apply_along_axis(
-        lambda p : -np.linalg.norm(p),
+        lambda p : -get_norm(p),
         1,
         mob.rgbas
     ))
@@ -72,7 +52,7 @@ def sort_by_color(mob):
 
 def get_image_array(name):
     image_files = os.listdir(IMAGE_DIR)
-    possibilities = filter(lambda s : s.startswith(name), image_files)
+    possibilities = [s for s in image_files if s.startswith(name)]
     for possibility in possibilities:
         try:
             path = os.path.join(IMAGE_DIR, possibility)
@@ -166,11 +146,11 @@ class TracePicture(Scene):
             ShowCreation(
                 edge_mobject,
                 run_time = run_time,
-                rate_func = None
+                rate_func=linear
             )
         )
         self.remove(edge_mobject)
-        self.dither()
+        self.wait()
 
 
     def get_edge_mobject(self, image_array):
@@ -231,11 +211,11 @@ class JohannThinksHeIsBetter(Scene):
         upper_point = Point(comparitive_johann.get_corner(UP+RIGHT))
         lightbulb = ImageMobject("Lightbulb", invert = False)
         lightbulb.scale(0.1)
-        lightbulb.sort_points(np.linalg.norm)
+        lightbulb.sort_points(get_norm)
         lightbulb.next_to(upper_point, RIGHT)
 
         self.add(johann)
-        self.dither()
+        self.wait()
         self.play(
             Transform(johann, pensive_johann),
             Transform(point, bubble),
@@ -249,7 +229,7 @@ class JohannThinksHeIsBetter(Scene):
             ShowCreation(greater_than),
             FadeIn(weakling)
         )
-        self.dither(2)
+        self.wait(2)
         for guy in guys[2:]:
             self.play(DelayByOrder(Transform(
                 weakling, upper_point
@@ -258,12 +238,12 @@ class JohannThinksHeIsBetter(Scene):
                 FadeIn(guy),
                 ShimmerIn(guy.name_mob)
             )
-            self.dither(3)
+            self.wait(3)
             self.remove(guy.name_mob)
             weakling = guy
         self.play(FadeOut(weakling), FadeOut(greater_than))
         self.play(ShowCreation(lightbulb))
-        self.dither()
+        self.wait()
         self.play(FadeOut(comparitive_johann), FadeOut(lightbulb))
         self.play(ApplyMethod(
             Mobject(johann, bubble).scale, 10,
@@ -275,7 +255,7 @@ class NewtonVsJohann(Scene):
     def construct(self):
         newton, johann = [
             ImageMobject(name, invert = False).scale(0.5)
-            for name in "Newton", "Johann_Bernoulli2"
+            for name in ("Newton", "Johann_Bernoulli2")
         ]
         greater_than = TexMobject(">")
         newton.next_to(greater_than, RIGHT)
@@ -290,14 +270,14 @@ class NewtonVsJohann(Scene):
                 ApplyMethod(newton.replace, johann, **kwargs),
                 ApplyMethod(johann.replace, newton, **kwargs),
             )
-            self.dither()
+            self.wait()
 
 
 class JohannThinksOfFermat(Scene):
     def construct(self):
         johann, fermat = [
             ImageMobject(name, invert = False)
-            for name in "Johann_Bernoulli2", "Pierre_de_Fermat"
+            for name in ("Johann_Bernoulli2", "Pierre_de_Fermat")
         ]
         johann.scale(0.2)
         johann.to_corner(DOWN+LEFT)
@@ -310,9 +290,9 @@ class JohannThinksOfFermat(Scene):
 
 
         self.add(johann, bubble)
-        self.dither()
+        self.wait()
         self.play(FadeIn(fermat))
-        self.dither()
+        self.wait()
 
 
 class MathematiciansOfEurope(Scene):
@@ -336,7 +316,7 @@ class MathematiciansOfEurope(Scene):
             name_mob = TextMobject(name.replace("_", " "))
             name_mob.to_corner(UP+LEFT, buff=0.75)
             self.add(name_mob)
-            man.scale_to_fit_height(4)
+            man.set_height(4)
             mobject = Point(man.get_corner(UP+LEFT))
             self.play(Transform(mobject, man))
             man.scale(0.2)
@@ -359,7 +339,7 @@ class OldNewtonIsDispleased(Scene):
 
         self.play(ShimmerIn(words))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
 
 
 class NewtonConsideredEveryoneBeneathHim(Scene):
@@ -378,10 +358,10 @@ class NewtonConsideredEveryoneBeneathHim(Scene):
         newton = mathematicians.pop(0)
         newton.scale(0.8)
         new_newton = newton.copy()
-        new_newton.scale_to_fit_height(3)
+        new_newton.set_height(3)
         new_newton.to_edge(UP)
         for man in mathematicians:
-            man.scale_to_fit_width(1.7)
+            man.set_width(1.7)
         johann = mathematicians.pop(0)
         johann.next_to(new_newton, DOWN)
         last_left, last_right = johann, johann
@@ -397,9 +377,9 @@ class NewtonConsideredEveryoneBeneathHim(Scene):
             Transform(newton, new_newton),
             GrowFromCenter(johann)
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(Mobject(*mathematicians)))
-        self.dither()
+        self.wait()
 
 
 

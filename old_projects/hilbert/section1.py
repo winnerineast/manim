@@ -1,28 +1,4 @@
-from mobject import Mobject, Point
-from mobject.tex_mobject import \
-    TexMobject, TextMobject, Brace
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromRegion
-
-from scene import Scene
-
-from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction,\
-    TransformAnimations, ShimmerIn, FadeOut, FadeIn
-from animation.simple_animations import \
-    ShowCreation, DelayByOrder
-from animation.playground import Vibrate
-
-from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point
-from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician, Randolph
-from topics.number_line import UnitInterval
-from topics.three_dimensions import Stars
-
-from mobject.region import  region_from_polygon_vertices
+from manimlib.imports import *
 
 import displayer as disp
 
@@ -31,7 +7,7 @@ from hilbert.curves import \
     SnakeCurve
 
 
-from helpers import *
+from constants import *
 
 
 
@@ -65,7 +41,7 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
         self.play(Transform(self.curve, self.bubble))
         self.show_infinite_objects()
         self.pose_question()
-        self.dither()
+        self.wait()
 
     def show_infinite_objects(self):
         sigma, summand, equals, result = TexMobject([
@@ -83,27 +59,27 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
             "|\\mathds{N}|"
         ]).scale(2).split()
         infinity = TexMobject("\\infty").scale(2)
-        local_mobjects = filter(
+        local_mobjects = list(filter(
             lambda m : isinstance(m, Mobject),
-            locals().values(),
-        )
+            list(locals().values()),
+        ))
         for mob in local_mobjects:    
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
 
         self.play(ShimmerIn(infinity))
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(summand),
             ShimmerIn(equals),
             ShimmerIn(result),
             DelayByOrder(Transform(infinity, sigma))
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(summand, alt_summand),
             Transform(result, alt_result),
         )
-        self.dither()
+        self.wait()
         self.remove(infinity)
         self.play(*[
             CounterclockwiseTransform(
@@ -111,7 +87,7 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
                 Mobject(rationals, other_equals, naturals)
             )
         ])
-        self.dither()
+        self.wait()
         self.clear()
         self.add(self.bubble)
 
@@ -122,14 +98,14 @@ class AboutSpaceFillingCurves(TransformOverIncreasingOrders):
         question_mark = TextMobject("?").scale(2)
 
         self.add(question_mark)
-        self.dither()
+        self.wait()
         self.play(*[
             ShimmerIn(mob)
-            for mob in infinity, rightarrow, N
+            for mob in (infinity, rightarrow, N)
         ] + [
             ApplyMethod(question_mark.next_to, rightarrow, UP),
         ])
-        self.dither()
+        self.wait()
 
 
 
@@ -140,7 +116,7 @@ class PostponePhilosophizing(Scene):
         ]).scale(2).split()
 
         self.add(abstract, arrow, concrete)
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(
                 word1.replace, word2,
@@ -148,7 +124,7 @@ class PostponePhilosophizing(Scene):
             )
             for word1, word2 in it.permutations([abstract, concrete])
         ])
-        self.dither()
+        self.wait()
 
 
 class GrowHilbertWithName(Scene):
@@ -171,7 +147,7 @@ class GrowHilbertWithName(Scene):
 class SectionOne(Scene):
     def construct(self):
         self.add(TextMobject("Section 1: Seeing with your ears"))
-        self.dither()
+        self.wait()
 
 class WriteSomeSoftware(Scene):
     pass #Done viea screen capture, written here for organization
@@ -184,11 +160,11 @@ class ImageToSound(Scene):
         picture = ImageMobject("lion", invert = False)
         picture.scale(0.8)
         picture_copy = picture.copy()
-        picture.sort_points(np.linalg.norm)
-        string.mobject.sort_points(lambda p : -np.linalg.norm(p))
+        picture.sort_points(get_norm)
+        string.mobject.sort_points(lambda p : -get_norm(p))
 
         self.add(picture)
-        self.dither()
+        self.wait()
         self.play(Transform(
             picture, string.mobject,
             run_time = 3,
@@ -198,7 +174,7 @@ class ImageToSound(Scene):
         self.play(string)
 
         for mob in picture_copy, string.mobject:
-            mob.sort_points(lambda p : np.linalg.norm(p)%1)
+            mob.sort_points(lambda p : get_norm(p)%1)
 
         self.play(Transform(
             string.mobject, picture_copy,
@@ -214,7 +190,7 @@ class LinksInDescription(Scene):
         """)
         self.play(ShimmerIn(text))
         self.play(ShowCreation(Arrow(text, 3*DOWN)))
-        self.dither(2)
+        self.wait(2)
 
 
 class ImageDataIsTwoDimensional(Scene):
@@ -233,7 +209,7 @@ class ImageDataIsTwoDimensional(Scene):
                 ShimmerIn(words_mob), 
                 run_time = 2
             )
-        self.dither()
+        self.wait()
 
 
 class SoundDataIsOneDimensional(Scene):
@@ -249,7 +225,7 @@ class SoundDataIsOneDimensional(Scene):
                 center = 2*DOWN + UP*k
             )
             for k, color in zip(
-                range(overtones),
+                list(range(overtones)),
                 Color(BLUE_E).range_to(WHITE, overtones)
             )
         ]
@@ -263,7 +239,7 @@ class SoundDataIsOneDimensional(Scene):
 
         freq_line = get_freq_line()
         freq_line.shift(floor)
-        freq_line.sort_points(np.linalg.norm)
+        freq_line.sort_points(get_norm)
         brace = Brace(freq_line, UP)
         words = TextMobject("Range of frequency values")
         words.next_to(brace, UP)
@@ -299,7 +275,7 @@ class SoundDataIsOneDimensional(Scene):
                 for dot in dots
             ]
         )
-        self.dither(0.5)
+        self.wait(0.5)
 
 class GridOfPixels(Scene):
     def construct(self):
@@ -316,20 +292,20 @@ class GridOfPixels(Scene):
         side_words.next_to(side_brace, LEFT)
 
         self.add(high_res)
-        self.dither()
+        self.wait()
         self.play(DelayByOrder(Transform(high_res, low_res)))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(top_brace),
             GrowFromCenter(side_brace),
             ShimmerIn(top_words),
             ShimmerIn(side_words)
         )
-        self.dither()
+        self.wait()
         for mob in grid, high_res:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
         self.play(DelayByOrder(Transform(high_res, grid)))
-        self.dither()
+        self.wait()
 
 
 class ShowFrequencySpace(Scene):
@@ -337,7 +313,7 @@ class ShowFrequencySpace(Scene):
         freq_line = get_freq_line()
 
         self.add(freq_line)
-        self.dither()
+        self.wait()
         for tex, vect in zip(["20 Hz", "20{,}000 Hz"], [LEFT, RIGHT]):
             tex_mob = TextMobject(tex)
             tex_mob.to_edge(vect)
@@ -347,7 +323,7 @@ class ShowFrequencySpace(Scene):
                 ShimmerIn(tex_mob),
                 ShowCreation(arrow)
             )
-        self.dither()
+        self.wait()
 
 
 
@@ -370,7 +346,7 @@ class AssociatePixelWithFrequency(Scene):
         )
         pixel.set_color(WHITE)
         pixel_width = big_grid.width/big_grid.columns
-        pixel.scale_to_fit_width(pixel_width)
+        pixel.set_width(pixel_width)
         pixel.to_corner(UP+RIGHT, buff = 2)
         pixel.shift(5*pixel_width*(2*LEFT+DOWN))
 
@@ -389,12 +365,12 @@ class AssociatePixelWithFrequency(Scene):
         ]
 
         self.add(small_grid)
-        self.dither()
+        self.wait()
         self.play(
             Transform(small_grid, big_grid)
         )
         self.play(FadeIn(pixel))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(small_grid),            
             ShowCreation(freq_line)
@@ -403,7 +379,7 @@ class AssociatePixelWithFrequency(Scene):
         self.play(
             Transform(pixel, dot),
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow))
         self.play(loud_vibration)
         self.play(
@@ -418,11 +394,11 @@ class AssociatePixelWithFrequency(Scene):
 class ListenToAllPixels(Scene):
     def construct(self):
         grid = get_grid()
-        grid.sort_points(np.linalg.norm)        
+        grid.sort_points(get_norm)        
         freq_line = get_freq_line()
         freq_line.sort_points(lambda p : p[0])
         red, blue = Color(RED), Color(BLUE)
-        freq_line.gradient_highlight(red, blue)
+        freq_line.set_color_by_gradient(red, blue)
 
         colors = [
             Color(rgb = interpolate(
@@ -438,7 +414,7 @@ class ListenToAllPixels(Scene):
         vibration_copy.mobject.stroke_width = 1
         sub_vibrations = [
             Vibrate(
-                string.copy().shift((n-1)*UP).highlight(colors[n]),
+                string.copy().shift((n-1)*UP).set_color(colors[n]),
                 overtones = 1,
                 spatial_period = 6./(n+1),
                 temporal_period = 1./(n+1),
@@ -450,12 +426,12 @@ class ListenToAllPixels(Scene):
         words.to_edge(UP, buff = 0.1)
 
         self.add(grid)
-        self.dither()
+        self.wait()
         self.play(DelayByOrder(ApplyMethod(
-            grid.gradient_highlight, red, blue
+            grid.set_color_by_gradient, red, blue
         )))
         self.play(Transform(grid, freq_line))
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(
                 words,
@@ -481,10 +457,10 @@ class LayAsideSpeculation(Scene):
     def construct(self):
         words = TextMobject("Would this actually work?")
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         mapping = Mobject(
             grid, freq_line, Arrow(grid, freq_line)
@@ -494,21 +470,21 @@ class LayAsideSpeculation(Scene):
         lower_right = Point().to_corner(DOWN+RIGHT, buff = 0)
 
         self.add(words)
-        self.dither()
+        self.wait()
         self.play(
             Transform(words, lower_right),
             Transform(lower_left, mapping)
         )
-        self.dither()
+        self.wait()
 
 
 class RandomMapping(Scene):
     def construct(self):
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         # for mob in grid, freq_line:
         #     indices = np.arange(mob.get_num_points())
@@ -526,20 +502,20 @@ class RandomMapping(Scene):
                 rate_func = rate_func,
                 path_func = path_along_arc(-np.pi/2)
             ))
-        self.dither()
+        self.wait()
         
 
 
 class DataScrambledAnyway(Scene):
     def construct(self):
         self.add(TextMobject("Data is scrambled anyway, right?"))
-        self.dither()
+        self.wait()
         
 
 class LeverageExistingIntuitions(Scene):
     def construct(self):
         self.add(TextMobject("Leverage existing intuitions"))
-        self.dither()
+        self.wait()
 
 
 
@@ -547,10 +523,10 @@ class LeverageExistingIntuitions(Scene):
 class ThinkInTermsOfReverseMapping(Scene):
     def construct(self):
         grid = get_grid()
-        grid.scale_to_fit_width(6)
+        grid.set_width(6)
         grid.to_edge(LEFT)
         freq_line = get_freq_line()
-        freq_line.scale_to_fit_width(6)
+        freq_line.set_width(6)
         freq_line.center().to_edge(RIGHT)
         arrow =  Arrow(grid, freq_line)
 
@@ -564,25 +540,25 @@ class ThinkInTermsOfReverseMapping(Scene):
         arrow2 = Arrow(4*RIGHT+UP, dot2, color = color2, buff = 0.1)
         dot3, arrow3 = [
             mob.copy().shift(5*LEFT+UP)
-            for mob in dot1, arrow1
+            for mob in (dot1, arrow1)
         ]
         dot4, arrow4 = [
             mob.copy().shift(5*LEFT+0.9*UP)
-            for mob in dot2, arrow2
+            for mob in (dot2, arrow2)
         ]
 
         self.add(grid, freq_line, arrow)
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
             arrow.rotate, np.pi, 
             path_func = clockwise_path()
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow1))
         self.add(dot1)
         self.play(ShowCreation(arrow2))
         self.add(dot2)
-        self.dither()
+        self.wait()
         self.remove(arrow1, arrow2)
         self.play(
             Transform(dot1, dot3),
@@ -594,7 +570,7 @@ class ThinkInTermsOfReverseMapping(Scene):
         )
         self.play(ShowCreation(arrow3))
         self.play(ShowCreation(arrow4))
-        self.dither()
+        self.wait()
 
 
 class WeaveLineThroughPixels(Scene):
@@ -611,7 +587,7 @@ class WeaveLineThroughPixels(Scene):
         curve = HilbertCurve(order = order)
         line = Line(5*LEFT, 5*RIGHT)
         for mob in curve, line:
-            mob.gradient_highlight(start_color, end_color)
+            mob.set_color_by_gradient(start_color, end_color)
         freq_line = get_freq_line()
         freq_line.replace(line, stretch = True)
 
@@ -624,14 +600,14 @@ class WeaveLineThroughPixels(Scene):
                 side_length = unit, 
                 color = WHITE
             ).shift(x*right+y*up)
-            for x, y in it.product(range(2**order), range(2**order))
+            for x, y in it.product(list(range(2**order)), list(range(2**order)))
         ])
         squares.center()
         targets = Mobject()
         for square in squares.submobjects:
             center = square.get_center()
             distances = np.apply_along_axis(
-                lambda p : np.linalg.norm(p-center),
+                lambda p : get_norm(p-center),
                 1,
                 curve.points
             )
@@ -647,17 +623,17 @@ class WeaveLineThroughPixels(Scene):
         self.play(ShowCreation(
             curve,
             run_time = 5, 
-            rate_func = None
+            rate_func=linear
         ))
-        self.dither()
+        self.wait()
         self.play(
             Transform(curve, line),
             Transform(squares, targets),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(freq_line))
-        self.dither()
+        self.wait()
 
 
 class WellPlayedGameOfSnake(Scene):
@@ -671,11 +647,11 @@ class WellPlayedGameOfSnake(Scene):
         self.play(ShowCreation(
             snake_curve,
             run_time = 7, 
-            rate_func = None
+            rate_func=linear
         ))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words))
-        self.dither()
+        self.wait()
 
 
 class TellMathematicianFriend(Scene):
@@ -683,7 +659,7 @@ class TellMathematicianFriend(Scene):
         mathy, bubble = get_mathy_and_bubble()
         squiggle_mouth = mathy.mouth.copy()
         squiggle_mouth.apply_function(
-            lambda (x, y, z) : (x, y+0.02*np.sin(50*x), z)
+            lambda x_y_z : (x_y_z[0], x_y_z[1]+0.02*np.sin(50*x_y_z[0]), x_y_z[2])
         )
         bubble.ingest_submobjects()        
         bubble.write("Why not use a Hilbert curve \\textinterrobang ")
@@ -702,7 +678,7 @@ class TellMathematicianFriend(Scene):
             ShowCreation(arrow),
             ShimmerIn(description)
         )
-        self.dither()
+        self.wait()
         point = Point(bubble.get_tip())
         self.play(
             Transform(point, bubble),
@@ -710,7 +686,7 @@ class TellMathematicianFriend(Scene):
         self.remove(point)
         self.add(bubble)
         self.play(ShimmerIn(words1))
-        self.dither()
+        self.wait()
         self.remove(description, arrow)
         self.play(
             Transform(mathy.mouth, squiggle_mouth),
@@ -718,13 +694,13 @@ class TellMathematicianFriend(Scene):
         )
         self.remove(words1)
         self.add(words2)
-        self.dither(2)
+        self.wait(2)
         self.remove(words2)
         self.add(words3)
-        self.dither(2)
+        self.wait(2)
         self.play(
             ApplyPointwiseFunction(
-                lambda p : 15*p/np.linalg.norm(p),
+                lambda p : 15*p/get_norm(p),
                 bubble
             ),
             ApplyMethod(mathy.shift, 5*(DOWN+LEFT)),
@@ -743,34 +719,34 @@ class Order1PseudoHilbertCurve(Scene):
         cluster.center()
         cluster.scale(0.7)
         cluster.to_edge(UP, buff = 0.3)
-        cluster.highlight(GREEN)
+        cluster.set_color(GREEN)
         grid1 = Grid(1, 1)
         grid2 = Grid(2, 2)
         curve = HilbertCurve(order = 1)
 
         self.add(words, s)
-        self.dither()
+        self.wait()
         self.play(Transform(
             s, pre_words, 
             path_func = path_along_arc(-np.pi/3)
         ))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(grid1))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(grid2))
-        self.dither()
+        self.wait()
         kwargs = {
             "run_time" : 5,
             "rate_func" : None
         }
         self.play(ShowCreation(curve, **kwargs))
-        self.dither()
+        self.wait()
 
 class Order2PseudoHilbertCurve(Scene):
     def construct(self):
         words = TextMobject("Order 2 Pseudo-Hilbert Curve")
         words.to_edge(UP, buff = 0.3)
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         grid2 = Grid(2, 2)
         grid4 = Grid(4, 4, stroke_width = 2)
         # order_1_curve = HilbertCurve(order = 1)
@@ -794,28 +770,28 @@ class Order2PseudoHilbertCurve(Scene):
             naive_curve.add(line, mini_curve)
             last_curve = mini_curve
         naive_curve.ingest_submobjects()
-        naive_curve.gradient_highlight(RED, GREEN)
+        naive_curve.set_color_by_gradient(RED, GREEN)
         order_2_curve = HilbertCurve(order = 2)
 
         self.add(words, grid2)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(grid4))
         self.play(*[
             ShowCreation(mini_curve)
             for mini_curve in mini_curves
         ])
-        self.dither()
+        self.wait()
         self.play(ShowCreation(naive_curve, run_time = 5))
         self.remove(*mini_curves)
-        self.dither()
+        self.wait()
         self.play(Transform(naive_curve, order_2_curve))
-        self.dither()
+        self.wait()
 
 
 class Order3PseudoHilbertCurve(Scene):
     def construct(self):
         words = TextMobject("Order 3 Pseudo-Hilbert Curve")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         words.to_edge(UP)
         grid4 = Mobject(
             Grid(2, 2),
@@ -834,11 +810,11 @@ class Order3PseudoHilbertCurve(Scene):
         ]
 
         self.add(words, grid4)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(grid8))
-        self.dither()
-        self.play(*map(GrowFromCenter, mini_curves))
-        self.dither()
+        self.wait()
+        self.play(*list(map(GrowFromCenter, mini_curves)))
+        self.wait()
         self.clear()
         self.add(words, grid8, *mini_curves)
         self.play(*[
@@ -849,13 +825,13 @@ class Order3PseudoHilbertCurve(Scene):
             ]
         ])
         self.play(ShowCreation(order_3_curve, run_time = 5))
-        self.dither()
+        self.wait()
 
 class GrowToOrder8PseudoHilbertCurve(Scene):
     def construct(self):
         self.curve = HilbertCurve(order = 1)
         self.add(self.curve)
-        self.dither()
+        self.wait()
         while self.curve.order < 8:
             self.increase_order()
 
@@ -878,7 +854,7 @@ class GrowToOrder8PseudoHilbertCurve(Scene):
             GrowFromCenter(mini_curve)
             for mini_curve in mini_curves[1:]
         ])
-        self.dither()
+        self.wait()
         self.clear()
         self.add(*mini_curves)
         self.play(*[
@@ -891,7 +867,7 @@ class GrowToOrder8PseudoHilbertCurve(Scene):
         self.curve = HilbertCurve(order = self.curve.order+1)
         self.play(ShowCreation(self.curve, run_time = 2))
         self.remove(*mini_curves)
-        self.dither()
+        self.wait()
 
 
 class UseOrder8(Scene):
@@ -899,19 +875,19 @@ class UseOrder8(Scene):
         mathy, bubble = get_mathy_and_bubble()
         bubble.write("For a 256x256 pixel array...")
         words = TextMobject("Order 8 Pseudo-Hilbert Curve")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
         words.to_edge(UP, buff = 0.3)
         curve = HilbertCurve(order = 8)
 
         self.add(mathy, bubble)
         self.play(ShimmerIn(bubble.content))
-        self.dither()
+        self.wait()
         self.clear()
         self.add(words)
         self.play(ShowCreation(
-            curve, run_time = 7, rate_func = None
+            curve, run_time = 7, rate_func=linear
         ))
-        self.dither()
+        self.wait()
 
 
 
@@ -922,7 +898,7 @@ class HilbertBetterThanSnakeQ(Scene):
                 CurveClass(order = n)
                 for n in range(2, 7)
             ]
-            for CurveClass in HilbertCurve, SnakeCurve
+            for CurveClass in (HilbertCurve, SnakeCurve)
         ]
         for curve in hilbert_curves+snake_curves:
             curve.scale(0.8)
@@ -942,13 +918,13 @@ class HilbertBetterThanSnakeQ(Scene):
                 Transform(hilbert_curve, new_hc),
                 Transform(snake_curve, new_sc)
             ])
-            self.dither()
+            self.wait()
 
 
 class ImagineItWorks(Scene):
     def construct(self):
         self.add(TextMobject("Imagine your project succeeds..."))
-        self.dither()
+        self.wait()
 
 
 class RandyWithHeadphones(Scene):
@@ -957,13 +933,13 @@ class RandyWithHeadphones(Scene):
         headphones.scale(0.1)
         headphones.stretch(2, 0)
         headphones.shift(1.2*UP+0.05*LEFT)
-        headphones.highlight(GREY)
+        headphones.set_color(GREY)
         randy = Randolph()
 
         self.add(randy, headphones)
-        self.dither(2)
+        self.wait(2)
         self.play(ApplyMethod(randy.blink))
-        self.dither(4)
+        self.wait(4)
 
 
 class IncreaseResolution(Scene):
@@ -973,7 +949,7 @@ class IncreaseResolution(Scene):
                 2**order, 2**order,
                 stroke_width = 1
             ).shift(0.3*DOWN)
-            for order in 6, 7
+            for order in (6, 7)
         ]
         grid = grids[0]
         side_brace = Brace(grid, LEFT)
@@ -994,13 +970,13 @@ class IncreaseResolution(Scene):
             ShimmerIn(top_words),
             ShimmerIn(side_words)
         )
-        self.dither()
+        self.wait()
         self.play(
             DelayByOrder(Transform(*grids)),
             Transform(top_words, new_top_words),
             Transform(side_words, new_side_words)
         )
-        self.dither()
+        self.wait()
 
 
 class IncreasingResolutionWithSnakeCurve(Scene):
@@ -1019,10 +995,10 @@ class IncreasingResolutionWithSnakeCurve(Scene):
                     (0.7, RED)
                 ]
             ])
-            for curve in start_curve, end_curve
+            for curve in (start_curve, end_curve)
         ]
         self.add(start_curve)
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(start_dots, run_time = 2),
             ApplyMethod(start_curve.fade)
@@ -1032,7 +1008,7 @@ class IncreasingResolutionWithSnakeCurve(Scene):
             Transform(start_curve, end_curve),
             Transform(start_dots, end_dots)
         )
-        self.dither()
+        self.wait()
 
 
 class TrackSpecificCurvePoint(Scene):
@@ -1054,13 +1030,13 @@ class TrackSpecificCurvePoint(Scene):
 
         self.play(ShowCreation(line))
         self.play(Transform(dot, start_dot))
-        self.dither()
+        self.wait()
         for new_dot, curve in zip(dots, curves):
             self.play(
                 Transform(line, curve),
                 Transform(dot, new_dot)
             )
-            self.dither()
+            self.wait()
 
 
 class TrackSpecificSnakeCurvePoint(TrackSpecificCurvePoint):
@@ -1076,10 +1052,10 @@ class NeedToRelearn(Scene):
         arrow = Arrow(top_words, bottom_words)
 
         self.play(ShimmerIn(top_words))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow))
         self.play(ShimmerIn(bottom_words))
-        self.dither()
+        self.wait()
 
 
 class TrackSpecificHilbertCurvePoint(TrackSpecificCurvePoint):

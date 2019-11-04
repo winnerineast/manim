@@ -1,35 +1,4 @@
-from helpers import *
-import scipy
-import math
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.graph_scene import GraphScene
-from old_projects.eoc.chapter8 import AreaIsDerivative
-from topics.common_scenes import OpeningQuote, PatreonThanks
+from manimlib.imports import *
 
 def derivative(func, x, n = 1, dx = 0.01):
     samples = [func(x + (k - n/2)*dx) for k in range(n+1)]
@@ -118,7 +87,7 @@ class ExampleApproximation(GraphScene):
         equation.next_to(near_text, DOWN, MED_LARGE_BUFF)
         equation.to_edge(RIGHT)
         near_text.next_to(equation, UP, MED_LARGE_BUFF)
-        equation.highlight_by_tex(
+        equation.set_color_by_tex(
             self.function_tex, self.function_color,
             substring = False
         )
@@ -148,8 +117,8 @@ class ExampleApproximation(GraphScene):
                 Animation(near_text),
                 term.set_fill, None, 1,
             )
-            self.dither()
-        self.dither(2)
+            self.wait()
+        self.wait(2)
 
 class ExampleApproximationWithSine(ExampleApproximation):
     CONFIG = {
@@ -228,14 +197,14 @@ class Pendulum(ReconfigurableScene):
         self.play(
             ShowCreation(
                 trajectory_dots,
-                rate_func = None,
+                rate_func=linear,
                 run_time = kwargs["run_time"]
             ),
             Rotate(self.pendulum, -2*self.angle, **kwargs),
         )
         for m in 2, -2, 2:
             self.play(Rotate(self.pendulum, m*self.angle, **kwargs))
-        self.dither()
+        self.wait()
 
     def show_height(self):
         v_line = self.get_v_line()
@@ -265,7 +234,7 @@ class Pendulum(ReconfigurableScene):
         self.play(
             GrowFromCenter(radius_brace)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(to_write),
             ReplacementTransform(
@@ -278,18 +247,18 @@ class Pendulum(ReconfigurableScene):
             ),
             run_time = 2
         )
-        self.dither(2)
+        self.wait(2)
 
         self.arc = arc
         self.theta = theta
         self.height_tex_R = height_tex_R
         self.cosine = VGroup(*[
             height_tex.get_part_by_tex(tex)
-            for tex in "cos", "theta", ")"
+            for tex in ("cos", "theta", ")")
         ])
         self.one_minus = VGroup(*[
             height_tex.get_part_by_tex(tex)
-            for tex in "\\big(1-", "\\big)"
+            for tex in ("\\big(1-", "\\big)")
         ])
 
     def get_angry_at_cosine(self):
@@ -309,9 +278,9 @@ class Pendulum(ReconfigurableScene):
             MoveToTarget(cosine),
             morty.change, "angry", cosine.target,
         )
-        self.dither()
+        self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
         self.morty = morty
 
@@ -332,12 +301,12 @@ class Pendulum(ReconfigurableScene):
             FadeIn(
                 cosine_approx,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             MoveToTarget(cosine),
             morty.change, "pondering", cosine_approx
         )
-        self.dither()
+        self.wait()
         if not self.perform_substitution:
             return
         self.play(
@@ -366,10 +335,10 @@ class Pendulum(ReconfigurableScene):
             randy.change, "confused", self.cosine
         )
         self.play(randy.look_at, self.height_tex_R)
-        self.dither()
+        self.wait()
         self.play(randy.look_at, self.cosine)
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
     #######
 
@@ -398,7 +367,7 @@ class Pendulum(ReconfigurableScene):
 
     def get_ceiling(self):
         line = Line(LEFT, RIGHT, color = GREY)
-        line.scale(SPACE_WIDTH)
+        line.scale(FRAME_X_RADIUS)
         line.move_to(self.anchor_point[1]*UP)
         return line
 
@@ -415,7 +384,7 @@ class Pendulum(ReconfigurableScene):
             for angle in angles
         ])
             
-        dots.highlight(color)
+        dots.set_color(color)
         dots.scale(self.radius)
         dots.rotate(-np.pi/2 + arc_angle)
         dots.shift(self.anchor_point)
@@ -455,7 +424,7 @@ class Pendulum(ReconfigurableScene):
         tex_mob = TexMobject(
             "R", "\\big(1-", "\\cos(", "\\theta", ")", "\\big)"
         )
-        tex_mob.highlight_by_tex("theta", YELLOW)
+        tex_mob.set_color_by_tex("theta", YELLOW)
         tex_mob.next_to(brace, RIGHT)
         return tex_mob
 
@@ -466,7 +435,7 @@ class Pendulum(ReconfigurableScene):
             color = YELLOW
         )
         theta = TexMobject("\\theta")
-        theta.highlight(YELLOW)
+        theta.set_color(YELLOW)
         theta.next_to(
             arc.point_from_proportion(0.5), 
             DOWN, SMALL_BUFF
@@ -477,7 +446,7 @@ class Pendulum(ReconfigurableScene):
 
     def get_cosine_approx(self):
         approx = TexMobject(*self.approx_tex)
-        approx.highlight_by_tex("theta", YELLOW)
+        approx.set_color_by_tex("theta", YELLOW)
         approx.theta_squared_over_two = VGroup(*approx[1:5])
 
         return approx
@@ -531,12 +500,12 @@ class ExampleApproximationWithCos(ExampleApproximationWithSine):
                     line_class = DashedLine,
                     color = YELLOW
                 )
-                for u in -1, 1
+                for u in (-1, 1)
             ])
-            for dx in 0.01, 0.7
+            for dx in (0.01, 0.7)
         ]
 
-        self.play(*map(ShowCreation, v_lines), run_time = 2)
+        self.play(*list(map(ShowCreation, v_lines)), run_time = 2)
         self.play(Transform(
             v_lines, alt_v_lines,
             run_time = 2,
@@ -548,9 +517,9 @@ class ExampleApproximationWithCos(ExampleApproximationWithSine):
             look_at_arg = self.graph_origin,
             target_mode = "confused"
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
     def setup_axes(self):
         GraphScene.setup_axes(self)
@@ -597,7 +566,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         dot = Dot(color = WHITE)
         dot.move_to(cosine_label)
         for mob in cosine_label, cosine_graph:
-            mob.highlight(self.colors[0])
+            mob.set_color(self.colors[0])
 
         def update_dot(dot):
             dot.move_to(cosine_graph.points[-1])
@@ -650,11 +619,11 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             quadratic_tex, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(
             FadeIn(free_to_change),
-            *map(ShowCreation, arrows)
+            *list(map(ShowCreation, arrows))
         )
         self.play(*[
             ApplyMethod(
@@ -668,7 +637,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             self.change_quadratic_graph(
                 self.quadratic_graph, *alt_consts
             )
-            self.dither()
+            self.wait()
 
         self.quadratic_tex = quadratic_tex
         self.free_to_change_group = VGroup(free_to_change, *arrows)
@@ -698,7 +667,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             Write(x_equals_0, run_time = 2)
         )
         self.play(one.restore)
-        self.dither()
+        self.wait()
 
         self.v_line = v_line
         self.equals_one_group = VGroup(arrow, x_equals_0, one)
@@ -709,7 +678,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         )
         poly_at_zero.next_to(self.quadratic_tex, DOWN)
         equals_c0 = TexMobject("=", "c_0", "+0")
-        equals_c0.highlight_by_tex("c_0", self.colors[0])
+        equals_c0.set_color_by_tex("c_0", self.colors[0])
         equals_c0.next_to(
             poly_at_zero.get_part_by_tex("="), DOWN,
             buff = MED_LARGE_BUFF,
@@ -721,7 +690,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             self.quadratic_tex,
         )
         poly_group_target = VGroup(
-            TexMobject("=", "1", "+0").highlight_by_tex("1", self.colors[0]),
+            TexMobject("=", "1", "+0").set_color_by_tex("1", self.colors[0]),
             self.get_quadratic_tex("1", "c_1", "c_2", arg = "0"),
             self.get_quadratic_tex("1", "c_1", "c_2"),
         )
@@ -733,16 +702,16 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             self.quadratic_tex.copy(),
             poly_at_zero
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(equals_c0))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(2)
-        self.play(*map(FadeOut, [poly_at_zero, equals_c0]))
+        self.wait(2)
+        self.play(*list(map(FadeOut, [poly_at_zero, equals_c0])))
 
         self.free_to_change_group.remove(
             self.free_to_change_group.arrows[0]
@@ -762,7 +731,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
                 self.quadratic_graph,
                 *alt_consts
             )
-            self.dither()
+            self.wait()
 
     def show_tangent_slope(self):
         graph_point_at_zero = self.input_to_graph_point(
@@ -774,15 +743,15 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.change_quadratic_graph(
             self.quadratic_graph, 1, 0, -0.1
         )
-        self.dither()
+        self.wait()
         self.change_quadratic_graph(
             self.quadratic_graph, 1, 1, -0.1
         )
-        self.dither(2)
+        self.wait(2)
         self.change_quadratic_graph(
             self.quadratic_graph, 1, 0, -0.1
         )
-        self.dither(2)
+        self.wait(2)
 
         self.tangent_line = tangent_line
 
@@ -793,18 +762,18 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             VGroup(derivative, *rhs[:2]),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(VGroup(*rhs[2:])), run_time = 2)
-        self.dither()
+        self.wait()
         self.play(Rotate(
             self.tangent_line, np.pi/12,
             in_place = True,
             run_time = 3,
             rate_func = wiggle
         ))
-        self.dither()
+        self.wait()
 
     def compute_polynomial_derivative(self):
         derivative = self.get_quadratic_derivative("c_1", "c_2")
@@ -817,14 +786,14 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT,
         )
-        equals_c1.highlight_by_tex("c_1", self.colors[1])
+        equals_c1.set_color_by_tex("c_1", self.colors[1])
         poly_group = VGroup(
             equals_c1,
             derivative,
             self.quadratic_tex
         )
         poly_group_target = VGroup(
-            TexMobject("=", "0", "+0").highlight_by_tex(
+            TexMobject("=", "0", "+0").set_color_by_tex(
                 "0", self.colors[1], substring = False
             ),
             self.get_quadratic_derivative("0", "c_2", arg = "0"),
@@ -837,25 +806,25 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             derivative, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither()
+        self.wait()
         self.play(Transform(
             derivative, derivative_at_zero,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(equals_c1))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(2)
+        self.wait(2)
 
-        self.play(*map(FadeOut, poly_group[:-1]))
+        self.play(*list(map(FadeOut, poly_group[:-1])))
         self.free_to_change_group.remove(
             self.free_to_change_group.arrows[1]
         )
@@ -868,7 +837,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
                 self.quadratic_graph,
                 1, 0, alt_c2
             )
-            self.dither()
+            self.wait()
 
     def point_out_negative_concavity(self):
         partial_cosine_graph = self.get_graph(
@@ -879,16 +848,16 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         )
 
         self.play(ShowCreation(partial_cosine_graph, run_time = 2))
-        self.dither()
+        self.wait()
         for x, run_time in (-1, 2), (1, 4):
             self.play(self.get_tangent_line_change_anim(
                 self.tangent_line, x, self.cosine_graph,
                 run_time = run_time
             ))
-            self.dither()
-        self.play(*map(FadeOut, [
+            self.wait()
+        self.play(*list(map(FadeOut, [
             partial_cosine_graph, self.tangent_line
-        ]))
+        ])))
 
     def compute_cosine_second_derivative(self):
         second_deriv, rhs = self.get_cosine_second_derivative()
@@ -896,11 +865,11 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         self.play(FadeIn(
             VGroup(second_deriv, *rhs[1][:2]),
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(3)
+        self.wait(3)
         self.play(Write(VGroup(*rhs[1][2:]), run_time = 2))
-        self.dither()
+        self.wait()
 
     def show_matching_curvature(self):
         alt_consts_list = [
@@ -913,7 +882,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
                 self.quadratic_graph,
                 *alt_consts
             )
-            self.dither()
+            self.wait()
 
     def show_matching_tangent_lines(self):
         graphs = [self.quadratic_graph, self.cosine_graph]
@@ -930,9 +899,9 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             for line, graph in zip(tangent_lines, graphs)
         ]
 
-        self.play(*map(ShowCreation, tangent_lines))
+        self.play(*list(map(ShowCreation, tangent_lines)))
         self.play(*tangent_change_anims)
-        self.play(*map(FadeOut, tangent_lines))
+        self.play(*list(map(FadeOut, tangent_lines)))
 
     def compute_polynomial_second_derivative(self):
         c2s = ["c_2", "\\text{\\tiny $\\left(-\\frac{1}{2}\\right)$}"]
@@ -950,7 +919,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             second_deriv[0].scale(
                 0.7, about_point = second_deriv[0].get_right()
             )
-            second_deriv[-1].highlight(self.colors[-1])
+            second_deriv[-1].set_color(self.colors[-1])
             second_deriv.next_to(
                 deriv, DOWN, 
                 buff = MED_LARGE_BUFF,
@@ -972,15 +941,15 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
 
         self.play(FadeOut(self.free_to_change_group))
         self.play(FadeIn(derivs[0]))
-        self.dither(2)
+        self.wait(2)
         self.play(Write(second_derivs[0]))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(
             poly_group, poly_group_target,
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(3)
+        self.wait(3)
 
     def box_final_answer(self):
         box = Rectangle(stroke_color = PINK)
@@ -993,7 +962,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         box.move_to(self.quadratic_tex)
 
         self.play(ShowCreation(box, run_time = 2))
-        self.dither(2)
+        self.wait(2)
 
     ######
 
@@ -1017,7 +986,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             c0, "+", c1, arg, "+", c2, arg, "^2"
         )
         for tex, color in zip([c0, c1, c2], self.colors):
-            tex_mob.highlight_by_tex(tex, color)
+            tex_mob.set_color_by_tex(tex, color)
         tex_mob.to_corner(UP+RIGHT)
         return tex_mob
 
@@ -1028,7 +997,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         )
         result[0].scale(0.7, about_point = result[0].get_right())
         for index, color in zip([5, 8], self.colors[1:]):
-            result[index].highlight(color)
+            result[index].set_color(color)
         if hasattr(self, "quadratic_tex"):
             result.next_to(
                 self.quadratic_tex, DOWN,
@@ -1072,7 +1041,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
         derivative = TexMobject(
             "{d(", "\\cos", ")", "\\over", "dx}", "(0)",
         )
-        derivative.highlight_by_tex("\\cos", self.colors[0])
+        derivative.set_color_by_tex("\\cos", self.colors[0])
         derivative.scale(0.7)
         derivative.next_to(
             self.cosine_label, DOWN,
@@ -1080,7 +1049,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             aligned_edge = LEFT
         )
         rhs = TexMobject("=", "-\\sin(0)", "=", "0")
-        rhs.highlight_by_tex("\\sin", self.colors[1])
+        rhs.set_color_by_tex("\\sin", self.colors[1])
         rhs.scale(0.75)
         rhs.next_to(
             derivative, RIGHT,
@@ -1097,8 +1066,8 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             "{d^2(", "\\cos", ")", "\\over", "dx^2}", 
             "(", "0", ")",
         )
-        second_deriv.highlight_by_tex("cos", self.colors[0])
-        second_deriv.highlight_by_tex("-\\cos", self.colors[2])
+        second_deriv.set_color_by_tex("cos", self.colors[0])
+        second_deriv.set_color_by_tex("-\\cos", self.colors[2])
         second_deriv.scale(0.75)
         second_deriv.add_background_rectangle()
         second_deriv.next_to(
@@ -1107,7 +1076,7 @@ class ConstructQuadraticApproximation(ExampleApproximationWithCos):
             aligned_edge = LEFT
         )
         rhs = TexMobject("=", "-\\cos(0)", "=", "-1")
-        rhs.highlight_by_tex("cos", self.colors[2])
+        rhs.set_color_by_tex("cos", self.colors[2])
         rhs.scale(0.8)
         rhs.next_to(
             second_deriv, RIGHT, 
@@ -1132,7 +1101,7 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
                 "\\cos(", s, ")", "\\approx",
                 "1 - \\frac{1}{2}", "(", s, ")", "^2"
             ).next_to(self.get_students(), UP, 2)
-            for s in "x", "0.1",
+            for s in ("x", "0.1",)
         ]
         approx_rhs = TexMobject("=", "0.995")
         approx_rhs.next_to(approx_at_point, RIGHT)
@@ -1145,31 +1114,31 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
             real_result.get_part_by_tex("=").get_center()
         )
         for mob in approx_at_point, real_result:
-            mob.highlight_by_tex("0.1", YELLOW)
+            mob.set_color_by_tex("0.1", YELLOW)
         real_result.set_fill(opacity = 0)
 
         self.play(
             Write(approx_at_x, run_time = 2),
             self.teacher.change_mode, "raise_right_hand"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             approx_at_x, approx_at_point,
         ))
-        self.dither()
+        self.wait()
         self.play(Write(approx_rhs))
-        self.dither(2)
+        self.wait(2)
         self.play(
             real_result.shift, 1.5*DOWN,
             real_result.set_fill, None, 1,
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither(2)
+        self.wait(2)
         self.change_student_modes(
             *["plain"]*3,
-            added_anims = map(FadeOut, [
+            added_anims = list(map(FadeOut, [
                 approx_at_point, approx_rhs, real_result
-            ]),
+            ])),
             look_at_arg = approx_at_x
         )
 
@@ -1181,7 +1150,7 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
             Write(polynomial),
             self.teacher.change, "pondering"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             ApplyMethod(
                 const.shift, MED_LARGE_BUFF*UP,
@@ -1190,7 +1159,7 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
             )
             for const, a in zip(const_terms, np.linspace(0, 0.3, len(const_terms)))
         ])
-        self.dither()
+        self.wait()
 
         self.const_terms = const_terms
         self.polynomial = polynomial
@@ -1204,7 +1173,7 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
 
         self.play(c0.shift, UP)
         self.play(Write(equation))
-        self.dither()
+        self.wait()
         self.play(Transform(self.polynomial, new_polynomial))
         self.play(FadeOut(equation))
 
@@ -1219,9 +1188,9 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
 
         self.play(c1.shift, UP)
         self.play(Write(equation))
-        self.dither()
+        self.wait()
         self.play(Transform(self.polynomial, new_polynomial))
-        self.dither()
+        self.wait()
         self.play(FadeOut(equation))
 
     def show_c2(self):
@@ -1239,9 +1208,9 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
 
         self.play(c2.shift, UP)
         self.play(FadeIn(equation))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(self.polynomial, new_polynomial))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(equation))
 
     #####
@@ -1252,7 +1221,7 @@ class ReflectOnQuadraticApproximation(TeacherStudentsScene):
         )
         colors = ConstructQuadraticApproximation.CONFIG["colors"]
         for tex, color in zip([c0, c1, c2], colors):
-            polynomial.highlight_by_tex(tex, color, substring = False)
+            polynomial.set_color_by_tex(tex, color, substring = False)
 
         polynomial.next_to(self.teacher, UP, LARGE_BUFF)
         polynomial.to_edge(RIGHT)
@@ -1265,25 +1234,25 @@ class ReflectionOnQuadraticSupplement(ConstructQuadraticApproximation):
         quadratic_graph = self.get_quadratic_graph()
         self.add(quadratic_graph)
 
-        self.dither()
+        self.wait()
         for c0 in 0, 2, 1:
             self.change_quadratic_graph(
                 quadratic_graph,
                 c0 = c0
             )
-        self.dither(2)
+        self.wait(2)
         for c1 in 1, -1, 0:
             self.change_quadratic_graph(
                 quadratic_graph,
                 c1 = c1
             )
-        self.dither(2)
+        self.wait(2)
         for c2 in -0.1, -1, -0.5:
             self.change_quadratic_graph(
                 quadratic_graph,
                 c2 = c2
             )
-        self.dither(2)
+        self.wait(2)
 
 class SimilarityOfChangeBehavior(ConstructQuadraticApproximation):
     def construct(self):
@@ -1328,8 +1297,8 @@ class SimilarityOfChangeBehavior(ConstructQuadraticApproximation):
             FadeOut(dots)
         )
         self.play(*tangent_line_movements + dot_anims, run_time = 6)
-        self.play(*map(FadeOut, [tangent_lines, dots]))
-        self.dither()
+        self.play(*list(map(FadeOut, [tangent_lines, dots])))
+        self.wait()
 
 class MoreTerms(TeacherStudentsScene):
     def construct(self):
@@ -1338,7 +1307,7 @@ class MoreTerms(TeacherStudentsScene):
             target_mode = "surprised",
         )
         self.change_student_modes(*["hooray"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
     CONFIG = {
@@ -1364,8 +1333,8 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         )
         self.quadratic_graph = self.get_quadratic_graph()
         self.big_rect = Rectangle(
-            height = 2*SPACE_HEIGHT,
-            width = 2*SPACE_WIDTH,
+            height = FRAME_HEIGHT,
+            width = FRAME_WIDTH,
             stroke_width = 0,
             fill_color = BLACK,
             fill_opacity = 0.5,
@@ -1376,7 +1345,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         )
 
         self.cosine_label = TexMobject("\\cos", "(0)", "=1")
-        self.cosine_label.highlight_by_tex("cos", self.colors[0])
+        self.cosine_label.set_color_by_tex("cos", self.colors[0])
         self.cosine_label.scale(0.75)
         self.cosine_label.to_corner(UP+LEFT)
         self.add(self.cosine_label)
@@ -1386,8 +1355,8 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         self.polynomial = TexMobject(
             "P(x)=", "1", "-\\frac{1}{2}", "x^2"
         )
-        self.polynomial.highlight_by_tex("1", self.colors[0])
-        self.polynomial.highlight_by_tex("-\\frac{1}{2}", self.colors[2])
+        self.polynomial.set_color_by_tex("1", self.colors[0])
+        self.polynomial.set_color_by_tex("-\\frac{1}{2}", self.colors[2])
         self.polynomial.to_corner(UP+RIGHT)
         self.polynomial.quadratic_part = VGroup(
             *self.polynomial[1:]
@@ -1399,7 +1368,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         plus_cubic_term = TexMobject("+\\,", "c_3", "x^3")
         plus_cubic_term.next_to(polynomial, RIGHT)
         plus_cubic_term.to_edge(RIGHT, buff = LARGE_BUFF)
-        plus_cubic_term.highlight_by_tex("c_3", self.colors[3])
+        plus_cubic_term.set_color_by_tex("c_3", self.colors[3])
         plus_cubic_copy = plus_cubic_term.copy()
 
         polynomial.generate_target()
@@ -1410,7 +1379,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             MoveToTarget(polynomial),
             GrowFromCenter(plus_cubic_term)
         )
-        self.dither()
+        self.wait()
 
         brace = Brace(polynomial.quadratic_part, DOWN)
         third_derivative = TexMobject(
@@ -1427,7 +1396,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             polynomial.quadratic_part.copy(),
             VGroup(third_derivative[1])
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(plus_cubic_copy.next_to, third_derivative, RIGHT)
         derivative_term = self.take_derivatives_of_monomial(
             VGroup(*plus_cubic_copy[1:])
@@ -1451,13 +1420,13 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             self.cosine_second_derivative.copy(),
             cosine_third_derivative
         ))
-        self.dither(2)
+        self.wait(2)
         dot.set_fill(opacity = 0.5)
         self.play(
             dot.move_to, self.polynomial_third_derivative.get_right(),
             dot.set_fill, None, 0,
         )
-        self.dither()
+        self.wait()
 
     def set_c3_to_zero(self):
         c3s = VGroup(
@@ -1468,16 +1437,16 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             TexMobject("0").move_to(c3)
             for c3 in c3s
         ])
-        zeros.highlight(self.colors[3])
+        zeros.set_color(self.colors[3])
         zeros.shift(SMALL_BUFF*UP)
         zeros[0].shift(0.25*SMALL_BUFF*(UP+LEFT))
 
         self.play(Transform(
             c3s, zeros, 
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(2)
+        self.wait(2)
 
     def show_cubic_curves(self):
         real_graph = self.quadratic_graph
@@ -1496,7 +1465,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         real_graph.set_stroke(width = 0)
         for alt_graph in alt_graphs:
             self.play(Transform(graph, alt_graph, run_time = 2))
-            self.dither()
+            self.wait()
         self.play(graph.restore, run_time = 2)
         real_graph.restore()
         self.play(FadeOut(graph))
@@ -1505,15 +1474,15 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
         polynomial = self.polynomial
         plus_quartic_term = TexMobject("+\\,", "c_4", "x^4")
         plus_quartic_term.next_to(polynomial, RIGHT)
-        plus_quartic_term.highlight_by_tex("c_4", self.colors[4])
+        plus_quartic_term.set_color_by_tex("c_4", self.colors[4])
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.plus_cubic_term,
             self.polynomial_third_derivative,
             self.polynomial_third_derivative_brace,
-        ]))
+        ])))
         self.play(Write(plus_quartic_term))
-        self.dither()
+        self.wait()
 
         self.plus_quartic_term = plus_quartic_term
 
@@ -1525,7 +1494,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             self.cosine_third_derivative.copy(),
             cosine_fourth_derivative
         ))
-        self.dither(3)
+        self.wait(3)
 
     def take_fourth_derivative_of_quartic(self):
         quartic_term = VGroup(*self.plus_quartic_term.copy()[1:])
@@ -1541,17 +1510,17 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             buff = LARGE_BUFF,
             aligned_edge = LEFT
         )
-        alt_rhs.highlight_by_tex("c_4", self.colors[4])
+        alt_rhs.set_color_by_tex("c_4", self.colors[4])
 
         self.play(Write(fourth_deriv_lhs))
         self.play(
             quartic_term.next_to, fourth_deriv_lhs, RIGHT
         )
-        self.dither()
+        self.wait()
         fourth_deriv_rhs = self.take_derivatives_of_monomial(quartic_term)
-        self.dither()
+        self.wait()
         self.play(Write(alt_rhs))
-        self.dither()
+        self.wait()
 
         self.fourth_deriv_lhs = fourth_deriv_lhs
         self.fourth_deriv_rhs = fourth_deriv_rhs
@@ -1564,7 +1533,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             self.plus_quartic_term.get_part_by_tex("c_4")
         )
         fraction = TexMobject("\\text{\\small $\\frac{1}{24}$}")
-        fraction.highlight(self.colors[4])
+        fraction.set_color(self.colors[4])
         fractions = VGroup(*[
             fraction.copy().move_to(c4, LEFT)
             for c4 in c4s
@@ -1578,11 +1547,11 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             Transform(
                 c4s, fractions,
                 run_time = 3,
-                submobject_mode = "lagged_start",
+                lag_ratio = 0.5,
             ),
             MoveToTarget(x_to_4, run_time = 2)
         )
-        self.dither(3)
+        self.wait(3)
 
     def show_quartic_approximation(self):
         real_graph = self.quadratic_graph
@@ -1613,7 +1582,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             ),
             Animation(tex_mobs)
         )
-        self.dither(3)
+        self.wait(3)
 
 
     ####
@@ -1643,7 +1612,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
 
             possibly_added_anims = []
             try:
-                possibly_added_anims.append(added_anims_iter.next())
+                possibly_added_anims.append(next(added_anims_iter))
             except:
                 pass
 
@@ -1663,7 +1632,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             self.remove(exponent_copy)
             self.add(front_num)
             curr_term = VGroup(front_num, *curr_term)
-        self.dither()
+        self.wait()
         self.play(FadeOut(curr_term[-1]))
 
         return VGroup(*curr_term[:-1])
@@ -1675,8 +1644,8 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             "{d^3(", "\\cos", ")", "\\over", "dx^3}", 
             "(", "0", ")",
         )
-        third_deriv.highlight_by_tex("cos", self.colors[0])
-        third_deriv.highlight_by_tex("-\\cos", self.colors[3])
+        third_deriv.set_color_by_tex("cos", self.colors[0])
+        third_deriv.set_color_by_tex("-\\cos", self.colors[3])
         third_deriv.scale(0.75)
         third_deriv.add_background_rectangle()
         third_deriv.next_to(
@@ -1685,7 +1654,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             aligned_edge = LEFT
         )
         rhs = TexMobject("=", "\\sin(0)", "=", "0")
-        rhs.highlight_by_tex("sin", self.colors[3])
+        rhs.set_color_by_tex("sin", self.colors[3])
         rhs.scale(0.8)
         rhs.next_to(
             third_deriv, RIGHT, 
@@ -1704,7 +1673,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             "{d^4(", "\\cos", ")", "\\over", "dx^4}", 
             "(", "0", ")",
         )
-        fourth_deriv.highlight_by_tex("cos", self.colors[0])
+        fourth_deriv.set_color_by_tex("cos", self.colors[0])
         fourth_deriv.scale(0.75)
         fourth_deriv.add_background_rectangle()
         fourth_deriv.next_to(
@@ -1713,7 +1682,7 @@ class CubicAndQuarticApproximations(ConstructQuadraticApproximation):
             aligned_edge = LEFT
         )
         rhs = TexMobject("=", "\\cos(0)", "=", "1")
-        rhs.highlight_by_tex("cos", self.colors[4])
+        rhs.set_color_by_tex("cos", self.colors[4])
         rhs.scale(0.8)
         rhs.next_to(
             fourth_deriv, RIGHT, 
@@ -1731,7 +1700,7 @@ class NoticeAFewThings(TeacherStudentsScene):
             "Notice a few things",
             target_mode = "hesitant"
         )
-        self.dither(3)
+        self.wait(3)
 
 class FactorialTerms(CubicAndQuarticApproximations):
     def construct(self):
@@ -1743,7 +1712,7 @@ class FactorialTerms(CubicAndQuarticApproximations):
             for s in ["^%d"%i if i > 1 else ""]
         ]
         for lhs in lhs_list:
-            lhs.highlight_by_tex("c_8", YELLOW)
+            lhs.set_color_by_tex("c_8", YELLOW)
             lhs.next_to(ORIGIN, LEFT)
         lhs_list[0].set_fill(opacity = 0)
         added_anims = [
@@ -1756,10 +1725,10 @@ class FactorialTerms(CubicAndQuarticApproximations):
 
         term = TexMobject("c_8", "x^8")
         term.next_to(lhs[-1], RIGHT)
-        term.highlight_by_tex("c_8", YELLOW)
+        term.set_color_by_tex("c_8", YELLOW)
 
         self.add(term)
-        self.dither()
+        self.wait()
         result = self.take_derivatives_of_monomial(term, *added_anims)
 
         factorial_term = VGroup(*result[:-1])
@@ -1771,7 +1740,7 @@ class FactorialTerms(CubicAndQuarticApproximations):
             "Set", "$c_8$", 
             "$ = \\frac{\\text{Desired derivative value}}{8!}"
         )
-        words.highlight_by_tex("c_8", YELLOW)
+        words.set_color_by_tex("c_8", YELLOW)
         words.shift(2*UP)
 
         self.play(
@@ -1785,7 +1754,7 @@ class FactorialTerms(CubicAndQuarticApproximations):
             ),
             Write(words),
         )
-        self.dither(2)
+        self.wait(2)
 
 class HigherTermsDontMessUpLowerTerms(Scene):
     CONFIG = {
@@ -1810,17 +1779,17 @@ class HigherTermsDontMessUpLowerTerms(Scene):
         polynomial.shift(2*LEFT + UP)
         c0, c2, c4 = [
             polynomial.get_part_by_tex(tex)
-            for tex in c0_tex, c2_tex, c4_tex
+            for tex in (c0_tex, c2_tex, c4_tex)
         ]
         for term, color in zip([c0, c2, c4], self.colors):
-            term.highlight(color)
+            term.set_color(color)
         arrows = VGroup(*[
             Arrow(
                 c4.get_top(), c.get_top(), 
                 path_arc = arc,
                 color = c.get_color()
             )
-            for c, arc in (c2, 0.9*np.pi), (c0, np.pi)
+            for c, arc in [(c2, 0.9*np.pi), (c0, np.pi)]
         ])
         no_affect_words = TextMobject(
             "Doesn't affect \\\\ previous terms"
@@ -1829,14 +1798,14 @@ class HigherTermsDontMessUpLowerTerms(Scene):
         no_affect_words.shift(MED_SMALL_BUFF*(UP+LEFT))
 
         self.add(*polynomial[:-2])
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(*polynomial[-2:])))
         self.play(
             Write(no_affect_words),
             ShowCreation(arrows),
             run_time = 3
         )
-        self.dither(2)
+        self.wait(2)
 
         self.polynomial = polynomial
         self.c0_tex = c0_tex
@@ -1849,9 +1818,9 @@ class HigherTermsDontMessUpLowerTerms(Scene):
             "2", self.c2_tex, "+", 
             "3 \\cdot 4", self.c4_tex, "(", "0", ")", "^2"
         )
-        second_deriv.highlight_by_tex(self.c2_tex, self.colors[1])
-        second_deriv.highlight_by_tex(self.c4_tex, self.colors[2])
-        second_deriv.highlight_by_tex("0", YELLOW)
+        second_deriv.set_color_by_tex(self.c2_tex, self.colors[1])
+        second_deriv.set_color_by_tex(self.c4_tex, self.colors[2])
+        second_deriv.set_color_by_tex("0", YELLOW)
         second_deriv.next_to(
             self.polynomial, DOWN,
             buff = MED_LARGE_BUFF,
@@ -1866,11 +1835,11 @@ class HigherTermsDontMessUpLowerTerms(Scene):
         second_deriv.set_fill(opacity = 0)
 
         self.play(second_deriv.restore)
-        self.dither()
+        self.wait()
         self.play(GrowFromCenter(brace))
-        self.dither()
+        self.wait()
         self.play(Write(equals_zero))
-        self.dither(3)
+        self.wait(3)
 
 class EachTermControlsOneDerivative(Scene):
     def construct(self):
@@ -1892,17 +1861,17 @@ class EachTermControlsOneDerivative(Scene):
                 for n in range(2, 5)
             ]
         ])
-        deriv_words.arrange_submobjects(
+        deriv_words.arrange(
             RIGHT, 
             buff = LARGE_BUFF,
             aligned_edge = UP
         )
-        deriv_words.scale_to_fit_width(2*SPACE_WIDTH - MED_LARGE_BUFF)
+        deriv_words.set_width(FRAME_WIDTH - MED_LARGE_BUFF)
         deriv_words.to_edge(UP)
 
         for const, deriv, color in zip(consts, deriv_words, colors):
             for mob in const, deriv:
-                mob.highlight(color)
+                mob.set_color(color)
             arrow = Arrow(
                 const.get_top(),
                 deriv.get_bottom(),
@@ -1917,7 +1886,7 @@ class EachTermControlsOneDerivative(Scene):
                 ShowCreation(deriv.arrow),
                 FadeIn(deriv)
             )
-            self.dither()
+            self.wait()
 
 class ApproximateNearNewPoint(CubicAndQuarticApproximations):
     CONFIG = {
@@ -1963,7 +1932,7 @@ class ApproximateNearNewPoint(CubicAndQuarticApproximations):
             ShowCreation(v_line),
             Animation(pi)
         )
-        self.dither()
+        self.wait()
 
     def change_approximation_center(self, graph, dot, target, **kwargs):
         start = self.x_axis.point_to_number(dot.get_center())
@@ -1993,15 +1962,15 @@ class ApproximateNearNewPoint(CubicAndQuarticApproximations):
         self.play(FadeIn(
             poly_around_pi,
             run_time = 4,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeIn(randy))
         self.play(randy.change, "confused", poly_around_pi)
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(randy.change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
     ###
 
@@ -2013,7 +1982,7 @@ class ApproximateNearNewPoint(CubicAndQuarticApproximations):
             ])
         )
         for d, color in enumerate(self.colors):
-            result.highlight_by_tex("c_%d"%d, color)
+            result.set_color_by_tex("c_%d"%d, color)
         result.scale(0.85)
         result.add_background_rectangle()
         return result
@@ -2035,7 +2004,7 @@ class OnAPhilosophicalLevel(TeacherStudentsScene):
             "And on a \\\\ philosophical level",
             run_time = 1
         )
-        self.dither(3)
+        self.wait(3)
 
 class TranslationOfInformation(CubicAndQuarticApproximations):
     def construct(self):
@@ -2077,9 +2046,9 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         )
         outer_v_lines = VGroup(*[
             center_v_line.copy().shift(vect)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
-        outer_v_lines.highlight(GREEN)
+        outer_v_lines.set_color(GREEN)
         dot = Dot(color = YELLOW)
         dot.move_to(center_v_line.get_top())
         dot.save_state()
@@ -2092,7 +2061,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         self.play(Write(deriv_info, run_time = 2))
         self.play(dot.restore)
         self.play(ShowCreation(center_v_line))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arrow))
         self.play(Write(output_info, run_time = 2))
 
@@ -2114,10 +2083,10 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                 )),
                 run_time = 2
             ))
-        self.dither()
-        self.play(*map(FadeOut, [
+        self.wait()
+        self.play(*list(map(FadeOut, [
             deriv_info, arrow, output_info, outer_v_lines
-        ]))
+        ])))
 
         self.quadratic_graph = quadratic_graph
         self.v_line = center_v_line
@@ -2132,7 +2101,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                     "-\\cos", "\\sin", "\\cos"
                 ]
             ])
-            for arg in "x", "0"
+            for arg in ("x", "0")
         ]
         arrows = VGroup(*[
             Arrow(
@@ -2143,17 +2112,17 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ) 
             for d in derivs_at_x
         ])
-        group = VGroup(*it.chain(*zip(
+        group = VGroup(*it.chain(*list(zip(
             derivs_at_x,
             arrows
-        )))
+        ))))
         group.add(TexMobject("\\vdots"))
-        group.arrange_submobjects(DOWN, buff = SMALL_BUFF)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        group.arrange(DOWN, buff = SMALL_BUFF)
+        group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0, color in zip(derivs_at_x, derivs_at_zero, self.colors):
             for d in dx, d0:
-                d.highlight(color)
+                d.set_color(color)
             d0.replace(dx)
         rhs_group = VGroup(*[
             TexMobject("=", "%d"%d).scale(0.7).next_to(deriv, RIGHT)
@@ -2163,14 +2132,14 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             rhs[1] for rhs in rhs_group
         ])
         for value, color in zip(derivative_values, self.colors):
-            value.highlight(color)
+            value.set_color(color)
         zeros = VGroup(*[
             deriv.get_part_by_tex("0")
             for deriv in derivs_at_zero
         ])
 
         self.play(FadeIn(derivs_at_x[0]))
-        self.dither()
+        self.wait()
         for start_d, arrow, target_d in zip(group[::2], group[1::2], group[2::2]):
             self.play(
                 ReplacementTransform(
@@ -2178,17 +2147,17 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                 ),
                 ShowCreation(arrow)
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(ReplacementTransform(
             derivs_at_x, derivs_at_zero
         ))
-        self.dither()
-        self.play(*map(Write, rhs_group))
-        self.dither()
+        self.wait()
+        self.play(*list(map(Write, rhs_group)))
+        self.wait()
         for rhs in rhs_group:
             self.play(Indicate(rhs[1]), color = WHITE)
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 zero.copy(), self.dot,
@@ -2197,7 +2166,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             )
             for zero, a in zip(zeros, np.linspace(0, 0.6, len(zeros)))
         ])
-        self.dither()
+        self.wait()
 
         self.cosine_derivative_group = VGroup(
             derivs_at_zero, arrows, group[-1], rhs_group
@@ -2230,10 +2199,10 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             Animation(derivative_values)
         )
         self.remove(derivative_values)
-        self.dither(2)
+        self.wait(2)
         to_fade = self.take_derivatives_of_monomial(monomial)
         self.play(FadeOut(to_fade))
-        self.dither()
+        self.wait()
 
         self.polynomial = polynomial
 
@@ -2253,11 +2222,11 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             x_min = -3.2, 
             x_max = 3.2,
         )
-        quartic_graph.highlight(self.colors[4])
+        quartic_graph.set_color(self.colors[4])
 
         self.play(GrowFromCenter(brace))
         self.play(Write(name))
-        self.dither()
+        self.wait()
         self.play(
             Transform(
                 self.quadratic_graph, quartic_graph,
@@ -2265,7 +2234,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ),
             Animation(self.dot)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.taylor_name_group = VGroup(brace, name)
 
@@ -2276,13 +2245,13 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             func, color = self.colors[0]
         )
 
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.cosine_derivative_group,
             self.cosine_graph,
             self.quadratic_graph,
             self.v_line,
             self.dot
-        ]))
+        ])))
         self.play(ShowCreation(graph))
 
         self.graph = graph
@@ -2299,10 +2268,10 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                     ("\\frac{d^4 f}{dx^4}", "(", arg, ")"),
                 ]
             ])
-            for arg in "x", "0", "a"
+            for arg in ("x", "0", "a")
         ]
-        derivs_at_x.arrange_submobjects(DOWN, buff = MED_LARGE_BUFF)
-        derivs_at_x.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        derivs_at_x.arrange(DOWN, buff = MED_LARGE_BUFF)
+        derivs_at_x.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         derivs_at_x.to_edge(LEFT)
         zeros = VGroup(*[
             deriv.get_part_by_tex("0")
@@ -2315,29 +2284,29 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
 
         for color, dx, d0, da in zip(self.colors, *deriv_lists):
             for d in dx, d0, da:
-                d.highlight(color)
+                d.set_color(color)
                 d.add_background_rectangle()
             d0.replace(dx)
             da.replace(dx)
 
         self.play(FadeIn(derivs_at_x[0]))
-        self.dither()
+        self.wait()
         for start, target in zip(derivs_at_x, derivs_at_x[1:]):
             self.play(ReplacementTransform(
                 start.copy(), target
             ))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(ReplacementTransform(
             derivs_at_x, derivs_at_zero,
         ))
         self.play(ReplacementTransform(
             zeros.copy(), self.dot,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
         self.play(ShowCreation(self.v_line))
-        self.dither()
+        self.wait()
 
         self.derivs_at_zero = derivs_at_zero
         self.derivs_at_a = derivs_at_a
@@ -2357,13 +2326,13 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             ReplacementTransform(
                 self.polynomial, new_polynomial,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             FadeOut(polynomial_fourth_term),
             FadeOut(self.taylor_name_group),
         )
         self.polynomial = new_polynomial
-        self.dither(3)
+        self.wait(3)
 
     def walk_through_terms(self):
         func = self.graph.underlying_function
@@ -2375,7 +2344,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             for n in range(7)
         ]
         for graph, color in zip(approx_graphs, self.colors):
-            graph.highlight(color)
+            graph.set_color(color)
 
         left_mob = self.polynomial.coefficients[0]
         right_mobs = list(self.polynomial.factorials)
@@ -2395,7 +2364,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
 
         self.play(GrowFromCenter(brace))
         self.play(ShowCreation(approx_graph))
-        self.dither()
+        self.wait()
         for new_brace, new_graph in zip(braces[1:], approx_graphs[1:]):
             self.play(Transform(brace, new_brace))
             self.play(
@@ -2403,7 +2372,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                 Animation(self.polynomial),
                 Animation(self.dot),
             )
-            self.dither()
+            self.wait()
         self.play(FadeOut(brace))
 
         self.approx_graph = approx_graph
@@ -2453,7 +2422,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             Animation(self.polynomial),
             Animation(polynomial_third_term)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(
             self.derivs_at_zero, 
             self.derivs_at_a
@@ -2462,7 +2431,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
             Transform(self.polynomial, new_polynomial),
             FadeOut(polynomial_third_term)
         )
-        self.dither()
+        self.wait()
         for x in -1, np.pi/6:
             self.play(
                 UpdateFromAlphaFunc(
@@ -2471,7 +2440,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
                 Animation(self.polynomial),
                 run_time = 4,
             )
-            self.dither()
+            self.wait()
 
 
     #####
@@ -2488,7 +2457,7 @@ class TranslationOfInformation(CubicAndQuarticApproximations):
         result.scale(0.8)
         coefs = VGroup(result[1], *result[3:-1:6])
         for coef, color in zip(coefs, self.colors):
-            coef.highlight(color)
+            coef.set_color(color)
         result.coefficients = coefs
         result.factorials = VGroup(*result[7::6])
 
@@ -2502,9 +2471,9 @@ class ThisIsAStandardFormula(TeacherStudentsScene):
         )
         self.change_student_modes(
             *["sad"]*3,
-            look_at_arg = SPACE_HEIGHT*UP
+            look_at_arg = FRAME_Y_RADIUS*UP
         )
-        self.dither(2)
+        self.wait(2)
 
 class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
     CONFIG = {
@@ -2532,7 +2501,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
             ),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.e_to_x = e_to_x
@@ -2541,10 +2510,10 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
         self.e_to_x.generate_target()
         derivs_at_x, derivs_at_zero = [
             VGroup(*[
-                TexMobject("e^%s"%s).highlight(c)
+                TexMobject("e^%s"%s).set_color(c)
                 for c in self.colors
             ])
-            for s in "x", "0"
+            for s in ("x", "0")
         ]
         derivs_at_x.submobjects[0] = self.e_to_x.target
         arrows = VGroup(*[
@@ -2556,13 +2525,13 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
             ) 
             for d in derivs_at_x
         ])
-        group = VGroup(*it.chain(*zip(
+        group = VGroup(*it.chain(*list(zip(
             derivs_at_x,
             arrows
-        )))
+        ))))
         group.add(TexMobject("\\vdots"))
-        group.arrange_submobjects(DOWN, buff = 2*SMALL_BUFF)
-        group.scale_to_fit_height(2*SPACE_HEIGHT - MED_LARGE_BUFF)
+        group.arrange(DOWN, buff = 2*SMALL_BUFF)
+        group.set_height(FRAME_HEIGHT - MED_LARGE_BUFF)
         group.to_edge(LEFT)
         for dx, d0 in zip(derivs_at_x, derivs_at_zero):
             for d in dx, d0:
@@ -2576,7 +2545,7 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
             rhs[1] for rhs in rhs_group
         ])
         for value, color in zip(derivative_values, self.colors):
-            value.highlight(color)
+            value.set_color(color)
 
         for arrow in arrows:
             d_dx = TexMobject("d/dx")
@@ -2594,13 +2563,13 @@ class ExpPolynomial(TranslationOfInformation, ExampleApproximationWithExp):
                 ),
                 Write(arrow, run_time = 1)
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(ReplacementTransform(
             derivs_at_x, derivs_at_zero
         ))
-        self.dither()
-        self.play(*map(Write, rhs_group))
+        self.wait()
+        self.play(*list(map(Write, rhs_group)))
 
         self.derivative_values = derivative_values
 
@@ -2645,7 +2614,7 @@ class ShowSecondTerm(TeacherStudentsScene):
             "\\frac{d^2 f}{dx^2}(a)", "(x - a)^2"
         )
         for tex, color in zip(["f(a)", "df", "d^2 f"], colors):
-            polynomial.highlight_by_tex(tex, color)
+            polynomial.set_color_by_tex(tex, color)
         polynomial.next_to(self.teacher, UP+LEFT)
         polynomial.shift(MED_LARGE_BUFF*UP)
         second_term = VGroup(*polynomial[-2:])
@@ -2660,7 +2629,7 @@ class ShowSecondTerm(TeacherStudentsScene):
             "Now for \\\\ something fun!",
             target_mode = "hooray"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(
                 self.teacher,
@@ -2673,7 +2642,7 @@ class ShowSecondTerm(TeacherStudentsScene):
             FadeIn(words),
         )
         self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class SecondTermIntuition(AreaIsDerivative):
     CONFIG = {
@@ -2729,7 +2698,7 @@ class SecondTermIntuition(AreaIsDerivative):
                     new_t_max = target,
                     run_time = 3,
                 )
-        self.func_name = func_name
+        self.__name__ = func_name
 
     def write_derivative(self):
         deriv = TexMobject("\\frac{df_{\\text{area}}}{dx}(x)")
@@ -2741,7 +2710,7 @@ class SecondTermIntuition(AreaIsDerivative):
 
         self.play(ApplyWave(self.v_graph, direction = UP))
         self.play(Write(deriv, run_time = 2))
-        self.dither()
+        self.wait()
 
         self.deriv_label = deriv
 
@@ -2773,7 +2742,7 @@ class SecondTermIntuition(AreaIsDerivative):
         self.change_area_bounds(new_t_max = new_x)
         self.play(
             FadeIn(dark_area),
-            *map(Animation, self.foreground_mobjects)
+            *list(map(Animation, self.foreground_mobjects))
         )
         self.play(
             FadeOut(self.T_label_group),
@@ -2781,7 +2750,7 @@ class SecondTermIntuition(AreaIsDerivative):
             FadeIn(rect),
             FadeIn(height_brace)
         )
-        self.dither()
+        self.wait()
         if not self.skip_reconfiguration:
             self.transition_to_alt_config(
                 dx = self.dx/10.0,
@@ -2805,7 +2774,7 @@ class SecondTermIntuition(AreaIsDerivative):
             stretch = True
         )
         circle = Circle(color = RED)
-        circle.scale_to_fit_height(triangle.get_height())
+        circle.set_height(triangle.get_height())
         circle.replace(triangle, dim_to_match = 1)
         circle.scale_in_place(1.3)
 
@@ -2843,12 +2812,12 @@ class SecondTermIntuition(AreaIsDerivative):
                 Write(label),
                 ShowCreation(arrow)
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(ReplacementTransform(
             dx_label, x_minus_a
         ))
-        self.dither()
+        self.wait()
 
         self.x_minus_a = x_minus_a
 
@@ -2857,9 +2826,9 @@ class SecondTermIntuition(AreaIsDerivative):
         tex_scale_factor = 0.7
         base_line = Line(*[
             triangle.get_corner(DOWN+vect)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
-        base_line.highlight(RED)
+        base_line.set_color(RED)
         base_label = TextMobject("Base = ", "$(x-a)$")
         base_label.scale(tex_scale_factor)
         base_label.next_to(base_line, DOWN+RIGHT, MED_LARGE_BUFF)
@@ -2891,21 +2860,21 @@ class SecondTermIntuition(AreaIsDerivative):
             ShowCreation(base_arrow),
             ShowCreation(base_line)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             GrowFromCenter(height_brace),
             Write(height_labels[0])
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(*height_labels))
-        self.dither(2)
+        self.wait(2)
 
         #Show area formula
         equals_half = TexMobject("=\\frac{1}{2}")
         equals_half.scale(tex_scale_factor)
         group = VGroup(triangle, equals_half, height_term, base_term)
         group.generate_target()
-        group.target.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.target.arrange(RIGHT, buff = SMALL_BUFF)
         group.target[-1].next_to(
             group.target[-2], RIGHT,
             buff = SMALL_BUFF,
@@ -2927,28 +2896,28 @@ class SecondTermIntuition(AreaIsDerivative):
             FadeOut(self.deriv_label),
             MoveToTarget(group, run_time = 2)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(
             group[-1], exp_2
         ))
-        self.dither(2)
+        self.wait(2)
 
     def walk_through_taylor_terms(self):
         mini_area, mini_rect, mini_triangle = [
             mob.copy()
-            for mob in self.dark_area, self.rect, self.triangle
+            for mob in (self.dark_area, self.rect, self.triangle)
         ]
         mini_area.set_fill(BLUE_E, opacity = 1)
-        mini_area.scale_to_fit_height(1)
-        mini_rect.scale_to_fit_height(1)
-        mini_triangle.scale_to_fit_height(0.5)
+        mini_area.set_height(1)
+        mini_rect.set_height(1)
+        mini_triangle.set_height(0.5)
 
         geometric_taylor = VGroup(
             TexMobject("f(x) \\approx "), mini_area,
             TexMobject("+"), mini_rect,
             TexMobject("+"), mini_triangle,
         )
-        geometric_taylor.arrange_submobjects(
+        geometric_taylor.arrange(
             RIGHT, buff = MED_SMALL_BUFF
         )
         geometric_taylor.to_corner(UP+LEFT)
@@ -2958,9 +2927,9 @@ class SecondTermIntuition(AreaIsDerivative):
             "\\frac{df}{dx}(a)(x-a)", "+",
             "\\frac{1}{2}\\frac{d^2 f}{dx^2}(a)(x-a)^2"
         )
-        analytic_taylor.highlight_by_tex("f(a)", BLUE)
-        analytic_taylor.highlight_by_tex("df", YELLOW)
-        analytic_taylor.highlight_by_tex("d^2 f", MAROON_B)
+        analytic_taylor.set_color_by_tex("f(a)", BLUE)
+        analytic_taylor.set_color_by_tex("df", YELLOW)
+        analytic_taylor.set_color_by_tex("d^2 f", MAROON_B)
         analytic_taylor.scale(0.7)
         analytic_taylor.next_to(
             geometric_taylor, DOWN,
@@ -2970,32 +2939,32 @@ class SecondTermIntuition(AreaIsDerivative):
             part.add_to_back(BackgroundRectangle(part))
 
         new_func_name = TexMobject("f_{\\text{area}}(a)")
-        new_func_name.replace(self.func_name)
+        new_func_name.replace(self.__name__)
 
         self.play(FadeIn(
             geometric_taylor,
             run_time = 2,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(VGroup(*analytic_taylor[:3])),
             self.dark_area.set_fill, BLUE_E, 1,
-            Transform(self.func_name, new_func_name)
+            Transform(self.__name__, new_func_name)
         )
-        self.dither()
+        self.wait()
         self.play(
             self.rect.scale_in_place, 0.5,
             rate_func = there_and_back
         )
         self.play(FadeIn(VGroup(*analytic_taylor[3:5])))
-        self.dither(2)
+        self.wait(2)
         self.play(
             self.triangle.scale_in_place, 0.5,
             rate_func = there_and_back
         )
         self.play(FadeIn(VGroup(*analytic_taylor[5:])))
-        self.dither(3)
+        self.wait(3)
 
 class EachTermHasMeaning(TeacherStudentsScene):
     def construct(self):
@@ -3009,7 +2978,7 @@ class EachTermHasMeaning(TeacherStudentsScene):
             *["thinking"]*3,
             look_at_arg = 4*UP
         )
-        self.dither(3)
+        self.wait(3)
 
 class AskAboutInfiniteSum(TeacherStudentsScene):
     def construct(self):
@@ -3020,8 +2989,8 @@ class AskAboutInfiniteSum(TeacherStudentsScene):
 
     def ask_question(self):
         big_rect = Rectangle(
-            width = 2*SPACE_WIDTH,
-            height = 2*SPACE_HEIGHT,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             stroke_width = 0,
             fill_color =  BLACK,
             fill_opacity = 0.7,
@@ -3045,7 +3014,7 @@ class AskAboutInfiniteSum(TeacherStudentsScene):
             "We could call \\\\ it an end here"
         )
         self.change_student_modes(*["erm"]*3)
-        self.dither(3)
+        self.wait(3)
         self.play(
             RemovePiCreatureBubble(self.teacher),
             self.get_students()[0].change_mode, "plain",
@@ -3064,7 +3033,7 @@ class AskAboutInfiniteSum(TeacherStudentsScene):
             ShowCreation(arrow),
             Write(words)
         )
-        self.dither(3)
+        self.wait(3)
 
         self.arrow = arrow
         self.words = words
@@ -3084,19 +3053,19 @@ class AskAboutInfiniteSum(TeacherStudentsScene):
         self.play(ReplacementTransform(
             self.words, series_def
         ))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(taylor_polynomial)
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             series_def.scale, 0.7,
             series_def.to_corner, UP+RIGHT,
             FadeIn(taylor_series)
         )
         self.play(self.randy.change, "thinking", taylor_series)
-        self.dither()
+        self.wait()
 
     def be_careful(self):
         self.play(FadeIn(self.teacher))
@@ -3109,9 +3078,9 @@ class AskAboutInfiniteSum(TeacherStudentsScene):
             },
             added_anims = [self.randy.change, "hesitant"]
         )
-        self.dither(2)
+        self.wait(2)
         self.play(self.randy.change, "confused", self.series)
-        self.dither(3)
+        self.wait(3)
 
 class ConvergenceExample(Scene):
     def construct(self):
@@ -3127,10 +3096,10 @@ class ConvergenceExample(Scene):
 
         convergence_words = TextMobject("``Converges'' to $\\frac{1}{2}$")
         convergence_words.next_to(series, UP, LARGE_BUFF)
-        convergence_words.highlight(YELLOW)
+        convergence_words.set_color(YELLOW)
         rhs = TexMobject("= \\frac{1}{2}")
         rhs.next_to(series, RIGHT)
-        rhs.highlight(BLUE)
+        rhs.set_color(BLUE)
 
         brace = braces[0]
         self.add(series, brace)
@@ -3139,12 +3108,12 @@ class ConvergenceExample(Scene):
             if i == 4:
                 self.play(FadeIn(convergence_words))
             else:
-                self.dither()
+                self.wait()
         self.play(
             FadeOut(brace),
             Write(rhs)
         )
-        self.dither(2)
+        self.wait(2)
 
     def get_partial_sum_braces(self, series, partial_sums):
         braces = [
@@ -3160,7 +3129,7 @@ class ConvergenceExample(Scene):
         ]
         for brace, partial_sum in zip(braces, partial_sums):
             number = brace.get_text("%.7f"%partial_sum)
-            number.highlight(YELLOW)
+            number.set_color(YELLOW)
             brace.add(number)
         return braces
 
@@ -3180,16 +3149,16 @@ class ExpConvergenceExample(ConvergenceExample):
             lhs.target = new_lhs
 
         self.add(x_group)
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(x_group.copy(), one_group))
         self.play(FadeIn(brace))
-        self.dither()
+        self.wait()
         for new_brace in braces[2:]:
             self.play(Transform(brace, new_brace))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(MoveToTarget(e_to_1))
-        self.dither(2)
+        self.wait(2)
 
     def get_series(self, arg, n_terms = 5):
         series = TexMobject("1", "+", *list(it.chain(*[
@@ -3199,12 +3168,12 @@ class ExpConvergenceExample(ConvergenceExample):
         colors = list(CubicAndQuarticApproximations.CONFIG["colors"])
         colors += [BLUE_C]
         for term, color in zip(series[::2], colors):
-            term.highlight(color)
+            term.set_color(color)
 
         lhs = TexMobject("e^%s"%arg, "\\rightarrow")
-        lhs.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        lhs.arrange(RIGHT, buff = SMALL_BUFF)
         group = VGroup(lhs, series)
-        group.arrange_submobjects(RIGHT, buff = SMALL_BUFF)
+        group.arrange(RIGHT, buff = SMALL_BUFF)
 
         return group
 
@@ -3239,28 +3208,28 @@ class ExpGraphConvergence(ExpPolynomial, ExpConvergenceExample):
         approx_graph = approx_graphs[1]
         x = self.example_input
         self.add(graph, self.series)
-        self.dither()
+        self.wait()
         self.play(dot.move_to, self.coords_to_point(x, 0))
         self.play(
             dot.move_to, self.input_to_graph_point(x, graph),
             ShowCreation(v_line)
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             ShowCreation(approx_graph)
         )
-        self.dither()
+        self.wait()
         for new_brace, new_graph in zip(self.braces[2:], approx_graphs[2:]):
             self.play(
                 Transform(brace, new_brace),
                 Transform(approx_graph, new_graph),
                 Animation(self.series),
             )
-            self.dither()
+            self.wait()
         self.play(FocusOn(equals))
         self.play(Transform(self.arrow, equals))
-        self.dither(2)
+        self.wait(2)
 
     def add_series(self):
         series_group = self.get_series("x")
@@ -3293,7 +3262,7 @@ class ExpGraphConvergence(ExpPolynomial, ExpConvergenceExample):
 
         colors = it.chain(self.colors, it.repeat(WHITE))
         for approx_graph, color in zip(approx_graphs, colors):
-            approx_graph.highlight(color)
+            approx_graph.set_color(color)
             dot = Dot(color = WHITE)
             dot.move_to(self.input_to_graph_point(
                 self.example_input, approx_graph
@@ -3333,7 +3302,7 @@ class BoundedRadiusOfConvergence(CubicAndQuarticApproximations):
                 self.coords_to_point(x, 2),
                 color = WHITE
             )
-            for x in -1, 1
+            for x in (-1, 1)
         ])
 
         colors = list(self.colors) + [GREEN, MAROON_B, PINK]
@@ -3354,14 +3323,14 @@ class BoundedRadiusOfConvergence(CubicAndQuarticApproximations):
             ShowCreation(approx_graph),
             Animation(dot)
         )
-        self.dither()
+        self.wait()
         for new_graph in approx_graphs[2:]:
             self.play(
                 Transform(approx_graph, new_graph),
                 Animation(dot)
             )
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
 class RadiusOfConvergenceForLnX(ExpGraphConvergence):
     CONFIG = {
@@ -3409,7 +3378,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         series.scale(0.8)
         series.to_corner(UP+LEFT)
         for n in range(4):
-            lhs[2*n].highlight(self.colors[n+1])
+            lhs[2*n].set_color(self.colors[n+1])
         self.braces = self.get_partial_sum_braces(
             lhs, np.zeros(self.n_iterations)
         )
@@ -3419,9 +3388,9 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         self.play(FadeIn(
             series, 
             run_time = 3,
-            submobject_mode = "lagged_start"
+            lag_ratio = 0.5
         ))
-        self.dither()
+        self.wait()
         self.series = series
         self.foreground_mobjects = [series]
 
@@ -3431,15 +3400,15 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         v_lines = [
             DashedLine(*[
                 self.coords_to_point(x, y)
-                for y in -2, 2
+                for y in (-2, 2)
             ])
-            for x in 0, 1, 2
+            for x in (0, 1, 2)
         ]
         outer_v_lines = VGroup(*v_lines[::2])
         center_v_line = VGroup(v_lines[1])
         input_v_line = Line(*[
             self.coords_to_point(self.convergent_example, y)
-            for y in -4, 3
+            for y in (-4, 3)
         ])
         input_v_line.set_stroke(WHITE, width = 2)
 
@@ -3447,7 +3416,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             dot.move_to, self.coords_to_point(1, 0),
             dot.set_fill, YELLOW, 1,
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(center_v_line),
             Animation(dot)
@@ -3470,7 +3439,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             it.repeat(PINK)
         )
         for graph, color in zip(approx_graphs, colors):
-            graph.highlight(color)
+            graph.set_color(color)
         for graph in approx_graphs:
             dot = Dot(color = WHITE)
             dot.move_to(self.input_to_graph_point(
@@ -3484,27 +3453,27 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
         brace = self.braces[0].copy()
 
         self.play(*it.chain(
-            map(FadeIn, [approx_graph, brace]),
-            map(Animation, self.foreground_mobjects)
+            list(map(FadeIn, [approx_graph, brace])),
+            list(map(Animation, self.foreground_mobjects))
         ))
-        self.dither()
+        self.wait()
         new_graphs = approx_graphs[1:self.initial_n_iterations]
         for new_graph, new_brace in zip(new_graphs, self.braces[1:]):
             self.play(
                 Transform(approx_graph, new_graph),
                 Transform(brace, new_brace),
-                *map(Animation, self.foreground_mobjects)
+                *list(map(Animation, self.foreground_mobjects))
             )
-            self.dither()
+            self.wait()
         approx_graph.remove(approx_dot)
         self.play(
             approx_dot.move_to, self.coords_to_point(self.divergent_example, 0),
             *it.chain(
-                map(FadeOut, [approx_graph, brace]),
-                map(Animation, self.foreground_mobjects)
+                list(map(FadeOut, [approx_graph, brace])),
+                list(map(Animation, self.foreground_mobjects))
             )
         )
-        self.dither()
+        self.wait()
 
         self.approx_graphs = approx_graphs
         self.approx_dot = approx_dot
@@ -3524,7 +3493,7 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             ),
             FadeIn(approx_graph[0]),
             FadeIn(brace),
-            *map(Animation, self.foreground_mobjects)
+            *list(map(Animation, self.foreground_mobjects))
         )
 
         new_graphs = self.approx_graphs[1:self.initial_n_iterations]
@@ -3532,9 +3501,9 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             self.play(
                 Transform(approx_graph, new_graph),
                 Transform(brace, new_brace),
-                *map(Animation, self.foreground_mobjects)
+                *list(map(Animation, self.foreground_mobjects))
             )
-            self.dither()
+            self.wait()
 
         self.approx_dot = approx_graph.dot
         self.approx_graph = approx_graph
@@ -3554,21 +3523,21 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             Write(word),
             ShowCreation(arrow)
         )
-        self.dither()
+        self.wait()
         new_graphs = self.approx_graphs[self.initial_n_iterations:]
         for new_graph in new_graphs:
             self.play(
                 Transform(self.approx_graph, new_graph),
-                *map(Animation, self.foreground_mobjects)
+                *list(map(Animation, self.foreground_mobjects))
             )
-            self.dither()
+            self.wait()
 
     def write_radius_of_convergence(self):
         line = Line(*[
             self.coords_to_point(x, 0)
-            for x in 1, 2
+            for x in (1, 2)
         ])
-        line.highlight(YELLOW)
+        line.set_color(YELLOW)
         brace = Brace(line, DOWN)
         words = brace.get_text("``Radius of convergence''")
         words.add_background_rectangle()
@@ -3577,9 +3546,9 @@ class RadiusOfConvergenceForLnX(ExpGraphConvergence):
             GrowFromCenter(brace),
             ShowCreation(line)
         )
-        self.dither()
+        self.wait()
         self.play(Write(words))
-        self.dither(3)
+        self.wait(3)
 
 class MoreToBeSaid(TeacherStudentsScene):
     CONFIG = {
@@ -3591,12 +3560,12 @@ class MoreToBeSaid(TeacherStudentsScene):
             "convergence tests, ",
             "$\\dots$"
         )
-        words[0].highlight(BLUE)
-        words[1].highlight(GREEN)
+        words[0].set_color(BLUE)
+        words[1].set_color(GREEN)
         words.to_edge(UP)
         fade_rect = FullScreenFadeRectangle()
         rect = Rectangle(height = 9, width = 16)        
-        rect.scale_to_fit_height(SPACE_HEIGHT)
+        rect.set_height(FRAME_Y_RADIUS)
         rect.to_corner(UP+RIGHT)
         randy = self.get_students()[1]
 
@@ -3607,12 +3576,12 @@ class MoreToBeSaid(TeacherStudentsScene):
         )
         for word in words:
             self.play(FadeIn(word))
-            self.dither()
+            self.wait()
         self.teacher_says(
             "About everything",
         )
         self.change_student_modes(*["pondering"]*3)
-        self.dither()
+        self.wait()
         self.remove()
         self.pi_creatures = []##Hack
         self.play(
@@ -3623,7 +3592,7 @@ class MoreToBeSaid(TeacherStudentsScene):
         )
         self.pi_creatures = [randy]
         self.play(ShowCreation(rect))
-        self.dither(4)
+        self.wait(4)
 
 class Chapter10Thanks(PatreonThanks):
     CONFIG = {
@@ -3685,7 +3654,7 @@ class Thumbnail(ExampleApproximationWithSine):
         self.add(cos_graph, quad_graph, quartic)
 
         title = TextMobject("Taylor Series")
-        title.scale_to_fit_width(1.5*SPACE_WIDTH)
+        title.set_width(1.5*FRAME_X_RADIUS)
         title.add_background_rectangle()
         title.to_edge(UP)
         self.add(title)

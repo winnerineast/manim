@@ -8,15 +8,11 @@ from random import random, randint
 import sys
 import inspect
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene, GraphScene, PascalsTriangleScene
+from manimlib.imports import *
 from script_wrapper import command_line_create_scene
+from functools import reduce
 
-RADIUS            = SPACE_HEIGHT - 0.1
+RADIUS            = FRAME_Y_RADIUS - 0.1
 CIRCLE_DENSITY    = DEFAULT_POINT_DENSITY_1D*RADIUS
 MOVIE_PREFIX      = "moser/"
 RADIANS           = np.arange(0, 6, 6.0/7)
@@ -53,7 +49,7 @@ class CircleScene(Scene):
         self.lines = [Line(p1, p2) for p1, p2 in it.combinations(self.points, 2)]
         self.n_equals = TexMobject(
             "n=%d"%len(radians),
-        ).shift((-SPACE_WIDTH+1, SPACE_HEIGHT-1.5, 0))
+        ).shift((-FRAME_X_RADIUS+1, FRAME_Y_RADIUS-1.5, 0))
         self.add(self.circle, self.n_equals, *self.dots + self.lines)
 
 
@@ -76,12 +72,9 @@ class CircleScene(Scene):
         self.remove(*self.lines)
         self.lines = []
         for point_pair in it.combinations(self.points, 2):
-            int_points = filter(
-                lambda p : is_on_line(p, *point_pair), 
-                self.intersection_points
-            )
+            int_points = [p for p in self.intersection_points if is_on_line(p, *point_pair)]
             points = list(point_pair) + int_points
-            points = map(lambda p : (p[0], p[1], 0), points)
+            points = [(p[0], p[1], 0) for p in points]
             points.sort(cmp = lambda x,y: cmp(x[0], y[0]))
             self.lines += [
                 Line(points[i], points[i+1])
@@ -125,7 +118,7 @@ class CircleScene(Scene):
     def generate_regions(self):
         self.regions = plane_partition_from_points(*self.points)
         interior = Region(lambda x, y : x**2 + y**2 < self.radius**2)
-        map(lambda r : r.intersect(interior), self.regions)
+        list(map(lambda r : r.intersect(interior), self.regions))
         self.exterior = interior.complement()
 
 
@@ -140,8 +133,8 @@ class CountSections(CircleScene):
         ], run_time = 2.0)
         regions = plane_partition_from_points(*self.points)
         interior = Region(lambda x, y : x**2 + y**2 < self.radius**2)
-        map(lambda r : r.intersect(interior), regions)
-        regions = filter(lambda r : r.bool_grid.any(), regions)
+        list(map(lambda r : r.intersect(interior), regions))
+        regions = [r for r in regions if r.bool_grid.any()]
         self.count_regions(regions, num_offset = ORIGIN)
 
 class MoserPattern(CircleScene):
@@ -151,7 +144,7 @@ class MoserPattern(CircleScene):
         self.remove(*self.dots + self.lines + [self.n_equals])
         n_equals, num = TexMobject(["n=", "10"]).split()
         for mob in n_equals, num:
-            mob.shift((-SPACE_WIDTH + 1.5, SPACE_HEIGHT - 1.5, 0))
+            mob.shift((-FRAME_X_RADIUS + 1.5, FRAME_Y_RADIUS - 1.5, 0))
         self.add(n_equals)
         for n in range(1, len(radians)+1):
             self.add(*self.dots[:n])
@@ -161,7 +154,7 @@ class MoserPattern(CircleScene):
                 TexMobject(str(n)).shift(num.get_center())
             ]
             self.add(*tex_stuffs)
-            self.dither(0.5)
+            self.wait(0.5)
             self.remove(*tex_stuffs)
 
 def hpsq_taylored_alpha(t):
@@ -206,7 +199,7 @@ class HardProblemsSimplerQuestions(Scene):
             mob.scale(scale_factor)
         fermat["2"].shift(right_center)
         fermat["3"].shift(left_center)
-        fermat["n"].shift((0, SPACE_HEIGHT - 1, 0))
+        fermat["n"].shift((0, FRAME_Y_RADIUS - 1, 0))
         shift_val = right_center - fermat2.get_center()
         fermat2.shift(shift_val)
         fermat2_jargon.shift(shift_val)
@@ -232,7 +225,7 @@ class HardProblemsSimplerQuestions(Scene):
         ])
         self.remove(*self.mobjects)
         self.add(fermat["n"], fermat2, fermat3)
-        self.dither()
+        self.wait()
 
         circle_grid = Mobject(
             Circle(), 
@@ -251,7 +244,7 @@ class HardProblemsSimplerQuestions(Scene):
         omega = np.array((0.5, 0.5*np.sqrt(3), 0))
         dots = Mobject(*[
             Dot(t*np.array((1, 0, 0)) + s * omega)
-            for t, s in it.product(range(-2, 3), range(-2, 3))
+            for t, s in it.product(list(range(-2, 3)), list(range(-2, 3)))
         ])
         for mob in dots, other_grid:
             mob.scale(0.5).shift(left_center + (0, 2, 0))
@@ -263,16 +256,16 @@ class HardProblemsSimplerQuestions(Scene):
             CounterclockwiseTransform(start_line, end_line),
             ShowCreation(dots)
         )
-        self.dither()
+        self.wait()
         all_mobjects = Mobject(*self.mobjects)
         self.remove(*self.mobjects)
         self.play(
             Transform(
                 all_mobjects,
-                Point((SPACE_WIDTH, 0, 0))
+                Point((FRAME_X_RADIUS, 0, 0))
             ),
             Transform(
-                Point((-SPACE_WIDTH, 0, 0)), 
+                Point((-FRAME_X_RADIUS, 0, 0)), 
                 Mobject(*CircleScene(RADIANS).mobjects)
             )
         )
@@ -300,12 +293,12 @@ class CountLines(CircleScene):
             )
         ]
         self.add(text)
-        self.dither()
+        self.wait()
         self.play(*[
            Transform(line1, line2, run_time = 2)
            for line1, line2 in zip(self.lines, new_lines)
         ])
-        self.dither()
+        self.wait()
         self.remove(text)
         self.count(new_lines)
         anims = [FadeIn(formula)]
@@ -339,7 +332,7 @@ class CountIntersectionPoints(CircleScene):
         text.scale(scale_factor).shift(text_center)
         self.add(text)
         self.count(intersection_dots, mode="show", num_offset = ORIGIN)
-        self.dither()
+        self.wait()
         anims = []
         for mob in self.mobjects:
             if mob == self.number: #put in during count
@@ -378,9 +371,9 @@ class NonGeneralPosition(CircleScene):
             color = "white",
         )
 
-        self.highlight_region(center_region, "green")
+        self.set_color_region(center_region, "green")
         self.add(text, arrow)
-        self.dither(2)
+        self.wait(2)
         self.remove(text, arrow)
         self.reset_background()
         self.play(*[
@@ -395,7 +388,7 @@ class GeneralPositionRule(Scene):
             (
                 np.arange(0, 2*np.pi, np.pi/3), 
                 "Not okay", 
-                zip(range(3), range(3, 6))
+                list(zip(list(range(3)), list(range(3, 6))))
             ),
             (
                 RADIANS,
@@ -405,7 +398,7 @@ class GeneralPositionRule(Scene):
             (
                 np.arange(0, 2*np.pi, np.pi/4),
                 "Not okay",
-                zip(range(4), range(4, 8))
+                list(zip(list(range(4)), list(range(4, 8))))
             ),
             (
                 [2*np.pi*random() for x in range(5)],
@@ -421,12 +414,12 @@ class GeneralPositionRule(Scene):
             if not first_time:
                 self.add(words_mob)
             if words == "Okay":
-                words_mob.highlight("green")
-                self.dither(2)                
+                words_mob.set_color("green")
+                self.wait(2)                
             else:
-                words_mob.highlight()
+                words_mob.set_color()
                 intersecting_lines = [
-                    line.scale_in_place(0.3).highlight()
+                    line.scale_in_place(0.3).set_color()
                     for i, j in pairs                    
                     for line in [Line(cs.points[i], cs.points[j])]
                 ]
@@ -440,7 +433,7 @@ class GeneralPositionRule(Scene):
                         words_mob
                     ))
                     first_time = False
-                self.dither()
+                self.wait()
             self.remove(*self.mobjects)
 
 
@@ -464,7 +457,7 @@ class LineCorrespondsWithPair(CircleScene):
         self.lines.remove(line)
         self.dots.remove(dot0)
         self.dots.remove(dot1)
-        self.dither()
+        self.wait()
         self.play(*[
             ApplyMethod(mob.fade, 0.2)
             for mob in self.lines + self.dots
@@ -490,7 +483,7 @@ class IllustrateNChooseK(Scene):
 
     def __init__(self, n, k, *args, **kwargs):
         Scene.__init__(self, *args, **kwargs)
-        nrange = range(1, n+1)
+        nrange = list(range(1, n+1))
         tuples  = list(it.combinations(nrange, k))
         nrange_mobs = TexMobject([str(n) + r'\;' for n in nrange]).split()
         tuple_mobs  = TexMobjects(
@@ -526,7 +519,7 @@ class IllustrateNChooseK(Scene):
         for mob in nrange_mobs:
             mob.shift((0, 2, 0))
         for mob in form1, count, form2:
-            mob.scale(0.75).shift((0, -SPACE_HEIGHT + 1, 0))
+            mob.scale(0.75).shift((0, -FRAME_Y_RADIUS + 1, 0))
         count_center = count.get_center()
         for mob in tuple_mobs:
             mob.scale(0.6)
@@ -535,7 +528,7 @@ class IllustrateNChooseK(Scene):
         )
 
         self.add(*nrange_mobs)
-        self.dither()
+        self.wait()
         run_time = 6.0
         frame_time = run_time / len(tuples)
         for tup, count in zip(tuples, it.count()):
@@ -543,10 +536,10 @@ class IllustrateNChooseK(Scene):
             count_mob.center().shift(count_center)
             self.add(count_mob)
             tuple_copy = Mobject(*[nrange_mobs[index-1] for index in tup])
-            tuple_copy.highlight()
+            tuple_copy.set_color()
             self.add(tuple_copy)
             self.add(tuple_mobs[count])
-            self.dither(frame_time)
+            self.wait(frame_time)
             self.remove(count_mob)
             self.remove(tuple_copy)
         self.add(count_mob)
@@ -554,7 +547,7 @@ class IllustrateNChooseK(Scene):
 
 class IntersectionPointCorrespondances(CircleScene):
     args_list = [
-        (RADIANS, range(0, 7, 2)),
+        (RADIANS, list(range(0, 7, 2))),
     ]
     @staticmethod
     def args_to_string(*args):
@@ -573,7 +566,7 @@ class IntersectionPointCorrespondances(CircleScene):
         intersection_dot = Dot(intersection_point)
         intersection_dot_arrow = Arrow(intersection_point).nudge()
         self.add(intersection_dot)
-        pairs = list(it.combinations(range(len(radians)), 2))
+        pairs = list(it.combinations(list(range(len(radians))), 2))
         lines_to_save = [
             self.lines[pairs.index((indices[p0], indices[p1]))]
             for p0, p1 in [(0, 2), (1, 3)]
@@ -587,7 +580,7 @@ class IntersectionPointCorrespondances(CircleScene):
         for mob in line_statement, dots_statement:
             mob.center()
             mob.scale(0.7)
-            mob.shift((SPACE_WIDTH-2, SPACE_HEIGHT - 1, 0))
+            mob.shift((FRAME_X_RADIUS-2, FRAME_Y_RADIUS - 1, 0))
         fade_outs = []
         line_highlights = []
         dot_highlights = []
@@ -605,11 +598,11 @@ class IntersectionPointCorrespondances(CircleScene):
         self.play(Highlight(intersection_dot))
         self.remove(intersection_dot_arrow)
         self.play(*fade_outs)
-        self.dither()
+        self.wait()
         self.add(line_statement)
         self.play(*line_highlights)
         self.remove(line_statement)
-        self.dither()
+        self.wait()
         self.add(dots_statement, *dot_pointers)
         self.play(*dot_highlights)
         self.remove(dots_statement, *dot_pointers)
@@ -632,7 +625,7 @@ class LinesIntersectOutside(CircleScene):
         )
         intersection_point = tuple(list(intersection_point) + [0])
         intersection_dot = Dot(intersection_point)
-        pairs = list(it.combinations(range(len(radians)), 2))
+        pairs = list(it.combinations(list(range(len(radians))), 2))
         lines_to_save = [
             self.lines[pairs.index((indices[p0], indices[p1]))]
             for p0, p1 in [(0, 1), (2, 3)]
@@ -651,7 +644,7 @@ class LinesIntersectOutside(CircleScene):
 class QuadrupletsToIntersections(CircleScene):
     def __init__(self, radians, *args, **kwargs):
         CircleScene.__init__(self, radians, *args, **kwargs)
-        quadruplets = it.combinations(range(len(radians)), 4)
+        quadruplets = it.combinations(list(range(len(radians))), 4)
         frame_time = 1.0
         for quad in quadruplets:
             intersection_dot = Dot(intersection(
@@ -662,9 +655,9 @@ class QuadrupletsToIntersections(CircleScene):
             for dot in dot_quad:
                 dot.scale_in_place(2)
             dot_quad = Mobject(*dot_quad)
-            dot_quad.highlight()
+            dot_quad.set_color()
             self.add(dot_quad)
-            self.dither(frame_time / 3)
+            self.wait(frame_time / 3)
             self.play(Transform(
                 dot_quad,
                 intersection_dot,
@@ -682,23 +675,23 @@ class GraphsAndEulersFormulaJoke(Scene):
             lambda t : (10*t, ((10*t)**3 - 10*t), 0),
             expected_measure = 40.0
         )
-        graph.filter_out(lambda (x, y, z) : abs(y) > SPACE_HEIGHT)
+        graph.filter_out(lambda x_y_z : abs(x_y_z[1]) > FRAME_Y_RADIUS)
         self.add(axes)
         self.play(ShowCreation(graph), run_time = 1.0)
         eulers = TexMobject("e^{\pi i} = -1").shift((0, 3, 0))
         self.play(CounterclockwiseTransform(
             deepcopy(graph), eulers
         ))
-        self.dither()
+        self.wait()
         self.remove(*self.mobjects)
         self.add(eulers)
         self.play(CounterclockwiseTransform(
             Mobject(axes, graph),
-            Point((-SPACE_WIDTH, SPACE_HEIGHT, 0))
+            Point((-FRAME_X_RADIUS, FRAME_Y_RADIUS, 0))
         ))
         self.play(CounterclockwiseTransform(
             eulers,
-            Point((SPACE_WIDTH, SPACE_HEIGHT, 0))
+            Point((FRAME_X_RADIUS, FRAME_Y_RADIUS, 0))
         ))
 
 class DefiningGraph(GraphScene):
@@ -714,7 +707,7 @@ class DefiningGraph(GraphScene):
         self.remove(all_dots)
         self.add(*dots)
         self.play(FadeIn(vertices_word))
-        self.dither()
+        self.wait()
         self.remove(vertices_word)
         self.play(*[
             ShowCreation(line) for line in lines
@@ -773,7 +766,7 @@ class DoubledEdges(GraphScene):
             ]
             outward_curved_lines.append(outward)
         self.play(*anims)
-        self.dither()
+        self.wait()
         self.remove(*outward_curved_lines)
 
 class EulersFormula(GraphScene):
@@ -784,23 +777,23 @@ class EulersFormula(GraphScene):
             (key, mob)
             for key, mob in zip(terms, TexMobjects(terms))
         ])
-        for mob in form.values():
-            mob.shift((0, SPACE_HEIGHT-0.7, 0))
-        formula = Mobject(*[form[k] for k in form.keys() if k != "=2"])
+        for mob in list(form.values()):
+            mob.shift((0, FRAME_Y_RADIUS-0.7, 0))
+        formula = Mobject(*[form[k] for k in list(form.keys()) if k != "=2"])
         new_form = dict([
             (key, deepcopy(mob).shift((0, -0.7, 0)))
-            for key, mob in zip(form.keys(), form.values())
+            for key, mob in zip(list(form.keys()), list(form.values()))
         ])
         self.add(formula)
         colored_dots = [
-            deepcopy(d).scale_in_place(1.5).highlight("red") 
+            deepcopy(d).scale_in_place(1.5).set_color("red") 
             for d in self.dots
         ]
         colored_edges = [
             Mobject(
                 Line(midpoint, start),
                 Line(midpoint, end),
-            ).highlight("red")
+            ).set_color("red")
             for e in self.edges
             for start, end, midpoint in [
                 (e.start, e.end, (e.start + e.end)/2.0)
@@ -822,7 +815,7 @@ class EulersFormula(GraphScene):
                 num_offset = new_form[letter].get_center(), 
                 run_time   = frame_time*len(items)
             )
-            self.dither()
+            self.wait()
             if item_type == "mobject":
                 self.remove(*items)
             self.add(new_form[symbol])
@@ -840,19 +833,19 @@ class CannotDirectlyApplyEulerToMoser(CircleScene):
             mob.shift(shift_val)
         self.add(n_equals)
         yellow_dots  = [
-            d.highlight("yellow").scale_in_place(2)
+            d.set_color("yellow").scale_in_place(2)
             for d in deepcopy(self.dots)
         ]
         yellow_lines = Mobject(*[
-            l.highlight("yellow") for l in deepcopy(self.lines)
+            l.set_color("yellow") for l in deepcopy(self.lines)
         ])
         self.play(*[
             ShowCreation(dot) for dot in yellow_dots
         ], run_time = 1.0)
-        self.dither()
+        self.wait()
         self.remove(*yellow_dots)
         self.play(ShowCreation(yellow_lines))
-        self.dither()
+        self.wait()
         self.remove(yellow_lines)
         cannot_intersect = TextMobject(r"""
             Euler's formula does not apply to \\
@@ -863,7 +856,7 @@ class CannotDirectlyApplyEulerToMoser(CircleScene):
         for mob in self.mobjects:
             mob.fade(0.3)
         self.add(cannot_intersect)
-        self.dither()
+        self.wait()
         self.remove(cannot_intersect)
         for mob in self.mobjects:
             mob.fade(1/0.3)
@@ -874,7 +867,7 @@ class CannotDirectlyApplyEulerToMoser(CircleScene):
 
 class ShowMoserGraphLines(CircleScene):
     def __init__(self, radians, *args, **kwargs):
-        radians = list(set(map(lambda x : x%(2*np.pi), radians)))
+        radians = list(set([x%(2*np.pi) for x in radians]))
         radians.sort()
         CircleScene.__init__(self, radians, *args, **kwargs)
         n, plus_n_choose_4 = TexMobject(["n", "+{n \\choose 4}"]).split()
@@ -882,7 +875,7 @@ class ShowMoserGraphLines(CircleScene):
             r"{n \choose 2}",r"&+2{n \choose 4}\\",r"&+n"
         ]).split()
         for mob in n, plus_n_choose_4, n_choose_2, plus_2_n_choose_4, plus_n:
-            mob.shift((SPACE_WIDTH - 2, SPACE_HEIGHT-1, 0))
+            mob.shift((FRAME_X_RADIUS - 2, FRAME_Y_RADIUS-1, 0))
         self.chop_lines_at_intersection_points()
         self.add(*self.intersection_dots)
         small_lines = [
@@ -906,7 +899,7 @@ class ShowMoserGraphLines(CircleScene):
                     run_time = 2.0,
                 ))
             else:
-                compound.highlight("yellow")
+                compound.set_color("yellow")
                 self.play(ShowCreation(compound))
                 self.remove(compound)
             if mobs == self.intersection_dots:
@@ -917,11 +910,11 @@ class ShowMoserGraphLines(CircleScene):
             for line, small_line in zip(self.lines, small_lines)
         ])
         yellow_lines = Mobject(*[
-            line.highlight("yellow") for line in small_lines
+            line.set_color("yellow") for line in small_lines
         ])
         self.add(plus_2_n_choose_4)
         self.play(ShowCreation(yellow_lines))
-        self.dither()
+        self.wait()
         self.remove(yellow_lines)
         self.chop_circle_at_points()
         self.play(*[
@@ -930,12 +923,12 @@ class ShowMoserGraphLines(CircleScene):
         ])
         self.add(plus_n)
         self.play(ShowCreation(Mobject(*[
-            mob.highlight("yellow") for mob in self.circle_pieces
+            mob.set_color("yellow") for mob in self.circle_pieces
         ])))
 
 class HowIntersectionChopsLine(CircleScene):
     args_list = [
-        (RADIANS, range(0, 7, 2)),
+        (RADIANS, list(range(0, 7, 2))),
     ]
     @staticmethod
     def args_to_string(*args):
@@ -951,7 +944,7 @@ class HowIntersectionChopsLine(CircleScene):
         )
         if len(intersection_point) == 2:
             intersection_point = list(intersection_point) + [0]
-        pairs = list(it.combinations(range(len(radians)), 2))
+        pairs = list(it.combinations(list(range(len(radians))), 2))
         lines = [
             Line(self.points[indices[p0]], self.points[indices[p1]])
             for p0, p1 in [(2, 0), (1, 3)]
@@ -1045,11 +1038,11 @@ class ApplyEulerToMoser(CircleScene):
         for d in dicts:
             if not d:
                 continue
-            main_key = d.keys()[0]
-            for key in d.keys():
+            main_key = list(d.keys())[0]
+            for key in list(d.keys()):
                 d[key].shift(shift_val)
             main_center = d[main_key].get_center()
-            for key in d.keys():
+            for key in list(d.keys()):
                 d[key] = deepcopy(d[main_key]).shift(
                     d[key].get_center() - main_center
                 )
@@ -1058,16 +1051,16 @@ class ApplyEulerToMoser(CircleScene):
             CounterclockwiseTransform(d[1], d[2], run_time = 2.0)
             for d in [V, minus, E, plus, F, equals, two]
         ])
-        self.dither()
-        F[1].highlight()
+        self.wait()
+        F[1].set_color()
         self.add(*self.lines + self.circle_pieces)
         for region in self.regions:
-            self.highlight_region(region)
-        self.highlight_region(self.exterior, "blue")
-        self.dither()
+            self.set_color_region(region)
+        self.set_color_region(self.exterior, "blue")
+        self.wait()
         self.reset_background()
-        F[1].highlight("white")
-        E[1].highlight()
+        F[1].set_color("white")
+        E[1].set_color()
         self.remove(*self.lines + self.circle_pieces)
         self.play(*[
             Transform(
@@ -1083,15 +1076,15 @@ class ApplyEulerToMoser(CircleScene):
             )
             for cp, scp in zip(self.circle_pieces, self.smaller_circle_pieces)
         ])
-        self.dither()
-        E[1].highlight("white")
-        V[1].highlight()
+        self.wait()
+        E[1].set_color("white")
+        V[1].set_color()
         self.add(*self.dots + self.intersection_dots)
         self.remove(*self.lines + self.circle_pieces)
         self.play(*[
             Transform(
                 deepcopy(dot), 
-                deepcopy(dot).scale_in_place(1.4).highlight("yellow")
+                deepcopy(dot).scale_in_place(1.4).set_color("yellow")
             )
             for dot in self.dots + self.intersection_dots
         ] + [
@@ -1101,13 +1094,13 @@ class ApplyEulerToMoser(CircleScene):
             )
             for line in self.lines + self.circle_pieces
         ])
-        self.dither()
+        self.wait()
         all_mobs = [mob for mob in self.mobjects]
         self.remove(*all_mobs)
         self.add(*[d[1] for d in [V, minus, E, plus, F, equals, two]])
-        V[1].highlight("white")
-        two[1].highlight()
-        self.dither()
+        V[1].set_color("white")
+        two[1].set_color()
+        self.wait()
         self.add(*all_mobs)
         self.remove(*[d[1] for d in [V, minus, E, plus, F, equals, two]])
         self.play(
@@ -1117,7 +1110,7 @@ class ApplyEulerToMoser(CircleScene):
                 for d in [F, equals, E, minus, plus, two]
             ]
         )
-        self.dither()
+        self.wait()
         self.remove(*self.mobjects)
         self.play(
             Transform(E[3], Mobject(
@@ -1138,12 +1131,12 @@ class ApplyEulerToMoser(CircleScene):
             ],
             run_time = 2.0
         )
-        self.dither()
+        self.wait()
         self.remove(*self.mobjects)
         self.play(
             Transform(
                 Mobject(plus2[4], n1[4], minus[4], n[4]),
-                Point((SPACE_WIDTH, SPACE_HEIGHT, 0))
+                Point((FRAME_X_RADIUS, FRAME_Y_RADIUS, 0))
             ),
             *[
                 Transform(d[4], d[5])
@@ -1151,7 +1144,7 @@ class ApplyEulerToMoser(CircleScene):
                           nc41, minus1, nc4, plus, two]
             ]
         )
-        self.dither()
+        self.wait()
         self.remove(*self.mobjects)
         self.play(
             Transform(nc41[5], nc4[6]),
@@ -1161,7 +1154,7 @@ class ApplyEulerToMoser(CircleScene):
                 for d in [F, equals, nc2, plus1, nc4, plus, two]
             ]
         )
-        self.dither()
+        self.wait()
         self.remove(*self.mobjects)
         self.play(
             CounterclockwiseTransform(two[6], two[7]),
@@ -1171,18 +1164,18 @@ class ApplyEulerToMoser(CircleScene):
                 for d in [F, equals, nc2, plus1, nc4]
             ]
         )
-        self.dither()
+        self.wait()
         self.add(*self.lines + self.circle_pieces)        
         for region in self.regions:
-            self.highlight_region(region)
-        self.dither()
-        self.highlight_region(self.exterior, "blue")
-        self.dither()
-        self.highlight_region(self.exterior, "black")
+            self.set_color_region(region)
+        self.wait()
+        self.set_color_region(self.exterior, "blue")
+        self.wait()
+        self.set_color_region(self.exterior, "black")
         self.remove(two[6])
         two = two[7]
         one = TexMobject("1").shift(two.get_center())
-        two.highlight("red")
+        two.set_color("red")
         self.add(two)
         self.play(CounterclockwiseTransform(two, one))
 
@@ -1210,7 +1203,7 @@ class FormulaRelatesToPowersOfTwo(Scene):
         self.play(*[
             FadeIn(s) for s in sums
         ])
-        self.dither()
+        self.wait()
         self.play(*[
             Transform(deepcopy(s), result)
             for s, result in zip(sums, results)
@@ -1219,10 +1212,10 @@ class FormulaRelatesToPowersOfTwo(Scene):
             TexMobject("2^{%d}"%(i-1)
             ).scale(scale_factor
             ).shift(result.get_center()
-            ).highlight()
+            ).set_color()
             for i, result in zip(pof2_range, results)
         ]
-        self.dither()
+        self.wait()
         self.remove(*self.mobjects)
         self.add(*forms + sums + results)
         self.play(*[
@@ -1255,18 +1248,18 @@ class PascalRuleExample(PascalsTriangleScene):
     def __init__(self, nrows, *args, **kwargs):
         assert(nrows > 1)    
         PascalsTriangleScene.__init__(self, nrows, *args, **kwargs)
-        self.dither()
+        self.wait()
         n = randint(2, nrows-1)
         k = randint(1, n-1)
-        self.coords_to_mobs[n][k].highlight("green")
-        self.dither()
+        self.coords_to_mobs[n][k].set_color("green")
+        self.wait()
         plus = TexMobject("+").scale(0.5)
         nums_above = [self.coords_to_mobs[n-1][k-1], self.coords_to_mobs[n-1][k]]
         plus.center().shift(sum(map(Mobject.get_center, nums_above)) / 2)
         self.add(plus)
         for mob in nums_above + [plus]:
-            mob.highlight("yellow")
-        self.dither()
+            mob.set_color("yellow")
+        self.wait()
 
 class PascalsTriangleWithNChooseK(PascalsTriangleScene):
     def __init__(self, *args, **kwargs):
@@ -1274,7 +1267,7 @@ class PascalsTriangleWithNChooseK(PascalsTriangleScene):
         self.generate_n_choose_k_mobs()
         mob_dicts = (self.coords_to_mobs, self.coords_to_n_choose_k)
         for i in [0, 1]:
-            self.dither()
+            self.wait()
             self.remove(*self.mobjects)
             self.play(*[
                 CounterclockwiseTransform(
@@ -1296,15 +1289,15 @@ class PascalsTriangleNChooseKExample(PascalsTriangleScene):
 
     def __init__(self, nrows, n, k, *args, **kwargs):
         PascalsTriangleScene.__init__(self, nrows, *args, **kwargs)
-        dither_time = 0.5
+        wait_time = 0.5
         triangle_terms = [self.coords_to_mobs[a][b] for a, b in self.coords]
         formula_terms = left, n_mob, k_mob, right = TexMobject([
             r"\left(", str(n), r"\atop %d"%k, r"\right)"
         ])
-        formula_center = (SPACE_WIDTH - 1, SPACE_HEIGHT - 1, 0)
+        formula_center = (FRAME_X_RADIUS - 1, FRAME_Y_RADIUS - 1, 0)
         self.remove(*triangle_terms)
         self.add(*formula_terms)
-        self.dither()
+        self.wait()
         self.play(*
             [
                 ShowCreation(mob) for mob in triangle_terms
@@ -1319,32 +1312,32 @@ class PascalsTriangleNChooseKExample(PascalsTriangleScene):
             row = [self.coords_to_mobs[a][b] for b in range(a+1)]
             a_mob = TexMobject(str(a))
             a_mob.shift(n_mob.get_center())
-            a_mob.highlight("green")
+            a_mob.set_color("green")
             self.add(a_mob)
             for mob in row:
-                mob.highlight("green")
-            self.dither(dither_time)
+                mob.set_color("green")
+            self.wait(wait_time)
             if a < n:
                 for mob in row:
-                    mob.highlight("white")
+                    mob.set_color("white")
                 self.remove(a_mob)
-        self.dither()
+        self.wait()
         for b in range(k+1):
             b_mob = TexMobject(str(b))
             b_mob.shift(k_mob.get_center())
-            b_mob.highlight("yellow")
+            b_mob.set_color("yellow")
             self.add(b_mob)
-            self.coords_to_mobs[n][b].highlight("yellow")
-            self.dither(dither_time)
+            self.coords_to_mobs[n][b].set_color("yellow")
+            self.wait(wait_time)
             if b < k:
-                self.coords_to_mobs[n][b].highlight("green")
+                self.coords_to_mobs[n][b].set_color("green")
                 self.remove(b_mob)
         self.play(*[
             ApplyMethod(mob.fade, 0.2)
             for mob in triangle_terms
             if mob != self.coords_to_mobs[n][k]
         ])
-        self.dither()
+        self.wait()
 
 class PascalsTriangleSumRows(PascalsTriangleScene):
     def __init__(self, *args, **kwargs):
@@ -1395,7 +1388,7 @@ class PascalsTriangleSumRows(PascalsTriangleScene):
                 FadeIn(equalses[n]),
                 run_time = run_time
             )
-        self.dither()
+        self.wait()
         self.remove(*to_remove)
         self.add(*powers_of_two)
         for n in range(self.nrows):
@@ -1430,14 +1423,14 @@ class MoserSolutionInPascal(PascalsTriangleScene):
         for k in range(len(terms)):
             if k%2 == 0 and k <= n:
                 new_term = deepcopy(self.coords_to_n_choose_k[n][k])
-                new_term.highlight(term_color)
+                new_term.set_color(term_color)
             else:
                 new_term = Point(
                     self.coords_to_center(n, k)
                 )
             target_terms.append(new_term)
         self.add(*terms)
-        self.dither()
+        self.wait()
         self.play(*
             [
                 FadeIn(self.coords_to_n_choose_k[n0][k0])
@@ -1448,10 +1441,10 @@ class MoserSolutionInPascal(PascalsTriangleScene):
                 for term, target_term in zip(terms, target_terms)
             ]
         )
-        self.dither()
-        term_range = range(0, min(4, n)+1, 2)
+        self.wait()
+        term_range = list(range(0, min(4, n)+1, 2))
         target_terms = dict([
-            (k, deepcopy(self.coords_to_mobs[n][k]).highlight(term_color))
+            (k, deepcopy(self.coords_to_mobs[n][k]).set_color(term_color))
             for k in term_range
         ])
         self.play(*
@@ -1467,7 +1460,7 @@ class MoserSolutionInPascal(PascalsTriangleScene):
                 for k in term_range
             ]
         )
-        self.dither()
+        self.wait()
         for k in term_range:
             if k == 0:
                 above_terms = [self.coords_to_n_choose_k[n-1][k]]
@@ -1481,13 +1474,13 @@ class MoserSolutionInPascal(PascalsTriangleScene):
             self.add(self.coords_to_mobs[n][k])
             self.play(Transform(
                 terms[k], 
-                Mobject(*above_terms).highlight(term_color)
+                Mobject(*above_terms).set_color(term_color)
             ))
             self.remove(*above_terms)
-        self.dither()
+        self.wait()
         terms_sum = TexMobject(str(moser_function(n)))
-        terms_sum.shift((SPACE_WIDTH-1, terms[0].get_center()[1], 0))
-        terms_sum.highlight(term_color)
+        terms_sum.shift((FRAME_X_RADIUS-1, terms[0].get_center()[1], 0))
+        terms_sum.set_color(term_color)
         self.play(Transform(Mobject(*terms), terms_sum))
 
 class RotatingPolyhedra(Scene):
@@ -1541,7 +1534,7 @@ class ExplainNChoose2Formula(Scene):
             str(n), "(%d-1)"%n, r"\over{2}"
         ]).split()
         for part in n_mob, n_minus_1, over_2:
-            part.shift((SPACE_WIDTH-1.5, SPACE_HEIGHT-1, 0))
+            part.shift((FRAME_X_RADIUS-1.5, FRAME_Y_RADIUS-1, 0))
 
         self.add(parens, n_mob)
         up_unit = np.array((0, height, 0))
@@ -1552,7 +1545,7 @@ class ExplainNChoose2Formula(Scene):
         a_mob = nums.pop(a-1)
         nums_compound = Mobject(*nums)
         self.add(a_mob, nums_compound)
-        self.dither()        
+        self.wait()        
         right_shift = b_mob.get_center() - a_mob.get_center()
         right_shift[1] = 0
         self.play(
@@ -1567,13 +1560,13 @@ class ExplainNChoose2Formula(Scene):
         self.play(*[
             CounterclockwiseTransform(
                 mob, 
-                Point(mob.get_center()).highlight("black")
+                Point(mob.get_center()).set_color("black")
             )
             for mob in nums
         ])
         self.play(*[
             ApplyMethod(mob.shift, (0, 1, 0))
-            for mob in parens, a_mob, b_mob
+            for mob in (parens, a_mob, b_mob)
         ])
         parens_copy = deepcopy(parens).shift((0, -2, 0))
         a_center = a_mob.get_center()
@@ -1624,7 +1617,7 @@ class ExplainNChoose4Formula(Scene):
             self.remove(nums_compound)
             nums = nums_compound.split()
             chosen = nums[quad[i]-1]
-            nums[quad[i]-1] = Point(chosen.get_center()).highlight("black")
+            nums[quad[i]-1] = Point(chosen.get_center()).set_color("black")
             nums_compound = Mobject(*nums)
             self.add(chosen)
             if i < 3:
@@ -1637,7 +1630,7 @@ class ExplainNChoose4Formula(Scene):
                 self.play(*[
                     CounterclockwiseTransform(
                         mob, 
-                        Point(mob.get_center()).highlight("black")
+                        Point(mob.get_center()).set_color("black")
                     )
                     for mob in nums
                 ])
@@ -1647,7 +1640,7 @@ class ExplainNChoose4Formula(Scene):
             r"There are $(4 \cdot 3 \cdot 2 \cdot 1)$ total permutations"
         ).shift((0, -2, 0))
         self.add(parens, num_perms_explain, *form_mobs)
-        perms = list(it.permutations(range(4)))        
+        perms = list(it.permutations(list(range(4))))        
         for count in range(6):
             perm = perms[randint(0, 23)]
             new_quad_mobs = [
@@ -1685,15 +1678,15 @@ class IntersectionChoppingExamples(Scene):
         for pairs, exp in [(pairs1, "3 + 2(2) = 7"), 
                            (pairs2, "4 + 2(3) = 10")]:
             lines = [Line(*pair).scale(2) for pair in pairs]
-            self.add(TexMobject(exp).shift((0, SPACE_HEIGHT-1, 0)))
+            self.add(TexMobject(exp).shift((0, FRAME_Y_RADIUS-1, 0)))
             self.add(*lines)
-            self.dither()
+            self.wait()
             self.play(*[
                 Transform(line, deepcopy(line).scale(1.2).scale_in_place(1/1.2))
                 for line in lines
             ])
             self.count(lines, run_time = 3.0, num_offset = ORIGIN)
-            self.dither()
+            self.wait()
             self.remove(*self.mobjects)
 
 

@@ -1,21 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.combinatorics import PascalsTriangle
-from scene import Scene
-from mobject.svg_mobject import *
-
-from mobject.tex_mobject import *
+from manimlib.imports import *
 
 
 class TrigAnimation(Animation):
@@ -37,7 +20,7 @@ class TrigAnimation(Animation):
         circle = Circle(color = WHITE)
         self.trig_lines = [
             Line(ORIGIN, RIGHT, color = color)
-            for color in self.sin_color, self.cos_color, self.tan_color
+            for color in (self.sin_color, self.cos_color, self.tan_color)
         ]
         mobject = VMobject(
             x_axis, y_axis, circle, 
@@ -47,7 +30,7 @@ class TrigAnimation(Animation):
         self.center = mobject.get_center()
         Animation.__init__(self, mobject, **kwargs)
 
-    def update_mobject(self, alpha):
+    def interpolate_mobject(self, alpha):
         theta = 2*np.pi*alpha
         circle_point = np.cos(theta)*RIGHT+np.sin(theta)*UP+self.center
         points = [
@@ -60,10 +43,7 @@ class TrigAnimation(Animation):
             )*RIGHT + self.center,
         ]
         for line, point in zip(self.trig_lines, points):
-            line.set_anchor_points(
-                [circle_point, point], 
-                mode = "corners"
-            )
+            line.set_points_as_corners([circle_point, point])
 
 
 
@@ -96,7 +76,7 @@ class Notation(Scene):
 
         self.play(Write(notation))
         self.play(Write(self.symbols))
-        self.dither()
+        self.wait()
         self.add(notation, self.symbols)
 
 
@@ -113,8 +93,8 @@ class Notation(Scene):
         prod2.submobjects[0] = times
 
         new_sin, new_cos, new_tan = [
-            VMobject().set_anchor_points(
-                corners, mode = "corners"
+            VMobject().set_points_as_corners(
+                corners
             ).replace(trig_part.split()[0])
             for corners, trig_part in zip(
                 [
@@ -148,12 +128,12 @@ class Notation(Scene):
             self.symbols, good_symbols, 
             path_arc = np.pi
         ))
-        self.dither(3)
+        self.wait(3)
         self.play(Transform(
             self.symbols, bad_symbols,
             path_arc = np.pi
         ))
-        self.dither()
+        self.wait()
 
 
     def shift_to_visuals(self):
@@ -164,9 +144,9 @@ class Notation(Scene):
             for trig_part in new_trig.split()
         ]
         trig_anim = TrigAnimation()
-        sin.highlight(trig_anim.sin_color)
-        cos.highlight(trig_anim.cos_color)
-        tan.highlight(trig_anim.tan_color)
+        sin.set_color(trig_anim.sin_color)
+        cos.set_color(trig_anim.cos_color)
+        tan.set_color(trig_anim.tan_color)
         new_trig.to_corner(UP+RIGHT)
         sum_lines = self.get_harmonic_sum_lines()
 
@@ -185,7 +165,7 @@ class Notation(Scene):
             Write(sum_lines)
         )
         self.play(trig_anim)
-        self.dither()
+        self.wait()
 
     def get_harmonic_sum_lines(self):
         result = VMobject()
@@ -221,7 +201,7 @@ class ButDots(Scene):
         but.shift(20*RIGHT)
         self.play(ApplyMethod(but.shift, 20*LEFT))
         self.play(Write(dots, run_time = 5))
-        self.dither()
+        self.wait()
 
 
 class ThreesomeOfNotation(Scene):
@@ -243,13 +223,13 @@ class ThreesomeOfNotation(Scene):
         self.play(Write(log))
         self.play(Transform(vars1, vars3, path_arc = -np.pi))
         self.play(Write(rad))
-        self.dither()
+        self.wait()
 
         words = TextMobject("Artificially unrelated")
         words.to_corner(UP+RIGHT)
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         self.play(Write(words))
-        self.dither()
+        self.wait()
 
 
 class TwoThreeEightExample(Scene):
@@ -280,7 +260,7 @@ class TwoThreeEightExample(Scene):
             Write(three),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
         exp = TexMobject("2^3")
         exp.next_to(eq, LEFT)
@@ -296,7 +276,7 @@ class TwoThreeEightExample(Scene):
         )
         self.clear()
         self.add(base_two, exp_three, eq, eight)
-        self.dither(3)
+        self.wait(3)
 
         rad_three, rad1, rad2, rad_eight, rad_eq, rad_two = \
             TexMobject("\\sqrt[3]{8} = 2").split()
@@ -311,14 +291,14 @@ class TwoThreeEightExample(Scene):
                 (base_two, rad_two)
             ]
         ])
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
-            VMobject(rad1, rad2).highlight, RED,
+            VMobject(rad1, rad2).set_color, RED,
             rate_func = there_and_back,
             run_time = 2
         ))
         self.remove(rad1, rad2)
-        self.dither()
+        self.wait()
 
         l, o, g, log_two, p1, log_eight, p2, log_eq, log_three = \
             TexMobject("\\log_2(8) = 3").split()
@@ -337,26 +317,26 @@ class TwoThreeEightExample(Scene):
                 (rad_three, log_three)
             ]
         ])
-        self.dither()
+        self.wait()
         self.play(ApplyMethod(
-            VMobject(l, o, g).highlight, RED,
+            VMobject(l, o, g).set_color, RED,
             rate_func = there_and_back,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
 class WhatTheHell(Scene):
     def construct(self):
         randy = Randolph()
         randy.to_corner(DOWN+LEFT)
-        exp, rad, log = map(TexMobject,[
+        exp, rad, log = list(map(TexMobject,[
             "2^3 = 8",
             "\\sqrt[3]{8} = 2",
             "\\log_2(8) = 3",
-        ])
-        # exp.highlight(BLUE_D)
-        # rad.highlight(RED_D)
-        # log.highlight(GREEN_D)
+        ]))
+        # exp.set_color(BLUE_D)
+        # rad.set_color(RED_D)
+        # log.set_color(GREEN_D)
         arrow1 = DoubleArrow(DOWN, UP)
         arrow2 = arrow1.copy()
         last = exp
@@ -365,9 +345,9 @@ class WhatTheHell(Scene):
             last = mob
         q_marks = VMobject(*[
             TexMobject("?!").next_to(arrow, RIGHT)
-            for arrow in arrow1, arrow2
+            for arrow in (arrow1, arrow2)
         ])
-        q_marks.highlight(RED_D)
+        q_marks.set_color(RED_D)
         everyone = VMobject(exp, rad, log, arrow1, arrow2, q_marks)
         everyone.scale(0.7)
         everyone.to_corner(UP+RIGHT)
@@ -382,7 +362,7 @@ class WhatTheHell(Scene):
             ]
         ]
         for phrase, color in zip(phrases, [BLUE, RED, GREEN]):
-            phrase.split()[1].highlight(color)
+            phrase.split()[1].set_color(color)
 
         self.play(ApplyMethod(randy.change_mode, "angry"))
         self.play(FadeIn(VMobject(exp, rad, log)))
@@ -391,10 +371,10 @@ class WhatTheHell(Scene):
             ShowCreationPerSubmobject(arrow2)
         )
         self.play(Write(q_marks))
-        self.dither()
+        self.wait()
         self.remove(randy)
         self.play(Write(VMobject(*phrases)))
-        self.dither()
+        self.wait()
 
 class Countermathematical(Scene):
     def construct(self):
@@ -404,9 +384,9 @@ class Countermathematical(Scene):
         mathematical.shift(intuitive.get_left()-mathematical.get_left())
 
         self.add(counterintuitive)
-        self.dither()
+        self.wait()
         self.play(Transform(intuitive, mathematical))
-        self.dither()
+        self.wait()
 
 
 class PascalsCollision(Scene):
@@ -431,14 +411,14 @@ class PascalsCollision(Scene):
 
         self.add(pascals_triangle, n_choose_k, formula)
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(
             Transform(pascals_triangle, final_triangle),
             Transform(n_choose_k, final_triangle),
             FadeOut(formula),
             ApplyMethod(to_remove.shift, 5*DOWN)
         )
-        self.dither()
+        self.wait()
 
 
 class LogarithmProperties(Scene):
@@ -455,7 +435,7 @@ class LogarithmProperties(Scene):
         ]
         bubble.add_content(props[0])
         words = TextMobject("What was it again?")
-        words.highlight(YELLOW)
+        words.set_color(YELLOW)
         words.scale(0.5)
         words.next_to(props[0], UP)
 
@@ -470,34 +450,34 @@ class LogarithmProperties(Scene):
             if i%2 == 0:
                 self.play(Blink(randy))
             else:
-                self.dither()
+                self.wait()
 
 
 class HaveToShare(Scene):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "Lovely", "Symmetrical", "Utterly Reasonable"
-        ])
+        ]))
         for w1, w2 in zip(words, words[1:]):
             w2.next_to(w1, DOWN)
         VMobject(*words).center()
         left_dot, top_dot, bottom_dot = [
             Dot(point, radius = 0.1)
-            for point in ORIGIN, RIGHT+0.5*UP, RIGHT+0.5*DOWN
+            for point in (ORIGIN, RIGHT+0.5*UP, RIGHT+0.5*DOWN)
         ]
         line1, line2 = [
             Line(left_dot.get_center(), dot.get_center(), buff = 0)
-            for dot in top_dot, bottom_dot
+            for dot in (top_dot, bottom_dot)
         ]
         share = VMobject(left_dot, top_dot, bottom_dot, line1, line2)
         share.next_to(words[1], RIGHT, buff = 1)
-        share.highlight(RED)
+        share.set_color(RED)
 
         for word in words:
             self.play(FadeIn(word))
-        self.dither()
+        self.wait()
         self.play(Write(share, run_time = 1))
-        self.dither()
+        self.wait()
 
 
 

@@ -1,27 +1,9 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
-
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from topics.geometry import *
-from topics.characters import Randolph
-from topics.functions import *
-from mobject.region import  Region
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from camera import Camera
-from brachistochrone.light import PhotonScene
-from brachistochrone.curves import *
+from manimlib.imports import *
+from old_projects.brachistochrone.light import PhotonScene
+from old_projects.brachistochrone.curves import *
 
 
 class MultilayeredScene(Scene):
@@ -37,11 +19,11 @@ class MultilayeredScene(Scene):
     def get_layers(self, n_layers = None):
         if n_layers is None:
             n_layers = self.n_layers
-        width = 2*SPACE_WIDTH
+        width = FRAME_WIDTH
         height = float(self.total_glass_height)/n_layers
         rgb_pair = [
             np.array(Color(color).get_rgb())
-            for color in self.top_color, self.bottom_color
+            for color in (self.top_color, self.bottom_color)
         ]
         rgb_range = [
             interpolate(*rgb_pair+[x])
@@ -74,11 +56,11 @@ class MultilayeredScene(Scene):
 
     def get_continuous_glass(self):
         result = self.RectClass(
-            width = 2*SPACE_WIDTH,
+            width = FRAME_WIDTH,
             height = self.total_glass_height,
         )
         result.sort_points(lambda p : -p[1])
-        result.gradient_highlight(self.top_color, self.bottom_color)
+        result.set_color_by_gradient(self.top_color, self.bottom_color)
         result.shift(self.top-result.get_top())
         return result
 
@@ -92,7 +74,7 @@ class TwoToMany(MultilayeredScene):
         layers = self.get_layers()
 
         self.add(glass)
-        self.dither()
+        self.wait()
         self.play(*[
             FadeIn(
                 layer,
@@ -102,14 +84,14 @@ class TwoToMany(MultilayeredScene):
         ]+[
             Transform(glass, layers[0])
         ])
-        self.dither()
+        self.wait()
 
     def get_glass(self):
         return self.RectClass(
-            height = SPACE_HEIGHT,
-            width = 2*SPACE_WIDTH,
+            height = FRAME_Y_RADIUS,
+            width = FRAME_WIDTH,
             color = BLUE_E
-        ).shift(SPACE_HEIGHT*DOWN/2)
+        ).shift(FRAME_Y_RADIUS*DOWN/2)
 
 
 class RaceLightInLayers(MultilayeredScene, PhotonScene):
@@ -118,7 +100,7 @@ class RaceLightInLayers(MultilayeredScene, PhotonScene):
     }
     def construct(self):
         self.add_layers()
-        line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         lines = [
             line.copy().shift(layer.get_center())
             for layer in self.layers
@@ -147,13 +129,13 @@ class ShowDiscretePath(MultilayeredScene, PhotonScene):
 
         self.generate_discrete_path()
         self.play(ShowCreation(self.discrete_path))
-        self.dither()
+        self.wait()
         self.play(self.photon_run_along_path(
             self.discrete_path,
             rate_func = rush_into,
             run_time = 3
         ))
-        self.dither()
+        self.wait()
 
 
     def generate_discrete_path(self):
@@ -179,7 +161,7 @@ class ShowDiscretePath(MultilayeredScene, PhotonScene):
                 angle_of_vector(start_point-end_point)-np.pi/2
             )
         self.discrete_path.add_line(
-            points[end], SPACE_WIDTH*RIGHT+(tops[-1]-0.5)*UP
+            points[end], FRAME_X_RADIUS*RIGHT+(tops[-1]-0.5)*UP
         )
 
 class NLayers(MultilayeredScene):
@@ -198,7 +180,7 @@ class NLayers(MultilayeredScene):
         n_layers = TextMobject("$n$ layers")
         n_layers.next_to(brace)
 
-        self.dither()
+        self.wait()
 
         self.add(brace)
         self.show_frame()
@@ -207,7 +189,7 @@ class NLayers(MultilayeredScene):
             GrowFromCenter(brace),
             GrowFromCenter(n_layers)
         )
-        self.dither()
+        self.wait()
 
 class ShowLayerVariables(MultilayeredScene, PhotonScene):
     CONFIG = {
@@ -227,8 +209,8 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
             )
             eq_mob.shift(layer.get_center()+2*LEFT)
             v_eq = eq_mob.split()
-            v_eq[0].highlight(layer.get_color())
-            path = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+            v_eq[0].set_color(layer.get_color())
+            path = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
             path.shift(layer.get_center())
             brace_endpoints = Mobject(
                 Point(self.top),
@@ -253,14 +235,14 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
         for v_eq, path, time in zip(v_equations, center_paths, [2, 1, 0.5]):
             photon_run = self.photon_run_along_path(
                 path,
-                rate_func = None
+                rate_func=linear
             )
             self.play(
                 FadeToColor(v_eq[0], WHITE),
                 photon_run,
                 run_time = time
             )
-        self.dither()
+        self.wait()
 
         starts = [0, 0.3, 0.6]
         self.play(*it.chain(*[
@@ -271,11 +253,11 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
                 )
                 for mob, start in zip(mobs, starts)
             ]
-            for mobs in start_ys, braces
+            for mobs in (start_ys, braces)
         ]))
-        self.dither()
+        self.wait()
 
-        triplets = zip(v_equations, start_ys, end_ys)
+        triplets = list(zip(v_equations, start_ys, end_ys))
         anims = []
         for v_eq, start_y, end_y in triplets:
             anims += [
@@ -284,7 +266,7 @@ class ShowLayerVariables(MultilayeredScene, PhotonScene):
                 Transform(start_y.copy(), end_y)
             ]
         self.play(*anims)
-        self.dither()
+        self.wait()
 
 
 class LimitingProcess(MultilayeredScene):
@@ -312,16 +294,16 @@ class LimitingProcess(MultilayeredScene):
         curr_set = glass_sets[0]
         self.add(curr_set)
         for layer_set in glass_sets[1:]:
-            self.dither()
+            self.wait()
             self.play(Transform(curr_set, layer_set))
-        self.dither()
+        self.wait()
 
 
 
 class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
     CONFIG = {
         "show_time" : False,
-        "dither_and_add" : False,
+        "wait_and_add" : False,
         "RectClass" : FilledRectangle
     }
     def construct(self):
@@ -347,12 +329,12 @@ class ShowLightAndSlidingObject(MultilayeredScene, TryManyPaths, PhotonScene):
         text = self.get_text().to_edge(UP, buff = 0.2)
 
         self.play(ShowCreation(loop))
-        self.dither()
+        self.wait()
         self.play(photon_run)
         self.remove(photon_run.mobject)
         randy = self.slide(randy, loop)
         self.add(randy)
-        self.dither()
+        self.wait()
         self.remove(randy)
         self.play(ShimmerIn(text))
         for path in paths:
@@ -374,7 +356,7 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         self.freeze_background()
 
         cycloid = Cycloid(end_theta = np.pi)
-        cycloid.highlight(YELLOW)
+        cycloid.set_color(YELLOW)
         chopped_cycloid = cycloid.copy()
         n = cycloid.get_num_points()
         chopped_cycloid.filter_out(lambda p : p[1] > 1 and p[0] < 0)
@@ -412,7 +394,7 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
             Transform(snells, new_snells),
             Transform(rest, colon)
         )
-        self.dither()
+        self.wait()
         return colon
 
     def get_marks(self, point1, point2):
@@ -466,17 +448,17 @@ class ContinuouslyObeyingSnellsLaw(MultilayeredScene):
         )
         self.play(ShowCreation(vert_line))
         self.play(ShowCreation(tangent_line))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(sqrt_y),
             GrowFromCenter(brace),
             GrowFromCenter(y_mob)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(
             Point(const.get_left()), const
         ))
-        self.dither()
+        self.wait()
 
 
 

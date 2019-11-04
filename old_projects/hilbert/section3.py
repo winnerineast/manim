@@ -1,29 +1,4 @@
-from mobject import Mobject, Point
-from mobject.tex_mobject import \
-    TexMobject, TextMobject, Brace
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromRegion
-
-from scene import Scene
-
-from animation import Animation
-from animation.transform import \
-    Transform, CounterclockwiseTransform, ApplyMethod,\
-    GrowFromCenter, ClockwiseTransform, ApplyPointwiseFunction,\
-    TransformAnimations, ShimmerIn, FadeOut, FadeIn
-from animation.simple_animations import \
-    ShowCreation, DelayByOrder
-from animation.playground import Vibrate
-
-from topics.geometry import \
-    Line, Dot, Arrow, Grid, Square, Point, Polygon
-from topics.characters import \
-    ThoughtBubble, SpeechBubble, Mathematician, Mortimer
-from topics.number_line import UnitInterval
-from topics.three_dimensions import Stars
-
-from mobject.region import  region_from_polygon_vertices
-
+from manimlib.imports import *
 import displayer as disp
 
 from hilbert.curves import \
@@ -32,14 +7,12 @@ from hilbert.curves import \
 from hilbert.section1 import get_mathy_and_bubble
 
 
-from helpers import *
-
 
 
 class SectionThree(Scene):
     def construct(self):
         self.add(TextMobject("A few words on the usefulness of infinite math"))
-        self.dither()
+        self.wait()
 
 
 class InfiniteResultsFiniteWorld(Scene):
@@ -68,27 +41,27 @@ class InfiniteResultsFiniteWorld(Scene):
         right_mobs = [right_words, right_formula]
         for mob in left_mobs:
             mob.to_edge(RIGHT, buff = 1)
-            mob.shift(SPACE_WIDTH*LEFT)
+            mob.shift(FRAME_X_RADIUS*LEFT)
         for mob in right_mobs:
             mob.to_edge(LEFT, buff = 1)
-            mob.shift(SPACE_WIDTH*RIGHT)
+            mob.shift(FRAME_X_RADIUS*RIGHT)
         arrow = Arrow(left_words, right_words)
         right_overwords.next_to(right_formula, UP)
 
         self.play(ShimmerIn(left_words))
         self.play(ShowCreation(arrow))
         self.play(ShimmerIn(right_words))
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(left_formula),
             ApplyMethod(left_words.next_to, left_formula, UP)
         )
-        self.dither()
+        self.wait()
         self.play(
             ShimmerIn(right_formula),
             Transform(right_words, right_overwords)
         )
-        self.dither()
+        self.wait()
         self.finite_analog(
             Mobject(left_formula, left_words),
             arrow,
@@ -100,7 +73,7 @@ class InfiniteResultsFiniteWorld(Scene):
         self.clear()
         self.add(left_mob, arrow, right_mob)
         ex = TextMobject("\\times")
-        ex.highlight(RED)
+        ex.set_color(RED)
         # ex.shift(arrow.get_center())
         middle = TexMobject(
             "\\sum_{n=0}^N 2^n \\equiv -1 \\mod 2^{N+1}"
@@ -123,10 +96,10 @@ class InfiniteResultsFiniteWorld(Scene):
             ]
         ]
         for mob in ex, middle:
-            mob.sort_points(np.linalg.norm)
+            mob.sort_points(get_norm)
 
         self.play(GrowFromCenter(ex))
-        self.dither()
+        self.wait()
         self.play(
             Transform(left_mob, new_left),
             Transform(arrow.copy(), left_arrow),
@@ -138,7 +111,7 @@ class InfiniteResultsFiniteWorld(Scene):
             GrowFromCenter(brace),
             ShimmerIn(finite_analog)
         )
-        self.dither()
+        self.wait()
         self.equivalence(
             left_mob,
             left_arrow, 
@@ -150,7 +123,7 @@ class InfiniteResultsFiniteWorld(Scene):
         self.add(left_mob, arrow, right_mob)
         words = TextMobject("is equivalent to")
         words.shift(0.25*LEFT)
-        words.highlight(BLUE)
+        words.set_color(BLUE)
         new_left = left_mob.copy().shift(RIGHT)
         new_right = right_mob.copy()
         new_right.shift(
@@ -160,14 +133,14 @@ class InfiniteResultsFiniteWorld(Scene):
             )*RIGHT
         )
         for mob in arrow, words:
-            mob.sort_points(np.linalg.norm)     
+            mob.sort_points(get_norm)     
 
         self.play(
             ApplyMethod(left_mob.shift, RIGHT),
             Transform(arrow, words),
             ApplyMethod(right_mob.to_edge, RIGHT)
         )
-        self.dither()
+        self.wait()
 
 
 class HilbertCurvesStayStable(Scene):
@@ -185,7 +158,7 @@ class HilbertCurvesStayStable(Scene):
         words.to_edge(UP)
 
         self.add(curve, grid)
-        self.dither()
+        self.wait()
         for n in range(3, 7):
             if n == 5:
                 self.play(ShimmerIn(words))
@@ -200,7 +173,7 @@ class HilbertCurvesStayStable(Scene):
             self.remove(grid)
             grid = new_grid
             self.play(Transform(curve, new_curve))
-            self.dither()
+            self.wait()
 
 
 
@@ -230,45 +203,45 @@ class InfiniteObjectsEncapsulateFiniteObjects(Scene):
             ]
         ]
         
-        words[0].highlight(RED)
+        words[0].set_color(RED)
         words[1].next_to(words[0])
-        words[2].highlight(GREEN).next_to(words[1])
+        words[2].set_color(GREEN).next_to(words[1])
         Mobject(*words).center().to_edge(UP)
         infinite_objects = [
             TexMobject(
                 "\\sum_{n=0}^\\infty", 
                 size = "\\normal"
-            ).highlight(RED_E),
+            ).set_color(RED_E),
             Sierpinski(order = 8).scale(0.3),
             TextMobject(
                 "$\\exists$ something infinite $\\dots$"
-            ).highlight(RED_B)
+            ).set_color(RED_B)
         ]
         finite_objects = [
             TexMobject(
                 "\\sum_{n=0}^N",
                 size = "\\normal"
-            ).highlight(GREEN_E),
+            ).set_color(GREEN_E),
             self.get_triangles(),
             TextMobject(
                 "$\\forall$ finite somethings $\\dots$"
-            ).highlight(GREEN_B)
+            ).set_color(GREEN_B)
         ]
         for infinite, finite, n in zip(infinite_objects, finite_objects, it.count(1, 2)):
             infinite.next_to(words[0], DOWN, buff = n)
             finite.next_to(words[2], DOWN, buff = n)
 
         self.play(ShimmerIn(words[0]))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(infinite_objects[0]))
         self.play(ShowCreation(infinite_objects[1]))
         self.play(ShimmerIn(infinite_objects[2]))
-        self.dither()
+        self.wait()
         self.play(ShimmerIn(words[1]), ShimmerIn(words[2]))
         self.play(ShimmerIn(finite_objects[0]))
         self.play(ShowCreation(finite_objects[1]))
         self.play(ShimmerIn(finite_objects[2]))
-        self.dither()
+        self.wait()
 
 
 class StatementRemovedFromReality(Scene):

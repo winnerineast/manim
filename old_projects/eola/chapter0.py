@@ -1,25 +1,5 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.combinatorics import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
+from manimlib.imports import *
+from once_useful_constructs import *
 
 EXAMPLE_TRANFORM = [[0, 1], [-1, 1]]
 TRANFORMED_VECTOR = [[1], [2]]
@@ -58,24 +38,24 @@ class OpeningQuote(Scene):
             """, 
             organize_left_to_right = False
         )
-        words.scale_to_fit_width(2*(SPACE_WIDTH-1))
+        words.set_width(2*(FRAME_X_RADIUS-1))
         words.to_edge(UP)        
         for mob in words.submobjects[48:49+13]:
-            mob.highlight(GREEN)
+            mob.set_color(GREEN)
         author = TextMobject("-Jean Dieudonn\\'e")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.next_to(words, DOWN)
 
         self.play(FadeIn(words))
-        self.dither(3)
+        self.wait(3)
         self.play(Write(author, run_time = 5))
-        self.dither()
+        self.wait()
 
 class VideoIcon(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, "video_icon", **kwargs)
         self.center()
-        self.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        self.set_width(FRAME_WIDTH/12.)
         self.set_stroke(color = WHITE, width = 0)
         self.set_fill(color = WHITE, opacity = 1)
 
@@ -88,7 +68,7 @@ class UpcomingSeriesOfVidoes(Scene):
         for icon, color in zip(icons, colors):
             icon.set_fill(color, opacity = 1)
         icons = VMobject(*icons)
-        icons.arrange_submobjects(RIGHT)
+        icons.arrange(RIGHT)
         icons.to_edge(LEFT)
         icons.shift(UP)
         icons = icons.split()
@@ -103,7 +83,7 @@ class UpcomingSeriesOfVidoes(Scene):
             )
             for icon, offset in zip(icons, np.linspace(0, 0.5, len(icons)))
         ])
-        self.dither()
+        self.wait()
 
 
 class AboutLinearAlgebra(Scene):
@@ -113,14 +93,14 @@ class AboutLinearAlgebra(Scene):
 
     def show_dependencies(self):
         linalg = TextMobject("Linear Algebra")
-        subjects = map(TextMobject, [
+        subjects = list(map(TextMobject, [
             "Computer science",
             "Physics",
             "Electrical engineering",
             "Mechanical engineering",
             "Statistics",
             "\\vdots"
-        ])
+        ]))
         prev = subjects[0]
         for subject in subjects[1:]:
             subject.next_to(prev, DOWN, aligned_edge = LEFT)
@@ -134,13 +114,13 @@ class AboutLinearAlgebra(Scene):
         ])
 
         self.play(Write(linalg, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(
-            ShowCreation(arrows, submobject_mode = "lagged_start"),
+            ShowCreation(arrows, lag_ratio = 0.5),
             FadeIn(all_subs),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.linalg = linalg
 
     def to_thought_bubble(self):
@@ -153,14 +133,14 @@ class AboutLinearAlgebra(Scene):
         new_linalg = bubble.position_mobject_inside(linalg.copy())
         q_marks = TextMobject("???").next_to(randy, UP)
 
-        self.play(*map(FadeOut, all_else))
+        self.play(*list(map(FadeOut, all_else)))
         self.remove(*all_else)
         self.play(
             Transform(linalg, new_linalg),
             Write(bubble),
             FadeIn(randy)
         )
-        self.dither()
+        self.wait()
 
         topics = [
             self.get_matrix_multiplication(),
@@ -191,9 +171,9 @@ class AboutLinearAlgebra(Scene):
 
             if count %3 == 0:
                 self.play(Blink(randy))
-                self.dither()
+                self.wait()
             else:
-                self.dither(2)
+                self.wait(2)
 
 
     def get_matrix_multiplication(self):
@@ -208,12 +188,12 @@ class AboutLinearAlgebra(Scene):
                 \\end{array}
             \\right)
             = 
-            ac - bc
+            ad - bc
         """)
 
     def get_cross_product(self):
         return TexMobject("""
-            \\vec\\textbf{v} \\times \\textbf{w} = 
+            \\vec{\\textbf{v}} \\times \\textbf{w} =
             \\text{Det}\\left(
                 \\begin{array}{ccc}
                     \\hat{\imath} & \\hat{\jmath} & \\hat{k} \\\\
@@ -224,12 +204,12 @@ class AboutLinearAlgebra(Scene):
         """)
 
     def get_eigenvalue(self):
-        result = TextMobject("\\Text{Det}\\left(A - \\lambda I \\right) = 0")
-        result.submobjects[-5].highlight(YELLOW)
+        result = TexMobject("\\text{Det}\\left(A - \\lambda I \\right) = 0")
+        result.submobjects[0][-5].set_color(YELLOW)
         return result
 
     def get_matrix_multiplication_question(self):
-        why = TextMobject("Why?").highlight(BLUE) 
+        why = TextMobject("Why?").set_color(BLUE) 
         mult = self.get_matrix_multiplication()
         why.next_to(mult, UP)
         result = VMobject(why, mult)
@@ -254,7 +234,7 @@ class AboutLinearAlgebra(Scene):
 
         )
         for mob in result.submobjects[-11:-6]:
-            mob.highlight(YELLOW)
+            mob.set_color(YELLOW)
         return result
 
 
@@ -270,13 +250,13 @@ class NumericVsGeometric(Scene):
         geometric = TextMobject("Geometric intuition")
         for mob in numeric, geometric:
             mob.to_corner(UP+LEFT)
-        geometric.shift(SPACE_WIDTH*RIGHT)
-        hline = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        geometric.shift(FRAME_X_RADIUS*RIGHT)
+        hline = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         hline.next_to(numeric, DOWN)
         hline.to_edge(LEFT, buff = 0)
-        vline = Line(SPACE_HEIGHT*UP, SPACE_HEIGHT*DOWN)
+        vline = Line(FRAME_Y_RADIUS*UP, FRAME_Y_RADIUS*DOWN)
         for mob in hline, vline:
-            mob.highlight(GREEN)
+            mob.set_color(GREEN)
 
         self.play(ShowCreation(VMobject(hline, vline)))
         digest_locals(self)
@@ -293,7 +273,7 @@ class NumericVsGeometric(Scene):
             "\\\\ &=",
             matrix_to_tex_string([[1], [-1]]),
         ]))
-        matrix_vector_product.scale_to_fit_width(SPACE_WIDTH-0.5)
+        matrix_vector_product.set_width(FRAME_X_RADIUS-0.5)
         matrix_vector_product.next_to(self.vline, LEFT)
 
         self.play(
@@ -301,22 +281,22 @@ class NumericVsGeometric(Scene):
             FadeIn(matrix_vector_product),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(Write(self.geometric, run_time = 2))
         ### Paste in linear transformation
-        self.dither()
+        self.wait()
         digest_locals(self)
 
     def clear_way_for_geometric(self):
-        new_line = Line(SPACE_HEIGHT*LEFT, SPACE_HEIGHT*RIGHT)
-        new_line.shift((SPACE_HEIGHT+1)*DOWN)
+        new_line = Line(FRAME_Y_RADIUS*LEFT, FRAME_Y_RADIUS*RIGHT)
+        new_line.shift((FRAME_Y_RADIUS+1)*DOWN)
         self.play(
             Transform(self.vline, new_line),
             Transform(self.hline, new_line),
-            ApplyMethod(self.numeric.shift, (2*SPACE_HEIGHT+1)*DOWN),
+            ApplyMethod(self.numeric.shift, (FRAME_HEIGHT+1)*DOWN),
             ApplyMethod(
                 self.matrix_vector_product.shift, 
-                (2*SPACE_HEIGHT+1)*DOWN
+                (FRAME_HEIGHT+1)*DOWN
             ),
             ApplyMethod(self.geometric.to_edge, LEFT)
         )
@@ -334,8 +314,8 @@ class NumericVsGeometric(Scene):
             Randolph(mode = "pondering")
         ]
         bulb = SVGMobject("light_bulb")
-        bulb.scale_to_fit_height(1)
-        bulb.highlight(YELLOW)
+        bulb.set_height(1)
+        bulb.set_color(YELLOW)
         thoughts = [
             matrix_to_mobject(EXAMPLE_TRANFORM),
             bulb,
@@ -359,7 +339,7 @@ class NumericVsGeometric(Scene):
                 )
                 curr_randy = randy
                 curr_thought = thought
-            self.dither(1.5)
+            self.wait(1.5)
 
 
 class ExampleTransformation(LinearTransformationScene):
@@ -367,7 +347,7 @@ class ExampleTransformation(LinearTransformationScene):
         self.setup()
         self.add_vector(np.array(TRANFORMED_VECTOR).flatten())
         self.apply_matrix(EXAMPLE_TRANFORM)
-        self.dither()
+        self.wait()
 
 
 class NumericToComputations(Scene):
@@ -379,9 +359,9 @@ class NumericToComputations(Scene):
         bottom.next_to(arrow, DOWN)
 
         self.add(top)
-        self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
+        self.play(ShowCreation(arrow))
         self.play(FadeIn(bottom))
-        self.dither()
+        self.wait()
 
 
 
@@ -399,19 +379,19 @@ class LinAlgPyramid(Scene):
                 ShowCreation(rect),
                 run_time = 1
             )
-        self.dither()
+        self.wait()
         self.play(*[
-            ApplyMethod(m.highlight, DARK_GREY)
-            for m in words[0], rects[0]
+            ApplyMethod(m.set_color, DARK_GREY)
+            for m in (words[0], rects[0])
         ])
-        self.dither()
+        self.wait()
         self.list_applications(rects[-1])
 
     def get_rects(self):
         height = 1
         rects = [
             Rectangle(height = height, width = width)
-            for width in 8, 5, 2
+            for width in (8, 5, 2)
         ]
         rects[0].shift(2*DOWN)
         for i in 1, 2:
@@ -448,7 +428,7 @@ class LinAlgPyramid(Scene):
             else:
                 curr_subject = subject
                 self.play(FadeIn(curr_subject, run_time = 0.5))
-            self.dither()
+            self.wait()
 
 
 class IntimidatingProf(Scene):
@@ -478,24 +458,24 @@ class IntimidatingProf(Scene):
         self.add(randy, morty)
         self.play(
             FadeIn(morty_name1),
-            ShowCreation(arrow, submobject_mode = "one_at_a_time")
+            ShowCreation(arrow)
         )
         self.play(Transform(morty_name1, morty_name2))
-        self.dither()
+        self.wait()
         self.play(FadeOut(morty_name1), FadeOut(arrow))
         self.play(
             FadeIn(speech_bubble),
             ApplyMethod(morty.change_mode, "speaking")
         )
         self.play(FadeIn(thought_bubble))
-        self.dither()
+        self.wait()
         self.play(
             ApplyMethod(randy.change_mode, "confused"),
             Write(q_marks, run_time = 1)
         )
         self.play(FadeOut(VMobject(speech_bubble, thought_bubble)))
         self.play(FadeIn(randy_bubble))
-        self.dither()
+        self.wait()
 
 
 class ThoughtBubbleTransformation(LinearTransformationScene):
@@ -511,33 +491,33 @@ class ThoughtBubbleTransformation(LinearTransformationScene):
             rotation, 
             path_arc = np.pi/3,
         )
-        self.dither()
+        self.wait()
 
 
 class SineApproximations(Scene):
     def construct(self):
         series = self.get_series()
         one_approx = self.get_approx_series("1", 1)
-        one_approx.highlight(YELLOW)
+        one_approx.set_color(YELLOW)
         pi_sixts_approx = self.get_approx_series("\\pi/6", np.pi/6)
-        pi_sixts_approx.highlight(RED)
+        pi_sixts_approx.set_color(RED)
         words = TextMobject("(How calculators compute sine)")
-        words.highlight(GREEN)
+        words.set_color(GREEN)
 
         series.to_edge(UP)
         one_approx.next_to(series, DOWN, buff = 1.5)
         pi_sixts_approx.next_to(one_approx, DOWN, buff = 1.5)
 
         self.play(Write(series))
-        self.dither()
+        self.wait()
         self.play(FadeIn(words))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(words))
         self.remove(words)
-        self.dither()
+        self.wait()
         self.play(Write(one_approx))
         self.play(Write(pi_sixts_approx))
-        self.dither()
+        self.wait()
 
     def get_series(self):
         return TexMobject("""
@@ -570,7 +550,7 @@ class LooseConnectionToTriangles(Scene):
         self.play(ShowCreation(arrow))
         self.play(ShowCreation(triangle))
         self.play(Write(q_mark))
-        self.dither()
+        self.wait()
 
 
 class PhysicsExample(Scene):
@@ -598,7 +578,7 @@ class PhysicsExample(Scene):
             MoveAlongPath(dot, parabola.copy(), **kwargs),
             ShowCreation(parabola, **kwargs)
         )
-        self.dither()
+        self.wait()
 
 
     def velocity_vector(self, parabola):
@@ -608,7 +588,7 @@ class PhysicsExample(Scene):
 
         p1 = parabola.point_from_proportion(alpha)
         p2 = parabola.point_from_proportion(alpha + d_alpha)
-        vector = vector_length*(p2-p1)/np.linalg.norm(p2-p1)
+        vector = vector_length*(p2-p1)/get_norm(p2-p1)
         v_mob = Vector(vector, color = YELLOW)
         vx = Vector(vector[0]*RIGHT, color = GREEN_B)
         vy = Vector(vector[1]*UP, color = RED)
@@ -626,18 +606,17 @@ class PhysicsExample(Scene):
 
         v_label = TexMobject("\\vec{v}")
         v_label.shift(p1 + RIGHT*vector[0]/4 + UP*vector[1]/2)
-        v_label.highlight(v_mob.get_color())
+        v_label.set_color(v_mob.get_color())
         vx_label = TexMobject("||\\vec{v}|| \\cos(\\theta)")
         vx_label.next_to(vx, UP)
-        vx_label.highlight(vx.get_color())
+        vx_label.set_color(vx.get_color())
         vy_label = TexMobject("||\\vec{v}|| \\sin(\\theta)")
         vy_label.next_to(vy, RIGHT)
-        vy_label.highlight(vy.get_color())
+        vy_label.set_color(vy.get_color())
 
-        kwargs = {"submobject_mode" : "one_at_a_time"}
         for v in v_mob, vx, vy:
             self.play(
-                ShowCreation(v, submobject_mode = "one_at_a_time")
+                ShowCreation(v)
             )
         self.play(
             ShowCreation(arc),
@@ -645,7 +624,7 @@ class PhysicsExample(Scene):
         )
         for label in v_label, vx_label, vy_label:
             self.play(Write(label, run_time = 1))
-        self.dither()
+        self.wait()
 
     def approximate_sine(self):
         approx = TexMobject("\\sin(\\theta) \\approx 0.7\\text{-ish}")
@@ -663,16 +642,16 @@ class PhysicsExample(Scene):
             Write(approx),
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
 
 class LinearAlgebraIntuitions(Scene):
     def construct(self):
         title = TextMobject("Preview of core visual intuitions")
         title.to_edge(UP)
-        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         h_line.next_to(title, DOWN)
-        h_line.highlight(BLUE_E)
+        h_line.set_color(BLUE_E)
         intuitions = [
             "Matrices transform space",
             "Matrix multiplication corresponds to applying " + 
@@ -692,38 +671,38 @@ class LinearAlgebraIntuitions(Scene):
             mob.scale(0.7)
             mob.next_to(h_line, DOWN)
             self.play(FadeIn(mob))
-            self.dither(4)
+            self.wait(4)
             self.play(FadeOut(mob))
             self.remove(mob)
-        self.dither()
+        self.wait()
 
 class MatricesAre(Scene):
     def construct(self):
         matrix = matrix_to_mobject([[1, -1], [1, 2]])
-        matrix.scale_to_fit_height(6)
+        matrix.set_height(6)
         arrow = Arrow(LEFT, RIGHT, stroke_width = 8, preserve_tip_size_when_scaling = False)
         arrow.scale(2)
         arrow.to_edge(RIGHT)
         matrix.next_to(arrow, LEFT)
 
         self.play(Write(matrix, run_time = 1))
-        self.play(ShowCreation(arrow, submobject_mode = "one_at_a_time"))
-        self.dither()
+        self.play(ShowCreation(arrow))
+        self.wait()
 
 class ExampleTransformationForIntuitionList(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.apply_matrix([[1, -1], [1, 2]])
-        self.dither()
+        self.wait()
 
 class MatrixMultiplicationIs(Scene):
     def construct(self):
         matrix1 = matrix_to_mobject([[1, -1], [1, 2]])
-        matrix1.highlight(BLUE)
+        matrix1.set_color(BLUE)
         matrix2 = matrix_to_mobject([[2, 1], [1, 2]])
-        matrix2.highlight(GREEN)
+        matrix2.set_color(GREEN)
         for m in matrix1, matrix2:
-            m.scale_to_fit_height(3)
+            m.set_height(3)
         arrow = Arrow(LEFT, RIGHT, stroke_width = 6, preserve_tip_size_when_scaling = False)
         arrow.scale(2)
         arrow.to_edge(RIGHT)
@@ -741,22 +720,22 @@ class MatrixMultiplicationIs(Scene):
             Write(apply_first),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(matrix2),
             GrowFromCenter(brace2),
             Write(apply_second),
             run_time = 1
         )
-        self.dither()
+        self.wait()
 
 class ComposedTransformsForIntuitionList(LinearTransformationScene):
     def construct(self):
         self.setup()
         self.apply_matrix([[1, -1], [1, 2]])
-        self.dither()
+        self.wait()
         self.apply_matrix([[2, 1], [1, 2]])
-        self.dither()
+        self.wait()
 
 class DeterminantsAre(Scene):
     def construct(self):
@@ -768,7 +747,7 @@ class DeterminantsAre(Scene):
                 \\end{array}
             \\right]\\right)
         """)
-        tex_mob.scale_to_fit_height(4)
+        tex_mob.set_height(4)
         arrow = Arrow(LEFT, RIGHT, stroke_width = 8, preserve_tip_size_when_scaling = False)
         arrow.scale(2)
         arrow.to_edge(RIGHT)
@@ -776,7 +755,7 @@ class DeterminantsAre(Scene):
 
         self.play(
             Write(tex_mob),
-            ShowCreation(arrow, submobject_mode = "one_at_a_time"),
+            ShowCreation(arrow),
             run_time = 1
         )
 
@@ -829,12 +808,12 @@ class ExampleMatrixMultiplication(NumericalMatrixMultiplication):
 class TableOfContents(Scene):
     def construct(self):
         title = TextMobject("Essence of Linear Algebra")
-        title.highlight(BLUE)
+        title.set_color(BLUE)
         title.to_corner(UP+LEFT)
-        h_line = Line(SPACE_WIDTH*LEFT, SPACE_WIDTH*RIGHT)
+        h_line = Line(FRAME_X_RADIUS*LEFT, FRAME_X_RADIUS*RIGHT)
         h_line.next_to(title, DOWN)
         h_line.to_edge(LEFT, buff = 0)
-        chapters = VMobject(*map(TextMobject, [
+        chapters = VMobject(*list(map(TextMobject, [
             "Chapter 1: Vectors, what even are they?",
             "Chapter 2: Linear combinations, span and bases",
             "Chapter 3: Matrices as linear transformations",
@@ -845,8 +824,8 @@ class TableOfContents(Scene):
             "Chapter 8: Change of basis",
             "Chapter 9: Eigenvectors and eigenvalues",
             "Chapter 10: Abstract vector spaces",
-        ]))
-        chapters.arrange_submobjects(DOWN)
+        ])))
+        chapters.arrange(DOWN)
         chapters.scale(0.7)
         chapters.next_to(h_line, DOWN)
 
@@ -857,23 +836,23 @@ class TableOfContents(Scene):
         for chapter in chapters.split():
             chapter.to_edge(LEFT, buff = 1)
             self.play(FadeIn(chapter))
-        self.dither(2)
+        self.wait(2)
 
         entry3 = chapters.split()[2]
         added_words = TextMobject("(Personally, I'm most excited \\\\ to do this one)")
         added_words.scale(0.5)
-        added_words.highlight(YELLOW)
+        added_words.set_color(YELLOW)
         added_words.next_to(h_line, DOWN)
         added_words.to_edge(RIGHT)
         arrow = Arrow(added_words.get_bottom(), entry3)
 
         self.play(
-            ApplyMethod(entry3.highlight, YELLOW),
-            ShowCreation(arrow, submobject_mode = "one_at_a_time"),
+            ApplyMethod(entry3.set_color, YELLOW),
+            ShowCreation(arrow),
             Write(added_words),
             run_time = 1
         )
-        self.dither()
+        self.wait()
         removeable = VMobject(added_words, arrow, h_line, title)
         self.play(FadeOut(removeable))
         self.remove(removeable)
@@ -883,14 +862,14 @@ class TableOfContents(Scene):
     def series_of_videos(self, chapters):
         icon = SVGMobject("video_icon")
         icon.center()
-        icon.scale_to_fit_width(2*SPACE_WIDTH/12.)
+        icon.set_width(FRAME_WIDTH/12.)
         icon.set_stroke(color = WHITE, width = 0)
         icons = [icon.copy() for chapter in chapters.split()]
         colors = Color(BLUE_A).range_to(BLUE_D, len(icons))
         for icon, color in zip(icons, colors):
             icon.set_fill(color, opacity = 1)
         icons = VMobject(*icons)
-        icons.arrange_submobjects(RIGHT)
+        icons.arrange(RIGHT)
         icons.to_edge(LEFT)
         icons.shift(UP)
 
@@ -908,14 +887,14 @@ class TableOfContents(Scene):
         self.add(icons)
         self.play(FadeIn(randy))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(bubble),
             Transform(icons, new_icons)
         )
         self.remove(icons)
         bubble.make_green_screen()
-        self.dither()
+        self.wait()
 
 
 class ResourceForTeachers(Scene):
@@ -928,9 +907,9 @@ class ResourceForTeachers(Scene):
         bubble.clear()
         randys = VMobject(*[
             Randolph(color = c)
-            for c in BLUE_D, BLUE_C, BLUE_E
+            for c in (BLUE_D, BLUE_C, BLUE_E)
         ])
-        randys.arrange_submobjects(RIGHT)
+        randys.arrange(RIGHT)
         randys.scale(0.8)
         randys.to_corner(DOWN+LEFT)
 
@@ -938,7 +917,7 @@ class ResourceForTeachers(Scene):
         self.play(FadeIn(bubble), Write(words), run_time = 3)
         for randy in np.array(randys.split())[[2,0,1]]:
             self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class AboutPacing(Scene):
     def construct(self):
@@ -947,21 +926,21 @@ class AboutPacing(Scene):
         words.remove(*dots)
         self.play(FadeIn(words))
         self.play(Write(VMobject(*dots)))
-        self.dither()
+        self.wait()
 
 class DifferingBackgrounds(Scene):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "Just brushing up",
             "Has yet to take the course",
             "Supplementing course concurrently",
-        ])
+        ]))
         students = VMobject(*[
             Randolph(color = c)
-            for c in BLUE_D, BLUE_C, BLUE_E
+            for c in (BLUE_D, BLUE_C, BLUE_E)
         ])
         modes = ["pondering", "speaking_looking_left", "sassy"]
-        students.arrange_submobjects(RIGHT)
+        students.arrange(RIGHT)
         students.scale(0.8)
         students.center().to_edge(DOWN)
 
@@ -974,7 +953,7 @@ class DifferingBackgrounds(Scene):
                 arrow_anim = Transform(last_arrow, arrow)
             else:
                 word_anim = Write(word, run_time = 1)
-                arrow_anim = ShowCreation(arrow, submobject_mode = "one_at_a_time")
+                arrow_anim = ShowCreation(arrow)
                 last_word = word
                 last_arrow = arrow
             self.play(
@@ -982,8 +961,8 @@ class DifferingBackgrounds(Scene):
                 ApplyMethod(student.change_mode, mode)
             )
             self.play(Blink(student))
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
 
 
 
@@ -991,14 +970,14 @@ class PauseAndPonder(Scene):
     def construct(self):
         pause = TexMobject("=").rotate(np.pi/2)
         pause.stretch(0.5, 1)
-        pause.scale_to_fit_height(1.5)
-        bubble = ThoughtBubble().scale_to_fit_height(2)
+        pause.set_height(1.5)
+        bubble = ThoughtBubble().set_height(2)
         pause.shift(LEFT)
         bubble.next_to(pause, RIGHT, buff = 1)
 
         self.play(FadeIn(pause))
         self.play(ShowCreation(bubble))
-        self.dither()
+        self.wait()
 
 
 class NextVideo(Scene):
@@ -1006,12 +985,12 @@ class NextVideo(Scene):
         title = TextMobject("Next video: Vectors, what even are they?")
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
 
 

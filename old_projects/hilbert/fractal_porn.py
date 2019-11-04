@@ -1,14 +1,5 @@
-from mobject import Mobject, Point, Mobject1D
-from scene import Scene
-from animation.transform import \
-    Transform, ShimmerIn, FadeIn, FadeOut, ApplyMethod
-from animation.simple_animations import \
-    ShowCreation, DelayByOrder
-from topics.geometry import Line, Arc, Arrow
-from mobject.tex_mobject import TexMobject, TextMobject
-
-from helpers import *
-from hilbert.curves import *
+from manimlib.imports import *
+from old_projects.hilbert.curves import *
 
 class Intro(TransformOverIncreasingOrders):
     @staticmethod
@@ -57,7 +48,7 @@ class BringInPeano(Intro):
         """)
         self.setup(PeanoCurve)
         self.play(ShimmerIn(words1))
-        self.dither(5)
+        self.wait(5)
         self.remove(words1)
         self.add(words2.to_edge(UP))
         for x in range(3):
@@ -132,7 +123,7 @@ class SurpriseFractal(Intro):
 
         self.setup(Sierpinski)
         self.add(TextMobject("Speaking of other fractals\\dots"))
-        self.dither(3)
+        self.wait(3)
         self.clear()
         self.play(ShimmerIn(words))
         for x in range(9):
@@ -141,12 +132,12 @@ class SurpriseFractal(Intro):
 
 class IntroduceKoch(Intro):
     def construct(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "This is another famous fractal.",
             "The ``Koch Snowflake''",
             "Let's finish things off by seeing how to turn \
             this into a space-filling curve"
-        ])
+        ]))
         for text in words:
             text.to_edge(UP)
 
@@ -160,7 +151,7 @@ class IntroduceKoch(Intro):
             self.increase_order()
         self.remove(words[1])
         self.add(words[2])
-        self.dither(6)
+        self.wait(6)
 
 class StraightKoch(KochCurve):
     CONFIG = {
@@ -194,12 +185,12 @@ class FromKochToSpaceFilling(Scene):
 
 
     def revisit_koch(self):
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "First, look at how one section of this curve is made.",
             "This pattern of four lines is the ``seed''",
             "With each iteration, every straight line is \
             replaced with an appropriately small copy of the seed",
-        ])
+        ]))
         for text in words:
             text.to_edge(UP)
 
@@ -212,19 +203,19 @@ class FromKochToSpaceFilling(Scene):
         ))
         self.remove(words[0])
         self.add(words[1])
-        self.dither(4)
+        self.wait(4)
         self.remove(words[1])
         self.add(words[2])
-        self.dither(3)
+        self.wait(3)
         for order in range(2, self.max_order):
             self.play(Transform(
                 curve,
                 StraightKoch(order = order)
             ))
             if order == 2:
-                self.dither(2)
+                self.wait(2)
             elif order == 3:
-                self.dither()
+                self.wait()
         self.clear()
 
 
@@ -237,7 +228,7 @@ class FromKochToSpaceFilling(Scene):
         words.to_edge(UP)
         koch, sharper_koch, duller_koch = curves = [
             CurveClass(order = 1)
-            for CurveClass in StraightKoch, SharperKoch, DullerKoch
+            for CurveClass in (StraightKoch, SharperKoch, DullerKoch)
         ]
         arcs = [
             Arc(
@@ -257,7 +248,7 @@ class FromKochToSpaceFilling(Scene):
             ShowCreation(arrow),
             ShimmerIn(theta)
         )
-        self.dither(2)
+        self.wait(2)
         self.remove(theta, arrow)
         self.play(
             Transform(koch, duller_koch),
@@ -275,21 +266,21 @@ class FromKochToSpaceFilling(Scene):
         seed.shift(3*LEFT+2*DOWN)
         fractal = TextMobject("Fractal")
         fractal.shift(3*RIGHT+2*DOWN)
-        words = map(TextMobject, [
+        words = list(map(TextMobject, [
             "A sharper angle results in a richer curve",
             "A more obtuse angle gives a sparser curve",
             "And as the angle approaches 0\\dots",
             "We have a new space-filling curve."
-        ])
+        ]))
         for text in words:
             text.to_edge(UP)
         sharper, duller, space_filling = [
             CurveClass(order = 1).shift(3*LEFT)
-            for CurveClass in SharperKoch, DullerKoch, SpaceFillingKoch
+            for CurveClass in (SharperKoch, DullerKoch, SpaceFillingKoch)
         ]
         shaper_f, duller_f, space_filling_f = [
             CurveClass(order = self.max_order).shift(3*RIGHT)
-            for CurveClass in SharperKoch, DullerKoch, SpaceFillingKoch
+            for CurveClass in (SharperKoch, DullerKoch, SpaceFillingKoch)
         ]
 
         self.add(words[0])
@@ -321,7 +312,7 @@ class FromKochToSpaceFilling(Scene):
             Transform(left_curve, duller, **kwargs),
             Transform(right_curve, duller_f, **kwargs)
         )
-        self.dither()
+        self.wait()
         kwargs["run_time"] = 7
         kwargs["rate_func"] = None
         self.remove(words[1])
@@ -332,7 +323,7 @@ class FromKochToSpaceFilling(Scene):
         )
         self.remove(words[2])
         self.add(words[3])
-        self.dither()
+        self.wait()
 
 
 

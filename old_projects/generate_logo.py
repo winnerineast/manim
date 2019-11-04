@@ -1,13 +1,4 @@
-
-from animation.transform import Transform
-from mobject import Mobject
-from mobject.tex_mobject import TextMobject
-from mobject.image_mobject import MobjectFromPixelArray
-from topics.geometry import Circle
-from topics.three_dimensions import Sphere
-from scene import Scene
-
-from helpers import *
+from manimlib.imports import *
 
 ## Warning, much of what is in this class
 ## likely not supported anymore.
@@ -52,14 +43,14 @@ class LogoGeneration(Scene):
             self.interpolation_factor
         )
         for mob, color in [(iris, self.sphere_brown), (circle, self.circle_brown)]:
-            mob.highlight(color, lambda (x, y, z) : x < 0 and y > 0)
-            mob.highlight(
+            mob.set_color(color, lambda x_y_z : x_y_z[0] < 0 and x_y_z[1] > 0)
+            mob.set_color(
                 "black", 
-                lambda point: np.linalg.norm(point) < \
+                lambda point: get_norm(point) < \
                               self.inner_radius_ratio*self.radius
             )
         self.name_mob = TextMobject("3Blue1Brown").center()
-        self.name_mob.highlight("grey")
+        self.name_mob.set_color("grey")
         self.name_mob.shift(2*DOWN)
 
         self.play(Transform(
@@ -70,6 +61,6 @@ class LogoGeneration(Scene):
         self.save_image(IMAGE_DIR)
         self.logo = MobjectFromPixelArray(self.frames[-1])
         self.add(self.name_mob)
-        self.dither()
+        self.wait()
 
 

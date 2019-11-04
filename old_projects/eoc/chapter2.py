@@ -1,31 +1,4 @@
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.common_scenes import OpeningQuote, PatreonThanks
-from topics.graph_scene import *
+from manimlib.imports import *
 
 DISTANCE_COLOR = BLUE
 TIME_COLOR = YELLOW
@@ -34,90 +7,6 @@ VELOCITY_COLOR = GREEN
 
 #### Warning, scenes here not updated based on most recent GraphScene changes #######
 
-
-class Car(SVGMobject):
-    CONFIG = {
-        "file_name" : "Car", 
-        "height" : 1,
-        "color" : "#BBBBBB",
-    }
-    def __init__(self, **kwargs):
-        SVGMobject.__init__(self, **kwargs)
-        self.scale_to_fit_height(self.height)
-        self.set_stroke(color = WHITE, width = 0)
-        self.set_fill(self.color, opacity = 1)
-
-        randy = Randolph(mode = "happy")
-        randy.scale_to_fit_height(0.6*self.get_height())
-        randy.stretch(0.8, 0)
-        randy.look(RIGHT)
-        randy.move_to(self)
-        randy.shift(0.07*self.height*(RIGHT+UP))
-        self.randy = randy
-        self.add_to_back(randy)
-
-        orientation_line = Line(self.get_left(), self.get_right())
-        orientation_line.set_stroke(width = 0)
-        self.add(orientation_line)
-        self.orientation_line = orientation_line
-
-        self.add_treds_to_tires()
-
-    def move_to(self, point_or_mobject):
-        vect = rotate_vector(
-            UP+LEFT, self.orientation_line.get_angle()
-        )
-        self.next_to(point_or_mobject, vect, buff = 0)
-        return self
-
-    def get_front_line(self):
-        return DashedLine(
-            self.get_corner(UP+RIGHT), 
-            self.get_corner(DOWN+RIGHT),
-            color = DISTANCE_COLOR,
-            dashed_segment_length = 0.05,
-        )
-
-    def add_treds_to_tires(self):
-        for tire in self.get_tires():
-            radius = tire.get_width()/2
-            center = tire.get_center()
-            tred = Line(
-                0.9*radius*RIGHT, 1.4*radius*RIGHT,
-                stroke_width = 2,
-                color = BLACK
-            )
-            tred.rotate_in_place(np.pi/4)
-            for theta in np.arange(0, 2*np.pi, np.pi/4):
-                new_tred = tred.copy()
-                new_tred.rotate(theta)
-                new_tred.shift(center)
-                tire.add(new_tred)
-        return self
-
-    def get_tires(self):
-        return VGroup(self[1][1], self[1][3])
-
-class MoveCar(ApplyMethod):
-    CONFIG = {
-        "moving_forward" : True,
-    }
-    def __init__(self, car, target_point, **kwargs):
-        ApplyMethod.__init__(self, car.move_to, target_point, **kwargs)
-        displacement = self.target_mobject.get_right()-self.starting_mobject.get_right()
-        distance = np.linalg.norm(displacement)
-        if not self.moving_forward:
-            distance *= -1
-        tire_radius = car.get_tires()[0].get_width()/2
-        self.total_tire_radians = -distance/tire_radius
-
-    def update_mobject(self, alpha):
-        ApplyMethod.update_mobject(self, alpha)
-        if alpha == 0:
-            return
-        radians = alpha*self.total_tire_radians
-        for tire in self.mobject.get_tires():
-            tire.rotate_in_place(radians)
 
 class IncrementNumber(Succession):
     CONFIG = {
@@ -152,7 +41,7 @@ class IncrementTest(Scene):
         num = TexMobject("0")
         num.shift(UP)
         self.play(IncrementNumber(num))
-        self.dither()
+        self.wait()
 
 
 
@@ -187,9 +76,9 @@ class Introduction(TeacherStudentsScene):
             ", 2) Avoid paradoxes.",
             arg_separator = ""
         )
-        goals[1].highlight(MAROON_B)
-        goals[2].highlight(RED)
-        goals[2][0].highlight(WHITE)
+        goals[1].set_color(MAROON_B)
+        goals[2].set_color(RED)
+        goals[2][0].set_color(WHITE)
         goals.to_edge(UP)
         self.add(*goals[:2])
 
@@ -198,7 +87,7 @@ class Introduction(TeacherStudentsScene):
             run_time = 2
         )
         self.play(self.get_teacher().change_mode, "happy")
-        self.dither()
+        self.wait()
         self.teacher_says(
             "It's actually a \\\\",
             "very subtle idea",
@@ -211,7 +100,7 @@ class Introduction(TeacherStudentsScene):
             "Instantaneous rate of change", "?",
             student_index = 0,
         )
-        self.dither()
+        self.wait()
 
         bubble = self.get_students()[0].bubble
         phrase = bubble.content[0]
@@ -226,14 +115,14 @@ class Introduction(TeacherStudentsScene):
             *it.chain(*[
                 [
                     pi.change_mode, mode,
-                    pi.look_at, SPACE_HEIGHT*UP
+                    pi.look_at, FRAME_Y_RADIUS*UP
                 ]
                 for pi, mode in zip(self.get_pi_creatures(), [
                     "speaking", "pondering", "confused", "confused",
                 ])
             ])
         )
-        self.dither()
+        self.wait()
         change = VGroup(*phrase[-len("change"):])
         instantaneous = VGroup(*phrase[:len("instantaneous")])
         change_brace = Brace(change)
@@ -254,7 +143,7 @@ class Introduction(TeacherStudentsScene):
             )
         self.play(FadeIn(clock))
         self.play(
-            change.gradient_highlight, BLUE, YELLOW,
+            change.set_color_by_gradient, BLUE, YELLOW,
             GrowFromCenter(change_brace),
             Write(change_description),
             get_clock_anim()
@@ -263,7 +152,7 @@ class Introduction(TeacherStudentsScene):
         stopped_clock = clock.copy()
         stopped_clock.next_to(instantaneous_description, DOWN)
         self.play(
-            instantaneous.highlight, BLUE,
+            instantaneous.set_color, BLUE,
             GrowFromCenter(instantaneous_brace),
             Transform(change_description.copy(), instantaneous_description),
             clock.copy().next_to, instantaneous_description, DOWN,
@@ -290,22 +179,22 @@ class FathersOfCalculus(Scene):
         men = Mobject()
         for name in self.names:
             image = ImageMobject(name, invert = False)
-            image.scale_to_fit_height(self.picture_height)
+            image.set_height(self.picture_height)
             title = TextMobject(name)
             title.scale(0.8)
             title.next_to(image, DOWN)
             image.add(title)
             men.add(image)
-        men.arrange_submobjects(RIGHT, aligned_edge = UP)
+        men.arrange(RIGHT, aligned_edge = UP)
         men.shift(DOWN)
 
         discover_brace = Brace(Mobject(*men[:3]), UP)
         discover = discover_brace.get_text("Discovered it")
-        VGroup(discover_brace, discover).highlight(BLUE)
+        VGroup(discover_brace, discover).set_color(BLUE)
         rigor_brace = Brace(Mobject(*men[3:]), UP)
         rigor = rigor_brace.get_text("Made it rigorous")
         rigor.shift(0.1*DOWN)
-        VGroup(rigor_brace, rigor).highlight(YELLOW)
+        VGroup(rigor_brace, rigor).set_color(YELLOW)
 
 
         for man in men:
@@ -318,7 +207,7 @@ class FathersOfCalculus(Scene):
             GrowFromCenter(rigor_brace),
             Write(rigor, run_time = 1)
         )
-        self.dither()
+        self.wait()
 
 class IntroduceCar(Scene):
     CONFIG = {
@@ -332,7 +221,7 @@ class IntroduceCar(Scene):
         A = Dot(point_A)
         B = Dot(point_B)
         line = Line(point_A, point_B)
-        VGroup(A, B, line).highlight(WHITE)        
+        VGroup(A, B, line).set_color(WHITE)        
         for dot, tex in (A, "A"), (B, "B"):
             label = TexMobject(tex).next_to(dot, DOWN)
             dot.add(label)
@@ -367,7 +256,7 @@ class IntroduceCar(Scene):
                 GrowFromCenter(distance_brace),
                 Write(distance)
             )
-            self.dither()
+            self.wait()
 
         if self.should_transition_to_graph:
             self.play(
@@ -379,7 +268,7 @@ class IntroduceCar(Scene):
             graph_scene = GraphCarTrajectory(skip_animations = True)
             origin = graph_scene.graph_origin
             top = graph_scene.coords_to_point(0, 100)
-            new_length = np.linalg.norm(top-origin)
+            new_length = get_norm(top-origin)
             new_point_B = point_A + new_length*RIGHT
             car_line_group = VGroup(car, A, B, line)
             for mob in car_line_group:
@@ -396,7 +285,7 @@ class IntroduceCar(Scene):
             car_line_group.target.rotate(np.pi/2, about_point = point_A)
             car_line_group.target.shift(graph_scene.graph_origin - point_A)
             self.play(MoveToTarget(car_line_group, path_arc = np.pi/2))
-            self.dither()
+            self.wait()
 
     def introduce_added_mobjects(self):
         pass
@@ -408,12 +297,12 @@ class GraphCarTrajectory(GraphScene):
     CONFIG = {
         "x_min" : 0,
         "x_max" : 10,
-        "x_labeled_nums" : range(1, 11),
+        "x_labeled_nums" : list(range(1, 11)),
         "x_axis_label" : "Time (seconds)",
         "y_min" : 0,
         "y_max" : 110,
         "y_tick_frequency" : 10,
-        "y_labeled_nums" : range(10, 110, 10),
+        "y_labeled_nums" : list(range(10, 110, 10)),
         "y_axis_label" : "Distance traveled \\\\ (meters)",
         "graph_origin" : 2.5*DOWN + 5*LEFT,
         "default_graph_colors" : [DISTANCE_COLOR, VELOCITY_COLOR],
@@ -442,7 +331,7 @@ class GraphCarTrajectory(GraphScene):
     def introduce_graph(self, graph, origin):
         h_line, v_line = [
             Line(origin, origin, color = color, stroke_width = 2)
-            for color in TIME_COLOR, DISTANCE_COLOR
+            for color in (TIME_COLOR, DISTANCE_COLOR)
         ]
         def h_update(h_line, proportion = 1):
             end = graph.point_from_proportion(proportion)
@@ -463,7 +352,7 @@ class GraphCarTrajectory(GraphScene):
         self.play(
             ShowCreation(
                 graph,
-                rate_func = None,
+                rate_func=linear,
             ),
             MoveCar(
                 car, car_target,
@@ -473,8 +362,8 @@ class GraphCarTrajectory(GraphScene):
             UpdateFromFunc(v_line, v_update),
             run_time = self.time_of_journey,
         )
-        self.dither()
-        self.play(*map(FadeOut, [h_line, v_line, car]))
+        self.wait()
+        self.play(*list(map(FadeOut, [h_line, v_line, car])))
 
         #Show example vertical distance
         h_update(h_line, 0.6)
@@ -483,18 +372,18 @@ class GraphCarTrajectory(GraphScene):
         t_dot.move_to(self.x_axis_label_mob)
         t_dot.set_fill(opacity = 0)
         dashed_h = DashedLine(*h_line.get_start_and_end())
-        dashed_h.highlight(h_line.get_color())
+        dashed_h.set_color(h_line.get_color())
         brace = Brace(dashed_h, RIGHT)
         brace_text = brace.get_text("Distance traveled")
         self.play(t_dot.restore)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(dashed_h))
         self.play(
             GrowFromCenter(brace),
             Write(brace_text)
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [t_dot, dashed_h, brace, brace_text]))
+        self.wait(2)
+        self.play(*list(map(FadeOut, [t_dot, dashed_h, brace, brace_text])))
 
         #Name graph
         s_of_t = TexMobject("s(t)")
@@ -506,13 +395,13 @@ class GraphCarTrajectory(GraphScene):
         s = s_of_t[0]
         d = TexMobject("d")
         d.move_to(s, DOWN)
-        d.highlight(DISTANCE_COLOR)
+        d.set_color(DISTANCE_COLOR)
 
         self.play(Write(s_of_t))
-        self.dither()
+        self.wait()
         s.save_state()
         self.play(Transform(s, d))
-        self.dither()
+        self.wait()
         self.play(s.restore)
 
     def comment_on_slope(self, graph, origin):
@@ -528,9 +417,9 @@ class GraphCarTrajectory(GraphScene):
 
         change_lines = self.get_change_lines(curr_time, delta_t)
         self.play(FadeIn(rect))
-        self.dither()
+        self.wait()
         self.play(Write(change_lines))
-        self.dither()
+        self.wait()
         for x in range(1, 10):
             curr_time = x
             new_change_lines = self.get_change_lines(curr_time, delta_t)
@@ -543,11 +432,11 @@ class GraphCarTrajectory(GraphScene):
                     "$\\frac{\\text{meters}}{\\text{second}}$"
                 )
                 self.play(Write(text))
-                self.dither()
+                self.wait()
                 self.play(FadeOut(text))
             else:
-                self.dither()
-        self.play(*map(FadeOut, [rect, change_lines]))
+                self.wait()
+        self.play(*list(map(FadeOut, [rect, change_lines])))
         self.rect = rect
 
     def get_change_lines(self, curr_time, delta_t = 1):
@@ -579,10 +468,10 @@ class GraphCarTrajectory(GraphScene):
             return result
         label = get_velocity_label(velocity_graph)
         self.play(Write(label))
-        self.dither()
+        self.wait()
         self.rect.move_to(self.coords_to_point(0, 0), DOWN+LEFT)
         self.play(FadeIn(self.rect))
-        self.dither()
+        self.wait()
         for time, show_slope in (4.5, True), (9, False):
             self.play(
                 self.rect.move_to, self.coords_to_point(time, 0), DOWN+LEFT
@@ -590,10 +479,10 @@ class GraphCarTrajectory(GraphScene):
             if show_slope:
                 change_lines = self.get_change_lines(time)
                 self.play(FadeIn(change_lines))
-                self.dither()
+                self.wait()
                 self.play(FadeOut(change_lines))
             else:
-                self.dither()
+                self.wait()
         self.play(FadeOut(self.rect))
 
         #Change distance and velocity graphs
@@ -630,13 +519,13 @@ class GraphCarTrajectory(GraphScene):
                 Transform(velocity_graph, new_velocity_graph),
                 Transform(label, new_velocity_label),
             )
-            self.dither(2)
+            self.wait(2)
         self.play(self.s_graph.restore)
         self.play(
             velocity_graph.restore,
             label.restore,
         )
-        self.dither(2)
+        self.wait(2)
 
     def ask_critically_about_velocity(self):
         morty = Mortimer().flip()
@@ -646,7 +535,7 @@ class GraphCarTrajectory(GraphScene):
             "what velocity means."
         ))
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class ShowSpeedometer(IntroduceCar):
     CONFIG = {
@@ -670,7 +559,7 @@ class ShowSpeedometer(IntroduceCar):
             vect = rotate_vector(RIGHT, angle)
             tick = Line((1-self.tick_length)*vect, vect)
             label = TexMobject(str(10*index))
-            label.scale_to_fit_height(self.tick_length)
+            label.set_height(self.tick_length)
             label.shift((1+self.tick_length)*vect)
             speedometer.add(tick, label)
 
@@ -701,7 +590,7 @@ class ShowSpeedometer(IntroduceCar):
 
         speedometer.save_state()
         speedometer.rotate(-np.pi/2, UP)
-        speedometer.scale_to_fit_height(self.car.get_height()/4)
+        speedometer.set_height(self.car.get_height()/4)
         speedometer.move_to(self.car)
         speedometer.shift((self.car.get_width()/4)*RIGHT)
 
@@ -741,7 +630,7 @@ class VelocityInAMomentMakesNoSense(Scene):
         self.play(Blink(randy))
         self.play(Write(q_marks))
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class SnapshotOfACar(Scene):
     def construct(self):
@@ -749,8 +638,8 @@ class SnapshotOfACar(Scene):
         car.scale(1.5)
         car.move_to(3*LEFT+DOWN)
         flash_box = Rectangle(
-            width = 2*SPACE_WIDTH,
-            height = 2*SPACE_HEIGHT,
+            width = FRAME_WIDTH,
+            height = FRAME_HEIGHT,
             stroke_width = 0,
             fill_color = WHITE,
             fill_opacity = 1,
@@ -773,7 +662,7 @@ class SnapshotOfACar(Scene):
             run_time = 2,
             rate_func = rush_into
         ))
-        car.get_tires().highlight(GREY)
+        car.get_tires().set_color(GREY)
         speed_lines.next_to(car, LEFT)
         self.add(speed_lines)
         self.play(
@@ -782,7 +671,7 @@ class SnapshotOfACar(Scene):
         )
         question.next_to(car, UP, buff = LARGE_BUFF)
         self.play(Write(question, run_time = 2))
-        self.dither(2)
+        self.wait(2)
 
 class CompareTwoTimes(Scene):
     CONFIG = {
@@ -806,17 +695,17 @@ class CompareTwoTimes(Scene):
         state2.to_corner(DOWN+LEFT)
 
         dividers = VGroup(
-            Line(SPACE_WIDTH*LEFT, RIGHT),
-            Line(RIGHT+SPACE_HEIGHT*UP, RIGHT+SPACE_HEIGHT*DOWN),
+            Line(FRAME_X_RADIUS*LEFT, RIGHT),
+            Line(RIGHT+FRAME_Y_RADIUS*UP, RIGHT+FRAME_Y_RADIUS*DOWN),
         )
-        dividers.highlight(GREY)
+        dividers.set_color(GREY)
 
         self.add(dividers, state1)
-        self.dither()
+        self.wait()
         copied_state = state1.copy()
         self.play(copied_state.move_to, state2)
         self.play(Transform(copied_state, state2))
-        self.dither(2)
+        self.wait(2)
         self.keeper = state1
 
     def show_equation(self):
@@ -838,11 +727,11 @@ class CompareTwoTimes(Scene):
         VGroup(
             VGroup(*formula[1:1+ed_len]),
             VGroup(*formula[2+ed_len:2+ed_len+sd_len])
-        ).highlight(DISTANCE_COLOR)
+        ).set_color(DISTANCE_COLOR)
         VGroup(
             VGroup(*formula[-2-seconds_len-et_len-st_len:-2-seconds_len-st_len]),
             VGroup(*formula[-1-seconds_len-st_len:-1-seconds_len]),
-        ).highlight(TIME_COLOR)
+        ).set_color(TIME_COLOR)
 
         down_arrow1 = TexMobject("\\Downarrow")
         down_arrow2 = TexMobject("\\Downarrow")
@@ -851,14 +740,14 @@ class CompareTwoTimes(Scene):
             change_over_change, down_arrow2,
             formula,
         )
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_corner(UP+RIGHT)
 
         self.play(FadeIn(
-            group, submobject_mode = "lagged_start",
+            group, lag_ratio = 0.5,
             run_time = 3
         ))
-        self.dither(3)
+        self.wait(3)
         self.formula = formula
 
     def fade_all_but_one_moment(self):
@@ -868,11 +757,11 @@ class CompareTwoTimes(Scene):
         ]
         anims.append(Animation(self.keeper.copy()))
         self.play(*anims)
-        self.dither()
+        self.wait()
 
     def get_car_state(self, distance, time):
         line = Line(3*LEFT, 3*RIGHT)
-        dots = map(Dot, line.get_start_and_end())
+        dots = list(map(Dot, line.get_start_and_end()))
         line.add(*dots)
         car = Car()
         car.move_to(line.get_start())
@@ -883,12 +772,12 @@ class CompareTwoTimes(Scene):
         distance_label = brace.get_text(
             str(distance), " meters"
         )
-        distance_label.highlight_by_tex(str(distance), DISTANCE_COLOR)
+        distance_label.set_color_by_tex(str(distance), DISTANCE_COLOR)
         brace.add(distance_label)
         time_label = TextMobject(
             "Time:", str(time), "seconds"
         )
-        time_label.highlight_by_tex(str(time), TIME_COLOR)
+        time_label.set_color_by_tex(str(time), TIME_COLOR)
         time_label.next_to(
             VGroup(line, car), UP,
             aligned_edge = LEFT
@@ -940,13 +829,13 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
             )
 
         self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
         self.play(UpdateFromAlphaFunc(
             line, line_update,
             run_time = 4,
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
         velocity_graph.add(line)
 
     def show_two_times_on_distance(self):
@@ -964,15 +853,15 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
 
         self.play(ShowCreation(VGroup(line1, line2)))
         for line, brace, text in (dt_line, dt_brace, dt_text), (ds_line, ds_brace, ds_text):
-            brace.highlight(line.get_color())
-            text.highlight(line.get_color())
+            brace.set_color(line.get_color())
+            text.set_color(line.get_color())
             text.add_background_rectangle()
             self.play(
                 ShowCreation(line),
                 GrowFromCenter(brace),
                 Write(text)
             )
-            self.dither()
+            self.wait()
 
     def show_confused_pi_creature(self):
         randy = Randolph()
@@ -981,12 +870,12 @@ class VelocityAtIndividualPointsVsPairs(GraphCarTrajectory):
 
         self.play(randy.change_mode, "confused")
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(randy))
         self.play(randy.change_mode, "erm")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither(2)
+        self.wait(2)
 
 class FirstRealWorld(TeacherStudentsScene):
     def construct(self):
@@ -994,7 +883,7 @@ class FirstRealWorld(TeacherStudentsScene):
         self.change_student_modes(
             "happy", "hooray", "happy"
         )
-        self.dither(3)
+        self.wait(3)
 
 class SidestepParadox(Scene):
     def construct(self):
@@ -1014,15 +903,15 @@ class SidestepParadox(Scene):
 
         new_words = TextMobject("over a small time")
         new_words.next_to(title[1], DOWN)
-        new_words.highlight(TIME_COLOR)
+        new_words.set_color(TIME_COLOR)
 
         self.add(title, car)
         self.play(Write(speedometer))
-        self.dither()
+        self.wait()
         self.play(Write(cross))
-        self.dither()
+        self.wait()
         self.play(Write(new_words))
-        self.dither()
+        self.wait()
 
 class CompareTwoVerySimilarTimes(CompareTwoTimes):
     CONFIG = {
@@ -1042,21 +931,21 @@ class CompareTwoVerySimilarTimes(CompareTwoTimes):
                 for mob in formula
                 if mob.get_color() == Color(color)
             ])
-            for color in DISTANCE_COLOR, TIME_COLOR
+            for color in (DISTANCE_COLOR, TIME_COLOR)
         ]
         ds_brace = Brace(ds_symbols, UP)
         ds_text = ds_brace.get_text("$ds$", buff = SMALL_BUFF)
-        ds_text.highlight(DISTANCE_COLOR)
+        ds_text.set_color(DISTANCE_COLOR)
         dt_brace = Brace(dt_symbols, DOWN)
         dt_text = dt_brace.get_text("$dt$", buff = SMALL_BUFF)
-        dt_text.highlight(TIME_COLOR)
+        dt_text.set_color(TIME_COLOR)
 
         self.play(
             GrowFromCenter(dt_brace),
             Write(dt_text)
         )
         formula.add(dt_brace, dt_text)
-        self.dither(2)
+        self.wait(2)
 
         formula.generate_target()
         VGroup(
@@ -1067,7 +956,7 @@ class CompareTwoVerySimilarTimes(CompareTwoTimes):
             GrowFromCenter(ds_brace),
             Write(ds_text)
         )
-        self.dither(2)
+        self.wait(2)
 
 class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
     CONFIG = {
@@ -1092,7 +981,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         input_point_line = self.get_vertical_line_to_graph(
             self.start_time,
             line_kwargs = {
-                "dashed_segment_length" : 0.02,
+                "dash_length" : 0.02,
                 "stroke_width" : 4,
                 "color" : WHITE,
             },
@@ -1109,7 +998,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
                 brace = Brace(line, vect)
                 text = brace.get_text("$d%s$"%char)
                 text.next_to(brace, vect)
-                text.highlight(line.get_color())
+                text.set_color(line.get_color())
                 subgroup = VGroup(line, brace, text)
                 subgroup.scale(self.dt)
                 result.add(subgroup)
@@ -1123,7 +1012,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         #Initially zoom in
         self.play(ShowCreation(input_point_line))
         self.activate_zooming()
-        self.play(*map(FadeIn, [self.big_rectangle, self.little_rectangle]))
+        self.play(*list(map(FadeIn, [self.big_rectangle, self.little_rectangle])))
         self.play(
             ApplyFunction(
                 align_little_rectangle_on_ds_dt_group,
@@ -1146,12 +1035,12 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
                 GrowFromCenter(brace),
                 Write(text)
             )
-            self.dither()
+            self.wait()
 
         #Show as function
         frac = TexMobject("\\frac{ds}{dt}")
-        VGroup(*frac[:2]).highlight(DISTANCE_COLOR)
-        VGroup(*frac[-2:]).highlight(TIME_COLOR)
+        VGroup(*frac[:2]).set_color(DISTANCE_COLOR)
+        VGroup(*frac[-2:]).set_color(TIME_COLOR)
         frac.next_to(self.input_to_graph_point(5.25), DOWN+RIGHT)
         rise_over_run = TexMobject(
             "=\\frac{\\text{rise}}{\\text{run}}"
@@ -1161,7 +1050,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         of_t.next_to(frac, RIGHT, buff = SMALL_BUFF)
 
         dt_choice = TexMobject("dt = 0.01")
-        dt_choice.highlight(TIME_COLOR)
+        dt_choice.set_color(TIME_COLOR)
         dt_choice.next_to(of_t, UP, aligned_edge = LEFT, buff = LARGE_BUFF)
 
 
@@ -1176,10 +1065,10 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
         upper_dt = VGroup(*full_formula[5:7])
         equals = full_formula[0]
         frac_line = full_formula[-3]
-        s_t_plus_dt.highlight(DISTANCE_COLOR)
-        s_t.highlight(DISTANCE_COLOR)
-        lower_dt.highlight(TIME_COLOR)
-        upper_dt.highlight(TIME_COLOR)
+        s_t_plus_dt.set_color(DISTANCE_COLOR)
+        s_t.set_color(DISTANCE_COLOR)
+        lower_dt.set_color(TIME_COLOR)
+        upper_dt.set_color(TIME_COLOR)
 
         velocity_graph = self.get_derivative_graph()
         t_tick_marks = VGroup(*[
@@ -1197,13 +1086,13 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
                 line_class = Line,
                 line_kwargs = {"color" : MAROON_B}
             )
-            for time in self.end_time, self.end_time + self.dt
+            for time in (self.end_time, self.end_time + self.dt)
         ]
 
 
         self.play(Write(frac))
         self.play(Write(rise_over_run))
-        self.dither()
+        self.wait()
         def input_point_line_update(line, alpha):
             time = interpolate(self.start_time, self.end_time, alpha)
             line.put_start_and_end_on(
@@ -1221,10 +1110,10 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
             run_time = 6,
         )
         self.play(FadeOut(input_point_line))
-        self.dither()
+        self.wait()
         self.play(FadeOut(rise_over_run))
         self.play(Write(of_t))
-        self.dither(2)
+        self.wait(2)
         self.play(ShowCreation(velocity_graph))
         velocity_label = self.label_graph(
             velocity_graph, 
@@ -1233,30 +1122,30 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
             direction = DOWN+LEFT,
             buff = SMALL_BUFF
         )
-        self.dither(2)
+        self.wait(2)
         self.play(Write(dt_choice))
-        self.dither()
+        self.wait()
         for anim_class in FadeIn, FadeOut:
             self.play(anim_class(
-                t_tick_marks, submobject_mode = "lagged_start",
+                t_tick_marks, lag_ratio = 0.5,
                 run_time = 2
             ))
         self.play(
             Write(equals),
             Write(numerator)
         )
-        self.dither()
+        self.wait()
 
         self.play(ShowCreation(v_line_at_t))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(v_line_at_t_plus_dt))
-        self.dither()
-        self.play(*map(FadeOut, [v_line_at_t, v_line_at_t_plus_dt]))
+        self.wait()
+        self.play(*list(map(FadeOut, [v_line_at_t, v_line_at_t_plus_dt])))
         self.play(
             Write(frac_line),
             Write(lower_dt)
         )
-        self.dither(2)
+        self.wait(2)
 
         #Show different curves
         self.disactivate_zooming()
@@ -1292,7 +1181,7 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
 
             self.play(Transform(self.graph, new_graph))
             self.play(Transform(velocity_graph, new_velocity_graph))
-            self.dither(2)
+            self.wait(2)
         self.play(self.graph.restore)
         self.play(
             velocity_graph.restore,
@@ -1306,12 +1195,12 @@ class DsOverDtGraphically(GraphCarTrajectory, ZoomedScene):
 
         self.play(FadeIn(randy))
         self.play(randy.change_mode, "pondering")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
         self.play(randy.change_mode, "thinking")
-        self.dither()
+        self.wait()
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
 
 class DefineTrueDerivative(Scene):
     def construct(self):
@@ -1319,8 +1208,8 @@ class DefineTrueDerivative(Scene):
         title.to_edge(UP)
 
         lhs = TexMobject("\\frac{ds}{dt}(t) = ")
-        VGroup(*lhs[:2]).highlight(DISTANCE_COLOR)
-        VGroup(*lhs[3:5]).highlight(TIME_COLOR)
+        VGroup(*lhs[:2]).set_color(DISTANCE_COLOR)
+        VGroup(*lhs[3:5]).set_color(TIME_COLOR)
         lhs.shift(3*LEFT+UP)
 
         dt_rhs = self.get_fraction("dt")
@@ -1335,17 +1224,17 @@ class DefineTrueDerivative(Scene):
 
         self.add(lhs, dt_rhs)
         self.play(Write(title))
-        self.dither()
+        self.wait()
         dt_rhs.save_state()
         for num_rhs in numerical_rhs_list:
             self.play(Transform(dt_rhs, num_rhs))
-        self.dither()
+        self.wait()
         self.play(dt_rhs.restore)
         self.play(
             GrowFromCenter(brace),
             Write(dt_to_zero)
         )
-        self.dither()
+        self.wait()
 
     def get_fraction(self, dt_string):
         tex_mob = TexMobject(
@@ -1365,13 +1254,13 @@ class DefineTrueDerivative(Scene):
             VGroup(*tex_mob[i1:i2])
             for i1, i2 in zip(pl_cumsum, pl_cumsum[1:])
         ])
-        VGroup(*result[1:3]+result[4:6]).highlight(TIME_COLOR)
+        VGroup(*result[1:3]+result[4:6]).set_color(TIME_COLOR)
         return result
 
     def get_brace_and_text(self, deriv_frac):
         brace = Brace(VGroup(deriv_frac), DOWN)
         dt_to_zero = brace.get_text("$dt \\to 0$")
-        VGroup(*dt_to_zero[:2]).highlight(TIME_COLOR)
+        VGroup(*dt_to_zero[:2]).set_color(TIME_COLOR)
         return brace, dt_to_zero
 
 class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
@@ -1396,13 +1285,13 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
     def get_ds_dt_group(self, dt, animate = False):
         points = [
             self.input_to_graph_point(time, self.graph)
-            for time in self.curr_time, self.curr_time+dt
+            for time in (self.curr_time, self.curr_time+dt)
         ]
-        dots = map(Dot, points)
+        dots = list(map(Dot, points))
         for dot in dots:
             dot.scale_in_place(0.5)
         secant_line = Line(*points)
-        secant_line.highlight(VELOCITY_COLOR)
+        secant_line.set_color(VELOCITY_COLOR)
         secant_line.scale_in_place(
             self.secant_line_length/secant_line.get_length()
         )
@@ -1411,7 +1300,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
         dt_line = Line(points[0], interim_point, color = TIME_COLOR)
         ds_line = Line(interim_point, points[1], color = DISTANCE_COLOR)
         dt = TexMobject("dt")
-        dt.highlight(TIME_COLOR)
+        dt.set_color(TIME_COLOR)
         if dt.get_width() > dt_line.get_width():
             dt.scale(
                 dt_line.get_width()/dt.get_width(),
@@ -1419,7 +1308,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             )
         dt.next_to(dt_line, DOWN, buff = SMALL_BUFF)
         ds = TexMobject("ds")
-        ds.highlight(DISTANCE_COLOR)
+        ds.set_color(DISTANCE_COLOR)
         if ds.get_height() > ds_line.get_height():
             ds.scale(
                 ds_line.get_height()/ds.get_height(),
@@ -1467,8 +1356,8 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
     def add_derivative_definition(self, target_upper_left):
         deriv_frac = self.get_fraction("dt")
         lhs = TexMobject("\\frac{ds}{dt}(t)=")
-        VGroup(*lhs[:2]).highlight(DISTANCE_COLOR)
-        VGroup(*lhs[3:5]).highlight(TIME_COLOR)
+        VGroup(*lhs[:2]).set_color(DISTANCE_COLOR)
+        VGroup(*lhs[3:5]).set_color(TIME_COLOR)
         lhs.next_to(deriv_frac, LEFT)
         brace, text = self.get_brace_and_text(deriv_frac)
         deriv_def = VGroup(lhs, deriv_frac, brace, text)
@@ -1494,13 +1383,13 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             ),
             run_time = 4
         ))
-        self.dither()
+        self.wait()
 
     def show_tangent_line(self):
         self.curr_time = self.start_time
 
         ds_dt_group = self.get_ds_dt_group(2, animate = True)
-        self.dither()
+        self.wait()
         def update_ds_dt_group(ds_dt_group, alpha):
             new_dt = interpolate(self.start_dt, self.end_dt, alpha)
             new_group = self.get_ds_dt_group(new_dt)
@@ -1509,7 +1398,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             UpdateFromAlphaFunc(ds_dt_group, update_ds_dt_group),
             run_time = 15
         )
-        self.dither()
+        self.wait()
         def update_as_tangent_line(ds_dt_group, alpha):
             self.curr_time = interpolate(self.start_time, self.end_time, alpha)
             new_group = self.get_ds_dt_group(self.end_dt)
@@ -1519,15 +1408,15 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             run_time = 8,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
         what_dt_is_not_text = self.what_this_is_not_saying()
-        self.dither()
+        self.wait()
         self.play(
             UpdateFromAlphaFunc(ds_dt_group, update_ds_dt_group),
             run_time = 8,
             rate_func = lambda t : 1-there_and_back(t)
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(what_dt_is_not_text))
 
         v_line = self.get_vertical_line_to_graph(
@@ -1546,7 +1435,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             )
             return v_line
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
 
         original_end_time = self.end_time
         for end_time in self.alt_end_time, original_end_time, self.start_time:
@@ -1564,11 +1453,11 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
             TextMobject(
                 "$dt$", "is", "not", s
             )
-            for s in "``infinitely small''", "0"
+            for s in ("``infinitely small''", "0")
         ]
         for phrase in phrases:
-            phrase[0].highlight(TIME_COLOR)
-            phrase[2].highlight(RED)
+            phrase[0].set_color(TIME_COLOR)
+            phrase[2].set_color(RED)
         phrases[0].shift(DOWN+2*RIGHT)
         phrases[1].next_to(phrases[0], DOWN, aligned_edge = LEFT)
 
@@ -1590,7 +1479,7 @@ class SecantLineToTangentLine(GraphCarTrajectory, DefineTrueDerivative):
 
         self.play(Write(words))
         self.play(ShowCreation(circle))        
-        self.dither()
+        self.wait()
 
 class UseOfDImpliesApproaching(TeacherStudentsScene):
     def construct(self):
@@ -1599,10 +1488,10 @@ class UseOfDImpliesApproaching(TeacherStudentsScene):
             announces that
             $dt \\to 0$
         """)
-        VGroup(*statement[-4:-2]).highlight(TIME_COLOR)
+        VGroup(*statement[-4:-2]).set_color(TIME_COLOR)
         self.teacher_says(statement)
         self.change_student_modes(*["pondering"]*3)
-        self.dither(4)
+        self.wait(4)
 
 class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
     def setup(self):
@@ -1615,7 +1504,7 @@ class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
         self.remove(deriv_def)
 
         self.teacher_says("An example \\\\ should help.")
-        self.dither()
+        self.wait()
         self.play(
             Write(deriv_def),
             *it.chain(*[
@@ -1634,7 +1523,7 @@ class LeadIntoASpecificExample(TeacherStudentsScene, SecantLineToTangentLine):
         #     height = 3,
         #     target_mode = "hooray"
         # )
-        # self.dither(2)
+        # self.wait(2)
 
 class TCubedExample(SecantLineToTangentLine):
     CONFIG = {
@@ -1642,10 +1531,10 @@ class TCubedExample(SecantLineToTangentLine):
         "y_min" : 0,
         "y_max" : 16,
         "y_tick_frequency" : 1,
-        "y_labeled_nums" : range(0, 17, 2),
+        "y_labeled_nums" : list(range(0, 17, 2)),
         "x_min" : 0,
         "x_max" : 4,
-        "x_labeled_nums" : range(1, 5),
+        "x_labeled_nums" : list(range(1, 5)),
         "graph_origin" : 2.5*DOWN + 6*LEFT,
         "start_time" : 2,
         "end_time" : 0.5,
@@ -1674,7 +1563,7 @@ class TCubedExample(SecantLineToTangentLine):
             direction = LEFT,
             buff = SMALL_BUFF
         )
-        self.dither()
+        self.wait()
 
     def show_vertical_lines(self):
         for t in 1, 2:
@@ -1695,7 +1584,7 @@ class TCubedExample(SecantLineToTangentLine):
                 last_group = group
             else:
                 self.play(Transform(last_group, group))
-            self.dither()
+            self.wait()
         self.play(FadeOut(last_group))
 
     def bear_with_me(self):
@@ -1708,11 +1597,11 @@ class TCubedExample(SecantLineToTangentLine):
             target_mode = "sassy"
         ))
         self.play(Blink(morty))
-        self.dither()
-        self.play(*map(
+        self.wait()
+        self.play(*list(map(
             FadeOut, 
             [morty, morty.bubble, morty.bubble.content]
-        ))
+        )))
 
     def add_ds_dt_group(self):
         self.curr_time = self.start_time
@@ -1724,15 +1613,15 @@ class TCubedExample(SecantLineToTangentLine):
         lhs.next_to(ds_dt_group, UP+RIGHT, buff = MED_LARGE_BUFF)
         ds = VGroup(*lhs[:2])
         dt = VGroup(*lhs[3:5])
-        ds.highlight(DISTANCE_COLOR)
-        dt.highlight(TIME_COLOR)
+        ds.set_color(DISTANCE_COLOR)
+        dt.set_color(TIME_COLOR)
         ds.target, dt.target = ds_dt_group[3:5]
         for mob in ds, dt:
             mob.save_state()
             mob.move_to(mob.target)
 
         nonzero_size = TextMobject("Nonzero size...for now")
-        nonzero_size.highlight(TIME_COLOR)
+        nonzero_size.set_color(TIME_COLOR)
         nonzero_size.next_to(dt, DOWN+2*RIGHT, buff = LARGE_BUFF)
         arrow = Arrow(nonzero_size, dt)
 
@@ -1740,8 +1629,8 @@ class TCubedExample(SecantLineToTangentLine):
             "\\frac{s(2+dt) - s(2)}{dt}"
         )
         rhs.next_to(lhs[-1])
-        VGroup(*rhs[4:6]).highlight(TIME_COLOR)
-        VGroup(*rhs[-2:]).highlight(TIME_COLOR)
+        VGroup(*rhs[4:6]).set_color(TIME_COLOR)
+        VGroup(*rhs[-2:]).set_color(TIME_COLOR)
         numerator = VGroup(*rhs[:-3])
         non_numerator = VGroup(*rhs[-3:])
         numerator_non_minus = VGroup(*numerator)
@@ -1757,34 +1646,34 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(Write(ds_dt_group, run_time = 2))
         self.play(
             FadeIn(lhs),
-            *[mob.restore for mob in ds, dt]
+            *[mob.restore for mob in (ds, dt)]
         )
         self.play(ShowCreation(v_lines[0]))
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(arrow),
             Write(nonzero_size),
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [arrow, nonzero_size]))
+        self.wait(2)
+        self.play(*list(map(FadeOut, [arrow, nonzero_size])))
         self.play(Write(numerator))
         self.play(ShowCreation(v_lines[1]))
-        self.dither()
+        self.wait()
         self.play(
-            v_lines[0].highlight, YELLOW,
+            v_lines[0].set_color, YELLOW,
             rate_func = there_and_back
         )
-        self.dither()
+        self.wait()
         self.play(Write(non_numerator))
-        self.dither(2)
+        self.wait(2)
         self.play(
-            *map(MoveToTarget, s_pair),
+            *list(map(MoveToTarget, s_pair)),
             **{
                 "path_arc" : -np.pi/2
             }
         )
         self.play(numerator_non_minus.shift, 0.2*LEFT)
-        self.dither()
+        self.wait()
 
         self.vertical_lines = v_lines
         self.ds_dt_group = ds_dt_group
@@ -1798,10 +1687,10 @@ class TCubedExample(SecantLineToTangentLine):
                 line_class = DashedLine,
                 line_kwargs = {
                     "color" : WHITE,
-                    "dashed_segment_length" : 0.05,
+                    "dash_length" : 0.05,
                 }
             )
-            for time in self.start_time, self.start_time+self.start_dt
+            for time in (self.start_time, self.start_time+self.start_dt)
         ])
 
     def brace_for_details(self):
@@ -1814,14 +1703,14 @@ class TCubedExample(SecantLineToTangentLine):
             morty.look_at, self.rhs
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
         self.play(
             morty.change_mode, "sassy",
             morty.look, OUT
         )
         self.play(Blink(morty))
         self.play(morty.change_mode, "pondering")
-        self.dither()
+        self.wait()
         self.play(FadeOut(morty))
 
     def show_expansion(self):
@@ -1834,7 +1723,7 @@ class TCubedExample(SecantLineToTangentLine):
                 - 2^3
             }{dt}
         """)
-        expression.scale_to_fit_width(
+        expression.set_width(
             VGroup(self.lhs, self.rhs).get_width()
         )
         expression.next_to(
@@ -1865,32 +1754,32 @@ class TCubedExample(SecantLineToTangentLine):
             VGroup(*terms[3][1:3]),
             terms[-1]
         ]
-        VGroup(*dts).highlight(TIME_COLOR)
+        VGroup(*dts).set_color(TIME_COLOR)
 
         two_cubed_terms = terms[0], terms[4]
 
         for term in terms:
             self.play(FadeIn(term))
-            self.dither()
+            self.wait()
 
         #Cancel out two_cubed terms
         self.play(*it.chain(*[
             [
                 tc.scale, 1.3, tc.get_corner(vect),
-                tc.highlight, RED
+                tc.set_color, RED
             ]
             for tc, vect in zip(
                 two_cubed_terms, 
                 [DOWN+RIGHT, DOWN+LEFT]
             )
         ]))
-        self.play(*map(FadeOut, two_cubed_terms))
+        self.play(*list(map(FadeOut, two_cubed_terms)))
         numerator = VGroup(*terms[1:4])
         self.play(
             numerator.scale, 1.4, numerator.get_bottom(),
             terms[-1].scale, 1.4, terms[-1].get_top()
         )
-        self.dither(2)
+        self.wait(2)
 
         #Cancel out dt
         #This is all way too hacky...
@@ -1902,11 +1791,11 @@ class TCubedExample(SecantLineToTangentLine):
         )
         new_exp = TexMobject("2").replace(faders[-1], dim_to_match = 1)
         self.play(
-            faders.highlight, BLACK,
+            faders.set_color, BLACK,
             FadeIn(new_exp),
             run_time = 2,
         )
-        self.dither()
+        self.wait()
         terms[3].add(new_exp)
         shift_val = 0.4*DOWN
         self.play(
@@ -1924,15 +1813,15 @@ class TCubedExample(SecantLineToTangentLine):
         )
         brace = Brace(VGroup(terms[2][0], terms[3][-1]), DOWN)
         brace_text = brace.get_text("Contains $dt$")
-        VGroup(*brace_text[-2:]).highlight(TIME_COLOR)
+        VGroup(*brace_text[-2:]).set_color(TIME_COLOR)
 
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace), 
             Write(brace_text)
         )
-        self.dither(2)
+        self.wait(2)
 
         #Shink dt
         faders = VGroup(*terms[2:4] + [brace, brace_text])        
@@ -1951,7 +1840,7 @@ class TCubedExample(SecantLineToTangentLine):
             faders.fade, 0.7,
             run_time = 5
         )
-        self.dither(2)
+        self.wait(2)
 
         #Show as derivative
         deriv_term = VGroup(*terms[1][:5])
@@ -1977,18 +1866,18 @@ class TCubedExample(SecantLineToTangentLine):
         )
         approach_text = TextMobject("As $dt \\to 0$")
         approach_text.next_to(arrow.get_center(), RIGHT)
-        VGroup(*approach_text[2:4]).highlight(TIME_COLOR)
+        VGroup(*approach_text[2:4]).set_color(TIME_COLOR)
         self.play(
             ShowCreation(arrow),
             Write(approach_text)
         )
-        self.dither(2)
-        self.dither()
+        self.wait(2)
+        self.wait()
 
         #Ephasize slope
         v_line = self.vertical_lines[0]
         slope_text = TextMobject("Slope = $12$")
-        slope_text.highlight(VELOCITY_COLOR)
+        slope_text.set_color(VELOCITY_COLOR)
         slope_text.next_to(v_line.get_end(), LEFT)
         self.play(Write(slope_text))
         self.play(
@@ -1996,7 +1885,7 @@ class TCubedExample(SecantLineToTangentLine):
             rate_func = wiggle
         )
         self.play(ShowCreation(v_line))
-        self.dither()
+        self.wait()
         self.play(FadeOut(v_line))
         self.play(FadeOut(slope_text))
 
@@ -2011,7 +1900,7 @@ class TCubedExample(SecantLineToTangentLine):
         for two in twos:
             two.target = TexMobject("t")
             two.target.replace(two, dim_to_match = 1)
-        self.play(*map(MoveToTarget, twos))
+        self.play(*list(map(MoveToTarget, twos)))
         def update_as_tangent_line(group, alpha):
             self.curr_time = interpolate(self.start_time, self.end_time, alpha)
             new_group = self.get_ds_dt_group(self.end_dt)
@@ -2021,7 +1910,7 @@ class TCubedExample(SecantLineToTangentLine):
             run_time = 5,
             rate_func = there_and_back
         )
-        self.dither(2)
+        self.wait(2)
 
         self.lhs_copy = lhs_copy
         self.deriv_term = deriv_term
@@ -2038,7 +1927,7 @@ class TCubedExample(SecantLineToTangentLine):
         self.play(Blink(morty))
         self.play(
             morty.change_mode, 'happy',
-            *map(FadeOut, [morty.bubble, morty.bubble.content])
+            *list(map(FadeOut, [morty.bubble, morty.bubble.content]))
         )
 
         numerator = VGroup(*self.rhs[:12])
@@ -2046,7 +1935,7 @@ class TCubedExample(SecantLineToTangentLine):
         for mob in numerator, denominator, self.approach_text, self.deriv_term:
             mob.generate_target()
             mob.target.scale_in_place(1.2)
-            mob.target.highlight(MAROON_B)
+            mob.target.set_color(MAROON_B)
             self.play(
                 MoveToTarget(
                     mob, rate_func = there_and_back,
@@ -2054,9 +1943,9 @@ class TCubedExample(SecantLineToTangentLine):
                 ),
                 morty.look_at, mob
             )
-            self.dither()
+            self.wait()
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class YouWouldntDoThisEveryTime(TeacherStudentsScene):
     def construct(self):
@@ -2068,42 +1957,42 @@ class YouWouldntDoThisEveryTime(TeacherStudentsScene):
             "You wouldn't do this \\\\ every time"
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(2)
+        self.wait(2)
         self.student_thinks(
             "$\\frac{d(t^3)}{dt} = 3t^2$",
         )
-        self.dither(3)
+        self.wait(3)
 
         series = VideoSeries()
-        series.scale_to_fit_width(2*SPACE_WIDTH-1)
+        series.set_width(FRAME_WIDTH-1)
         series.to_edge(UP)
         this_video = series[1]
         next_video = series[2]
         this_video.save_state()
-        this_video.highlight(YELLOW)
-        self.play(FadeIn(series, submobject_mode = "lagged_start"))
+        this_video.set_color(YELLOW)
+        self.play(FadeIn(series, lag_ratio = 0.5))
         self.play(
             this_video.restore,
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             next_video.shift, 0.5*DOWN
         )
-        self.dither(2)
+        self.wait(2)
 
 class ContrastConcreteDtWithLimit(Scene):
     def construct(self):
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
         self.add(v_line)
 
         l_title = TextMobject("""
             If $dt$ has a
             specific size.
         """)
-        VGroup(*l_title[2:4]).highlight(TIME_COLOR)
+        VGroup(*l_title[2:4]).set_color(TIME_COLOR)
         r_title = TexMobject("dt \\to 0")
-        VGroup(*r_title[:2]).highlight(TIME_COLOR)
+        VGroup(*r_title[:2]).set_color(TIME_COLOR)
         for title, vect in (l_title, LEFT), (r_title, RIGHT):
             title.to_edge(UP)
-            title.shift(SPACE_WIDTH*vect/2)
+            title.shift(FRAME_X_RADIUS*vect/2)
             self.add(title)
 
         l_formula = TexMobject("""
@@ -2122,22 +2011,22 @@ class ContrastConcreteDtWithLimit(Scene):
             l_formula[21:23],
             l_formula[27:29],
             l_formula[35:37],
-        )).highlight(TIME_COLOR)
-        l_formula.scale_to_fit_width(SPACE_WIDTH-MED_LARGE_BUFF)
+        )).set_color(TIME_COLOR)
+        l_formula.set_width(FRAME_X_RADIUS-MED_LARGE_BUFF)
         l_formula.to_edge(LEFT)
 
         l_brace = Brace(l_formula, DOWN)
         l_text = l_brace.get_text("Messy")
-        l_text.highlight(RED)
+        l_text.set_color(RED)
 
         r_formula = TexMobject(
             "\\frac{d(t^3)}{dt} = 3t^2"
         )
-        VGroup(*r_formula[6:8]).highlight(TIME_COLOR)
-        r_formula.shift(SPACE_WIDTH*RIGHT/2)
+        VGroup(*r_formula[6:8]).set_color(TIME_COLOR)
+        r_formula.shift(FRAME_X_RADIUS*RIGHT/2)
         r_brace = Brace(r_formula, DOWN)
         r_text = r_brace.get_text("Simple")
-        r_text.highlight(GREEN)
+        r_text.set_color(GREEN)
 
         triplets = [
             (l_formula, l_brace, l_text),
@@ -2149,7 +2038,7 @@ class ContrastConcreteDtWithLimit(Scene):
                 GrowFromCenter(brace),
                 Write(text)
             )
-            self.dither(2)
+            self.wait(2)
 
 class TimeForAnActualParadox(TeacherStudentsScene):
     def construct(self):
@@ -2157,7 +2046,7 @@ class TimeForAnActualParadox(TeacherStudentsScene):
         paradoxes = TextMobject("Paradoxes")
         arrow = Arrow(ORIGIN, DOWN, buff = 0)
         group = VGroup(words, arrow, paradoxes)
-        group.arrange_submobjects(DOWN)
+        group.arrange(DOWN)
         group.to_edge(UP)
 
         teacher = self.get_teacher()
@@ -2166,7 +2055,7 @@ class TimeForAnActualParadox(TeacherStudentsScene):
             teacher.look_at, words,
             Write(words)
         )
-        self.play(*map(Write, [arrow, paradoxes]))
+        self.play(*list(map(Write, [arrow, paradoxes])))
         self.play(*it.chain(*[
             [pi.change_mode, mode, pi.look_at, words]
             for pi, mode in zip(
@@ -2174,7 +2063,7 @@ class TimeForAnActualParadox(TeacherStudentsScene):
                 ["pondering", "happy", "hesitant"]
             )
         ]))
-        self.dither(4)
+        self.wait(4)
 
 class ParadoxAtTEquals0(TCubedExample):
     CONFIG = {
@@ -2225,12 +2114,12 @@ class ParadoxAtTEquals0(TCubedExample):
                 car, car_target_point,
                 rate_func = lambda t : (t*graph_x_max)**3
             ),
-            ShowCreation(graph, rate_func = None),
+            ShowCreation(graph, rate_func=linear),
             UpdateFromFunc(h_line, h_line_update),
             UpdateFromFunc(v_line, v_line_update),
             run_time = 5
         )
-        self.play(*map(FadeOut, [h_line, v_line]))
+        self.play(*list(map(FadeOut, [h_line, v_line])))
 
         self.label_graph(
             graph,
@@ -2239,7 +2128,7 @@ class ParadoxAtTEquals0(TCubedExample):
             direction = RIGHT,
             buff = SMALL_BUFF
         )
-        self.dither()
+        self.wait()
 
         self.car = car
 
@@ -2248,7 +2137,7 @@ class ParadoxAtTEquals0(TCubedExample):
             "At time $t=0$,", 
             "is \\\\ the car moving?"
         )
-        VGroup(*question[0][-4:-1]).highlight(RED)
+        VGroup(*question[0][-4:-1]).set_color(RED)
         question.next_to(
             self.coords_to_point(0, 10),
             RIGHT
@@ -2258,10 +2147,10 @@ class ParadoxAtTEquals0(TCubedExample):
 
         self.play(Write(question[0], run_time = 1))
         self.play(MoveCar(self.car, origin))
-        self.dither()
+        self.wait()
         self.play(Write(question[1]))
         self.play(ShowCreation(arrow))
-        self.dither(2)
+        self.wait(2)
 
         self.question = question
 
@@ -2272,18 +2161,18 @@ class ParadoxAtTEquals0(TCubedExample):
             "= 0",
             "\\frac{\\text{m}}{\\text{s}}",
         )
-        VGroup(*derivative[0][:2]).highlight(DISTANCE_COLOR)
-        VGroup(*derivative[0][3:5]).highlight(TIME_COLOR)
-        derivative[1][3].highlight(RED)
+        VGroup(*derivative[0][:2]).set_color(DISTANCE_COLOR)
+        VGroup(*derivative[0][3:5]).set_color(TIME_COLOR)
+        derivative[1][3].set_color(RED)
         derivative[-1].scale_in_place(0.7)
         derivative.to_edge(RIGHT, buff = LARGE_BUFF)
         derivative.shift(2*UP)
 
         self.play(Write(derivative[0]))
-        self.dither()
+        self.wait()
         self.play(FadeIn(derivative[1]))
-        self.play(*map(FadeIn, derivative[2:]))
-        self.dither(2)
+        self.play(*list(map(FadeIn, derivative[2:])))
+        self.wait(2)
 
         self.derivative = derivative
 
@@ -2321,7 +2210,7 @@ class ParadoxAtTEquals0(TCubedExample):
             UpdateFromAlphaFunc(dot, dot_update),            
             run_time = 4
         )
-        self.dither(2)
+        self.wait(2)
 
         self.tangent_line = line
 
@@ -2348,7 +2237,7 @@ class ParadoxAtTEquals0(TCubedExample):
         )
         self.play(MoveCar(self.car, self.coords_to_point(0, 0)))
         self.play(Blink(morty))
-        self.dither(2)
+        self.wait(2)
 
         self.morty = morty
 
@@ -2381,11 +2270,11 @@ class ParadoxAtTEquals0(TCubedExample):
         for word in change_word, moment_word:
             self.play(
                 word.scale_in_place, 1.2,
-                word.highlight, YELLOW,
+                word.set_color, YELLOW,
                 rate_func = there_and_back,
                 run_time = 1.5
             )
-        self.dither(2)
+        self.wait(2)
         self.play(
             everything.restore,
             FadeOut(question),
@@ -2396,14 +2285,14 @@ class ParadoxAtTEquals0(TCubedExample):
             GrowFromCenter(brace),
             FadeIn(brace_text)
         )
-        self.dither()
+        self.wait()
         self.play(
             self.tangent_line.rotate_in_place, np.pi/24,
             rate_func = wiggle,
             run_time = 1
         )
         self.play(Blink(morty))
-        self.dither()
+        self.wait()
 
 class TinyMovement(ZoomedScene):
     CONFIG = {
@@ -2426,12 +2315,12 @@ class TinyMovement(ZoomedScene):
 
         dots = VGroup(*[
             Dot(point, radius = self.distance/10)
-            for point in wheel_point, target_wheel_point
+            for point in (wheel_point, target_wheel_point)
         ])
         brace = Brace(Line(ORIGIN, RIGHT))
         distance_label = TexMobject(self.distance_label)
         distance_label.next_to(brace, DOWN)
-        distance_label.highlight(DISTANCE_COLOR)
+        distance_label.set_color(DISTANCE_COLOR)
         brace.add(distance_label)
         brace.scale(self.distance)
         brace.next_to(dots, DOWN, buff = self.distance/5)
@@ -2445,7 +2334,7 @@ class TinyMovement(ZoomedScene):
         start_time = TexMobject("0")
         end_time = TexMobject(self.time_label)
         for time in start_time, end_time:
-            time.highlight(TIME_COLOR)
+            time.set_color(TIME_COLOR)
             time.next_to(time_label, RIGHT)
 
         self.add(car, time_label, start_time)
@@ -2462,7 +2351,7 @@ class TinyMovement(ZoomedScene):
             zoom_rect.scale, 0.5,
             zoom_rect.move_to, brace
         )
-        self.dither()
+        self.wait()
 
     def show_ratios(self):
         ratios = [
@@ -2471,10 +2360,10 @@ class TinyMovement(ZoomedScene):
         ]
         ratio = ratios[0]
         self.play(FadeIn(ratio))
-        self.dither(2)
+        self.wait(2)
         for new_ratio in ratios[1:]:
             self.play(Transform(ratio, new_ratio))
-            self.dither()
+            self.wait()
 
     def get_ratio(self, power = 1):
         dt = "0.%s1"%("0"*(power-1))
@@ -2501,18 +2390,18 @@ class TinyMovement(ZoomedScene):
                 np.cumsum(lengths)[1:],
             )
         ])
-        result[1].highlight(DISTANCE_COLOR)
-        result[3].highlight(TIME_COLOR)
-        result[5].highlight(VELOCITY_COLOR)
+        result[1].set_color(DISTANCE_COLOR)
+        result[3].set_color(TIME_COLOR)
+        result[5].set_color(VELOCITY_COLOR)
 
         return result
 
 class NextVideos(TeacherStudentsScene):
     def construct(self):
         series = VideoSeries()
-        series.scale_to_fit_width(2*SPACE_WIDTH - 1)
+        series.set_width(FRAME_WIDTH - 1)
         series.to_edge(UP)
-        series[1].highlight(YELLOW)
+        series[1].set_color(YELLOW)
         self.add(series)
 
         brace = Brace(VGroup(*series[2:6]))
@@ -2530,9 +2419,9 @@ class NextVideos(TeacherStudentsScene):
                 for pi in self.get_students()
             ])
         )
-        self.dither(2)
+        self.wait(2)
         self.change_student_modes(*["thinking"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class Chapter2PatreonThanks(PatreonThanks):
     CONFIG = {
@@ -2586,7 +2475,7 @@ class Promotion(PiCreatureScene):
         url_rect.stretch_in_place(1.1, dim = 1)
 
         rect = Rectangle(height = 9, width = 16)
-        rect.scale_to_fit_height(4.5)
+        rect.set_height(4.5)
         rect.next_to(url, DOWN)
         rect.to_edge(LEFT)
         mathy = Mathematician()
@@ -2626,9 +2515,9 @@ class Promotion(PiCreatureScene):
             aops_logo.shift, 1.5*UP + 0.5*RIGHT
         )
         self.change_mode("happy")
-        self.dither(2)
+        self.wait(2)
         self.play(Blink(mathy))
-        self.dither()
+        self.wait()
         self.play(
             RemovePiCreatureBubble(
                 mathy, target_mode = "happy"
@@ -2640,28 +2529,28 @@ class Promotion(PiCreatureScene):
             mathy.look_at, morty.eyes,
             morty.look_at, mathy.eyes,
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Animation(VectorizedPoint(book_spot)),
             mathy.change, "raise_right_hand", book_spot,
             morty.change, "pondering",
         )
-        self.dither(3)
+        self.wait(3)
         self.play(Blink(mathy))
-        self.dither(7)
+        self.wait(7)
         self.play(
             ShowCreation(rect),
             morty.restore,
             morty.change, "happy", rect,
             FadeOut(mathy),
         )
-        self.dither(10)
+        self.wait(10)
         self.play(ShowCreation(url_rect))
         self.play(
             FadeOut(url_rect),
-            url.get_part_by_tex("3blue1brown").highlight, BLUE,
+            url.get_part_by_tex("3blue1brown").set_color, BLUE,
         )
-        self.dither(3)
+        self.wait(3)
 
 class Thumbnail(SecantLineToTangentLine):
     def construct(self):
@@ -2675,10 +2564,10 @@ class Thumbnail(SecantLineToTangentLine):
         VGroup(*self.get_mobjects()).fade(0.4)
 
         title = TextMobject("Derivative paradox")
-        title.scale_to_fit_width(2*SPACE_WIDTH-1)
+        title.set_width(FRAME_WIDTH-1)
         title.to_edge(UP)
         title.add_background_rectangle()
-        title.gradient_highlight(GREEN, YELLOW)
+        title.set_color_by_gradient(GREEN, YELLOW)
 
         randy = Randolph(mode = "confused")
         randy.scale(1.7)
@@ -2686,8 +2575,8 @@ class Thumbnail(SecantLineToTangentLine):
         randy.shift(RIGHT)
 
         deriv = TexMobject("\\frac{ds}{dt}(t)")
-        VGroup(*deriv[:2]).highlight(DISTANCE_COLOR)
-        VGroup(*deriv[3:5]).highlight(TIME_COLOR)
+        VGroup(*deriv[:2]).set_color(DISTANCE_COLOR)
+        VGroup(*deriv[3:5]).set_color(TIME_COLOR)
         deriv.scale(3)
         # deriv.next_to(randy, RIGHT, buff = 2)
         deriv.to_edge(RIGHT, buff = LARGE_BUFF)

@@ -1,33 +1,7 @@
-from helpers import *
 import scipy
 import math
 
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.graph_scene import GraphScene
+from manimlib.imports import *
 from old_projects.eoc.chapter1 import Car, MoveCar
 from old_projects.eoc.chapter10 import derivative
 
@@ -39,11 +13,11 @@ from old_projects.eoc.chapter10 import derivative
 class Introduce(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Next up is \\\\", "Taylor series")
-        words.highlight_by_tex("Taylor", BLUE)
+        words.set_color_by_tex("Taylor", BLUE)
         derivs = VGroup(*[
             TexMobject(
                 "{d", "^%d"%n, "f \\over dx", "^%d}"%n
-            ).highlight_by_tex(str(n), YELLOW)
+            ).set_color_by_tex(str(n), YELLOW)
             for n in range(2, 5)
         ])
         derivs.next_to(self.teacher, UP, LARGE_BUFF)
@@ -74,17 +48,17 @@ class Introduce(TeacherStudentsScene):
             color = WHITE
         )
         self.play(FadeIn(second_deriv))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(second_deriv, derivs[1]))
-        self.dither(2)
+        self.wait(2)
         self.play(MoveToTarget(card_dot))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(Transform(second_deriv, derivs[2]))
         self.change_student_modes(*["erm"]*3)
-        self.dither()
+        self.wait()
         self.play(second_deriv.restore)
-        self.dither(2)
+        self.wait(2)
 
 class SecondDerivativeGraphically(GraphScene):
     CONFIG = {
@@ -122,7 +96,7 @@ class SecondDerivativeGraphically(GraphScene):
                 rate_func = squish_rate_func(smooth, 0.5, 1)
             )
         )
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.graph_label = graph_label
@@ -130,7 +104,7 @@ class SecondDerivativeGraphically(GraphScene):
     def show_derivative(self):
         deriv = TexMobject("\\frac{df}{dx}")
         deriv.next_to(self.graph_label, DOWN, MED_LARGE_BUFF)
-        deriv.highlight(self.deriv_color)
+        deriv.set_color(self.deriv_color)
         ss_group = self.get_secant_slope_group(
             1, self.graph,
             dx = 0.01,
@@ -139,18 +113,18 @@ class SecondDerivativeGraphically(GraphScene):
 
         self.play(
             Write(deriv),
-            *map(ShowCreation, ss_group)
+            *list(map(ShowCreation, ss_group))
         )
         self.animate_secant_slope_group_change(
             ss_group, target_x = self.x3,
             run_time = 5
         )
-        self.dither()
+        self.wait()
         self.animate_secant_slope_group_change(
             ss_group, target_x = self.x2,
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
         self.ss_group = ss_group
         self.deriv = deriv
@@ -158,10 +132,10 @@ class SecondDerivativeGraphically(GraphScene):
     def write_second_derivative(self):
         second_deriv = TexMobject("\\frac{d^2 f}{dx^2}")
         second_deriv.next_to(self.deriv, DOWN, MED_LARGE_BUFF)
-        second_deriv.highlight(self.second_deriv_color)
+        second_deriv.set_color(self.second_deriv_color)
         points = [
             self.input_to_graph_point(x, self.graph)
-            for x in self.x2, self.x3
+            for x in (self.x2, self.x3)
         ]
         words = TextMobject("Change to \\\\ slope")
         words.next_to(
@@ -173,7 +147,7 @@ class SecondDerivativeGraphically(GraphScene):
         ]
 
         self.play(Write(second_deriv))
-        self.dither()
+        self.wait()
         self.play(
             Write(words),
             ShowCreation(
@@ -227,14 +201,14 @@ class SecondDerivativeGraphically(GraphScene):
             UpdateFromFunc(dot, get_dot_update_func(positive_curve))
         )
         self.play(FadeOut(dot))
-        self.dither()
+        self.wait()
         self.animate_secant_slope_group_change(
             self.ss_group, target_x = self.x3,
             run_time = 4,
             added_anims = [Animation(positive_curve)]
         )
 
-        self.play(*map(FadeOut, [self.ss_group, positive_curve]))
+        self.play(*list(map(FadeOut, [self.ss_group, positive_curve])))
         self.animate_secant_slope_group_change(
             self.ss_group, target_x = self.x1,
             run_time = 0
@@ -250,11 +224,11 @@ class SecondDerivativeGraphically(GraphScene):
             run_time = 4,
             added_anims = [Animation(negative_curve)]
         )
-        self.dither(2)
-        self.play(*map(FadeOut, [
+        self.wait(2)
+        self.play(*list(map(FadeOut, [
             self.graph, self.ss_group, 
             negative_curve, self.second_deriv_words
-        ]))
+        ])))
 
     def contrast_big_and_small_concavity(self):
         colors = color_gradient([GREEN, WHITE], 3)
@@ -269,7 +243,7 @@ class SecondDerivativeGraphically(GraphScene):
         ]
         arg_rhs_list = [
             TexMobject("(", str(x0), ")", "=", str(rhs))
-            for rhs in 10, 0.4, 0
+            for rhs in (10, 0.4, 0)
         ]
         for graph, arg_rhs in zip(graphs, arg_rhs_list):
             graph.ss_group = self.get_secant_slope_group(
@@ -305,14 +279,14 @@ class SecondDerivativeGraphically(GraphScene):
                 if submob is not graph.arg_rhs.get_part_by_tex(str(x0))
             ]))
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(graph.ss_group))
         self.animate_secant_slope_group_change(
             graph.ss_group, target_x = x0 + 1,
             run_time = 3,
         )
         self.play(FadeOut(graph.ss_group))
-        self.dither()
+        self.wait()
         for new_graph in graphs[1:]:
             self.play(Transform(graph, new_graph))
             self.play(Transform(
@@ -341,15 +315,15 @@ class IntroduceNotation(TeacherStudentsScene):
 
         rp = clunky_deriv.get_part_by_tex("(")
         lp = clunky_deriv.get_part_by_tex(")")
-        dfs, overs, dxs = map(clunky_deriv.get_parts_by_tex, [
+        dfs, overs, dxs = list(map(clunky_deriv.get_parts_by_tex, [
             "df", "over", "dx"
-        ])
+        ]))
         df_over_dx = VGroup(dfs[0], overs[0], dxs[0])
         d = clunky_deriv.get_part_by_tex("d")
         d_over_dx = VGroup(d, overs[1], dxs[1])
 
         d2f_over_dx2 = TexMobject("{d^2 f", "\\over", "dx", "^2}")
-        d2f_over_dx2.highlight_by_tex("dx", YELLOW)
+        d2f_over_dx2.set_color_by_tex("dx", YELLOW)
 
         for mob in clunky_deriv, d2f_over_dx2:
             mob.next_to(self.teacher, UP+LEFT)
@@ -360,7 +334,7 @@ class IntroduceNotation(TeacherStudentsScene):
             circle.scale_in_place(1.3)
             mob.circle = circle
         dx_to_zero = TexMobject("dx \\to 0")
-        dx_to_zero.highlight(YELLOW)
+        dx_to_zero.set_color(YELLOW)
         dx_to_zero.next_to(clunky_deriv, UP+LEFT)
 
         self.student_says(
@@ -372,25 +346,25 @@ class IntroduceNotation(TeacherStudentsScene):
             FadeIn(
                 clunky_deriv,
                 run_time = 2,
-                submobject_mode = "lagged_start"
+                lag_ratio = 0.5
             ),
             RemovePiCreatureBubble(self.get_students()[1]),
             self.teacher.change_mode, "raise_right_hand"
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(numerator.circle))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             numerator.circle,
             denominator.circle,
         ))
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(denominator.circle),
             Write(dx_to_zero),
-            dxs.highlight, YELLOW
+            dxs.set_color, YELLOW
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(dx_to_zero),
             *[ApplyMethod(pi.change, "plain") for pi in self.get_pi_creatures()]
@@ -401,7 +375,7 @@ class IntroduceNotation(TeacherStudentsScene):
             FadeOut(VGroup(lp, rp)),
             d_over_dx.shift, 0.8*LEFT + 0.05*UP,
         )
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(
                 group,
@@ -414,13 +388,13 @@ class IntroduceNotation(TeacherStudentsScene):
                 (VGroup(dxs[1].copy()), "^2}"),
             ]
         ])
-        self.dither(2)
+        self.wait(2)
         self.student_says(
             "How does one... \\\\ read that?",
             student_index = 0,
         )
         self.play(self.teacher.change, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class HowToReadNotation(GraphScene, ReconfigurableScene):
     CONFIG = {
@@ -477,11 +451,11 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             brace.dx = TexMobject("dx")
             max_width = 0.7*brace.get_width()
             if brace.dx.get_width() > max_width:
-                brace.dx.scale_to_fit_width(max_width)
+                brace.dx.set_width(max_width)
             brace.dx.next_to(brace, DOWN, SMALL_BUFF)
 
         self.play(ShowCreation(v_lines[0]))
-        self.dither()
+        self.wait()
         for brace, line in zip(braces, v_lines[1:]):
             self.play(
                 ReplacementTransform(
@@ -491,7 +465,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
                 Write(brace.dx, run_time = 1),
             )
             self.play(ShowCreation(line))
-        self.dither()
+        self.wait()
 
         self.v_lines = v_lines
         self.braces = braces
@@ -521,7 +495,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             )
             df_lines.add(df_line)
             df_label = TexMobject("df_%d"%i)
-            df_label.highlight(YELLOW)
+            df_label.set_color(YELLOW)
             df_label.scale(0.8)
             df_label.next_to(df_line.get_center(), UP+LEFT, MED_LARGE_BUFF)
             df_arrow = Arrow(
@@ -546,7 +520,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
                 ShowCreation(df_line.arrow),
                 Write(df_line.label)
             )
-            self.dither(2)
+            self.wait(2)
 
         self.df_dx_groups = df_dx_groups
         self.df_labels = df_labels
@@ -554,7 +528,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
     def show_ddf(self):
         df_dx_groups = self.df_dx_groups.copy()
         df_dx_groups.generate_target()
-        df_dx_groups.target.arrange_submobjects(
+        df_dx_groups.target.arrange(
             RIGHT, 
             buff = MED_LARGE_BUFF,
             aligned_edge = DOWN
@@ -580,7 +554,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             h_lines.add(h_line)
             max_height = 0.8*group.get_height()
             if label.get_height() > max_height:
-                label.scale_to_fit_height(max_height)
+                label.set_height(max_height)
 
 
         ddf_brace = Brace(h_lines, LEFT, buff = SMALL_BUFF)
@@ -589,16 +563,16 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             df_labels[0].get_height()/ddf.get_height(), 
             about_point = ddf.get_right()
         )
-        ddf.highlight(MAROON_B)
+        ddf.set_color(MAROON_B)
 
         self.play(
-            *map(MoveToTarget, [df_dx_groups, df_labels]),
+            *list(map(MoveToTarget, [df_dx_groups, df_labels])),
             run_time = 2
         )
         self.play(ShowCreation(h_lines, run_time = 2))
         self.play(GrowFromCenter(ddf_brace))
         self.play(Write(ddf))
-        self.dither(2)
+        self.wait(2)
 
         self.ddf = ddf
 
@@ -620,9 +594,9 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
 
         self.play(MoveToTarget(ddf))
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
         self.play(Write(example_dx))
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(example_dx))
 
         self.ddf = ddf
@@ -634,7 +608,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         )
         ddf_over_dx_squared.scale(0.8)
         ddf_over_dx_squared.move_to(self.ddf, RIGHT)
-        ddf_over_dx_squared.highlight_by_tex("df", self.ddf.get_color())
+        ddf_over_dx_squared.set_color_by_tex("df", self.ddf.get_color())
         parens = VGroup(
             ddf_over_dx_squared[0][1],
             ddf_over_dx_squared[0][4],
@@ -646,7 +620,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
         left_shifter = ddf_over_dx_squared[2][4]
 
         exp_two = TexMobject("2")
-        exp_two.highlight(self.ddf.get_color())
+        exp_two.set_color(self.ddf.get_color())
         exp_two.scale(0.5)
         exp_two.move_to(right_shifter.get_corner(UP+RIGHT), LEFT)
         exp_two.shift(MED_SMALL_BUFF*RIGHT)
@@ -660,10 +634,10 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
                     ddf_over_dx_squared.get_part_by_tex(tex),
                     path_arc = -np.pi/2,                    
                 )
-                for mob, tex in (self.ddf, "df"), (self.dx_squared, "dx")
+                for mob, tex in [(self.ddf, "df"), (self.dx_squared, "dx")]
             ]
         )
-        self.dither(2)
+        self.wait(2)
         self.play(FadeOut(parens))
         self.play(
             left_shifter.shift, 0.2*LEFT,
@@ -671,7 +645,7 @@ class HowToReadNotation(GraphScene, ReconfigurableScene):
             ReplacementTransform(pre_exp_two, exp_two),
             ddf_over_dx_squared.get_part_by_tex("over").scale_in_place, 0.8
         )
-        self.dither(2)
+        self.wait(2)
 
 class Footnote(Scene):
     def construct(self):
@@ -725,12 +699,12 @@ class SecondDerivativeAsAcceleration(Scene):
             "{d^2 s \\over dt^2}(t)",  "\\Leftrightarrow",
             "\\text{Acceleration}"
         )
-        a_words.highlight_by_tex("d^2 s", MAROON_B)
-        a_words.highlight_by_tex("Acceleration", YELLOW)
+        a_words.set_color_by_tex("d^2 s", MAROON_B)
+        a_words.set_color_by_tex("Acceleration", YELLOW)
         a_words.to_corner(UP+RIGHT )
         self.add(a_words)
         self.show_car_movement()
-        self.dither()
+        self.wait()
 
         self.a_words = a_words
 
@@ -762,30 +736,30 @@ class SecondDerivativeAsAcceleration(Scene):
         )
         s_graph, v_graph, a_graph, j_graph = graphs = [
             VGroup(*scene.get_top_level_mobjects())
-            for scene in s_scene, v_scene, a_scene, j_scene
+            for scene in (s_scene, v_scene, a_scene, j_scene)
         ]
         for i, graph in enumerate(graphs):
-            graph.scale_to_fit_height(SPACE_HEIGHT)
+            graph.set_height(FRAME_Y_RADIUS)
             graph.to_corner(UP+LEFT)
             graph.shift(i*DOWN/2.0)
 
         s_words = TexMobject(
             "s(t)", "\\Leftrightarrow", "\\text{Displacement}"
         )
-        s_words.highlight_by_tex("s(t)", s_scene.graph.get_color())
+        s_words.set_color_by_tex("s(t)", s_scene.graph.get_color())
         v_words = TexMobject(
             "\\frac{ds}{dt}(t)", "\\Leftrightarrow", 
             "\\text{Velocity}"
         )
-        v_words.highlight_by_tex("ds", v_scene.graph.get_color())
+        v_words.set_color_by_tex("ds", v_scene.graph.get_color())
         j_words = TexMobject(
             "\\frac{d^3 s}{dt^3}(t)", "\\Leftrightarrow", 
             "\\text{Jerk}"
         )
-        j_words.highlight_by_tex("d^3", j_scene.graph.get_color())
+        j_words.set_color_by_tex("d^3", j_scene.graph.get_color())
         self.a_words.generate_target()
         words_group = VGroup(s_words, v_words, self.a_words.target, j_words)
-        words_group.arrange_submobjects(
+        words_group.arrange(
             DOWN, 
             buff = MED_LARGE_BUFF,
             aligned_edge = LEFT
@@ -823,37 +797,37 @@ class SecondDerivativeAsAcceleration(Scene):
             s_graph.scale, 0.3,
             s_graph.next_to, s_words, LEFT
         )
-        self.play(*map(FadeIn, [v_graph, v_words]) )
-        self.dither(2)
+        self.play(*list(map(FadeIn, [v_graph, v_words])) )
+        self.wait(2)
         self.play(
             v_graph.scale, 0.3,
             v_graph.next_to, v_words, LEFT
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             Indicate(self.a_words),
             FadeIn(a_graph),
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(positive_rect))
         for x in range(2):
             self.show_car_movement(
                 run_time = 3,
                 rate_func = lambda t : smooth(t/2.0)
             )
-            self.dither()
+            self.wait()
         self.play(FadeIn(negative_rect))
-        self.dither()
+        self.wait()
         self.play(MoveCar(
             self.car, self.line.get_end(),
             run_time = 3,
             rate_func = lambda t : 2*smooth((t+1)/2.0) - 1
         ))
-        self.dither()
+        self.wait()
         self.play(
             a_graph.scale, 0.3,
             a_graph.next_to, self.a_words, LEFT,
-            *map(FadeOut, [positive_rect, negative_rect])
+            *list(map(FadeOut, [positive_rect, negative_rect]))
         )
         self.play(
             FadeOut(self.car),
@@ -866,12 +840,12 @@ class SecondDerivativeAsAcceleration(Scene):
         self.car.move_to(self.line.get_start())
         self.play(FadeIn(self.car))
         self.show_car_movement()
-        self.dither(2)
+        self.wait(2)
 
     ##########
 
     def show_car_movement(self, *added_anims, **kwargs):
-        distance = np.linalg.norm(
+        distance = get_norm(
             self.car.get_center() - self.start_car_copy.get_center()
         )
         if distance > 1:
@@ -893,7 +867,7 @@ class NextVideo(Scene):
         rect.next_to(title, DOWN)
         self.add(rect)
         self.play(Write(title))
-        self.dither()
+        self.wait()
 
 class Thumbnail(SecondDerivativeGraphically):
     CONFIG = {
@@ -909,9 +883,9 @@ class Thumbnail(SecondDerivativeGraphically):
         self.graph.set_stroke(GREEN, width = 8)
 
         tex = TexMobject("{d^n f", "\\over", "dx^n}")
-        tex.highlight_by_tex("d^n", YELLOW)
-        tex.highlight_by_tex("dx", BLUE)
-        tex.scale_to_fit_height(4)
+        tex.set_color_by_tex("d^n", YELLOW)
+        tex.set_color_by_tex("dx", BLUE)
+        tex.set_height(4)
         tex.to_edge(UP)
 
         self.add(tex)

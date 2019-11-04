@@ -1,35 +1,5 @@
 # -*- coding: utf-8 -*-
-
-from helpers import *
-
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import *
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.fractals import *
-from topics.number_line import *
-from topics.combinatorics import *
-from topics.numerals import *
-from topics.three_dimensions import *
-from topics.objects import *
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-from scene.reconfigurable_scene import ReconfigurableScene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-
-from topics.common_scenes import OpeningQuote, PatreonThanks
-
-from topics.graph_scene import *
+from manimlib.imports import *
 
 class Chapter7OpeningQuote(OpeningQuote):
     CONFIG = {
@@ -61,7 +31,7 @@ class ThisVideo(TeacherStudentsScene):
         integral_videos = VGroup(*series[7:9])
         video_groups = [deriv_videos, this_video, integral_videos]
 
-        braces = map(Brace, video_groups)
+        braces = list(map(Brace, video_groups))
         deriv_brace, this_brace, integral_brace = braces
 
         tex_mobs = [
@@ -74,8 +44,8 @@ class ThisVideo(TeacherStudentsScene):
         ]
         deriv_tex, this_tex, integral_tex = tex_mobs
         for tex_mob, brace in zip(tex_mobs, braces):
-            tex_mob.highlight_by_tex("f", GREEN)
-            tex_mob.highlight_by_tex("dx", YELLOW)
+            tex_mob.set_color_by_tex("f", GREEN)
+            tex_mob.set_color_by_tex("dx", YELLOW)
             tex_mob.next_to(brace, DOWN)
         integral_tex.shift(LARGE_BUFF*RIGHT)
 
@@ -95,15 +65,15 @@ class ThisVideo(TeacherStudentsScene):
                 Write(tex_mob, run_time = 2)
             )
         self.play(
-            this_video.highlight, YELLOW,
+            this_video.set_color, YELLOW,
             GrowFromCenter(this_brace),
             self.get_teacher().change_mode, "raise_right_hand",
             self.get_teacher().look_at, this_video
         )
         self.play(Write(this_tex))
-        self.dither(2)
+        self.wait(2)
         self.play(self.get_teacher().change_mode, "sassy")
-        self.dither(2)
+        self.wait(2)
 
 class LimitJustMeansApproach(PiCreatureScene):
     CONFIG = {
@@ -133,8 +103,7 @@ class LimitJustMeansApproach(PiCreatureScene):
             self.play(
                 Transform(
                     expression, next_expression,
-                    submobject_mode = "lagged_start",
-                    lag_factor = 1.2,
+                    lag_ratio = 0.5,
                 ),
                 self.pi_creature.look_at, next_expression[-1]
             )
@@ -143,8 +112,8 @@ class LimitJustMeansApproach(PiCreatureScene):
                     GrowFromCenter(brace),
                     Write(question)
                 )
-            self.dither(0.5)
-        self.dither(2)
+            self.wait(0.5)
+        self.wait(2)
 
     def create_pi_creature(self):
         self.pi_creature = Mortimer().flip()
@@ -153,7 +122,7 @@ class LimitJustMeansApproach(PiCreatureScene):
 
     def get_limit_expression(self):
         lim = TexMobject("\\lim_", "{dx", " \\to 0}")
-        lim.highlight_by_tex("dx", self.dx_color)
+        lim.set_color_by_tex("dx", self.dx_color)
         ratio = self.get_expression("dx")
         ratio.next_to(lim, RIGHT)
         limit_expression = VGroup(lim, ratio)
@@ -168,7 +137,7 @@ class LimitJustMeansApproach(PiCreatureScene):
             ratio = ((2+dx)**3-2**3)/dx
             ratio_mob = TexMobject("%.6f\\dots"%ratio)
             group = VGroup(expression, TexMobject("="), ratio_mob)
-            group.arrange_submobjects(RIGHT)
+            group.arrange(RIGHT)
             result.add(group)
         return result
 
@@ -176,7 +145,7 @@ class LimitJustMeansApproach(PiCreatureScene):
         result = TexMobject(
             "{(2 + ", str(dx), ")^3 - 2^3 \\over", str(dx)
         )
-        result.highlight_by_tex(dx, self.dx_color)
+        result.set_color_by_tex(dx, self.dx_color)
         return result
 
 class Goals(Scene):
@@ -195,10 +164,10 @@ class Goals(Scene):
 
         curr_goal = goals[0]
         self.play(FadeIn(curr_goal))
-        self.dither(2)
+        self.wait(2)
         for goal in goals[1:]:
             self.play(Transform(curr_goal, goal))
-            self.dither(2)
+            self.wait(2)
 
 class RefreshOnDerivativeDefinition(GraphScene):
     CONFIG = {
@@ -221,7 +190,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
                 line_class = DashedLine,
                 color = RED
             )
-            for nudge in 0, self.start_dx
+            for nudge in (0, self.start_dx)
         ]
         nudged_x_v_line.save_state()
         ss_group = self.get_secant_slope_group(
@@ -236,9 +205,9 @@ class RefreshOnDerivativeDefinition(GraphScene):
         derivative = TexMobject(
             "{df", "\\over \\,", "dx}", "(", str(self.start_x), ")"
         )
-        derivative.highlight_by_tex("df", self.df_color)
-        derivative.highlight_by_tex("dx", self.dx_color)
-        derivative.highlight_by_tex(str(self.start_x), RED)
+        derivative.set_color_by_tex("df", self.df_color)
+        derivative.set_color_by_tex("dx", self.dx_color)
+        derivative.set_color_by_tex(str(self.start_x), RED)
         df = derivative.get_part_by_tex("df")
         dx = derivative.get_part_by_tex("dx")
         input_x = derivative.get_part_by_tex(str(self.start_x))
@@ -246,14 +215,14 @@ class RefreshOnDerivativeDefinition(GraphScene):
         derivative.save_state()
         deriv_brace = Brace(derivative)
         dx_to_0 = TexMobject("dx", "\\to 0")
-        dx_to_0.highlight_by_tex("dx", self.dx_color)
+        dx_to_0.set_color_by_tex("dx", self.dx_color)
         dx_to_0.next_to(deriv_brace, DOWN)
 
         #Introduce graph
         self.play(ShowCreation(graph))
         self.play(Write(graph_label, run_time = 1))
         self.play(Write(derivative))
-        self.dither()
+        self.wait()
         input_copy = input_x.copy()
         self.play(
             input_copy.next_to, 
@@ -261,24 +230,24 @@ class RefreshOnDerivativeDefinition(GraphScene):
             DOWN
         )
         self.play(ShowCreation(start_x_v_line))
-        self.dither()
+        self.wait()
 
         #ss_group_development
         self.play(
             ShowCreation(ss_group.dx_line),
             ShowCreation(ss_group.dx_label),
         )
-        self.dither()
+        self.wait()
         self.play(ShowCreation(ss_group.df_line))
         self.play(Write(ss_group.df_label))
-        self.dither(2)
+        self.wait(2)
         self.play(
             ReplacementTransform(ss_group.dx_label.copy(), dx),
             ReplacementTransform(ss_group.df_label.copy(), df),
             run_time = 2
         )
         self.play(ShowCreation(ss_group.secant_line))
-        self.dither()
+        self.wait()
 
         #Let dx approach 0
         self.play(
@@ -290,7 +259,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
             target_dx = 0.01,
             run_time = 5,
         )
-        self.dither()
+        self.wait()
 
         #Write out fuller limit
         new_deriv = TexMobject(
@@ -298,9 +267,9 @@ class RefreshOnDerivativeDefinition(GraphScene):
             "-", "f", "(", str(self.start_x), ")",
             "\\over \\,", "dx"
         )
-        new_deriv.highlight_by_tex("dx", self.dx_color)
-        new_deriv.highlight_by_tex("f", self.df_color)
-        new_deriv.highlight_by_tex(str(self.start_x), RED)
+        new_deriv.set_color_by_tex("dx", self.dx_color)
+        new_deriv.set_color_by_tex("f", self.df_color)
+        new_deriv.set_color_by_tex(str(self.start_x), RED)
         deriv_to_new_deriv = dict([
             (
                 VGroup(derivative.get_part_by_tex(s)), 
@@ -308,11 +277,8 @@ class RefreshOnDerivativeDefinition(GraphScene):
             )
             for s in ["f", "over", "dx", "(", str(self.start_x), ")"]
         ])
-        covered_new_deriv_parts = list(it.chain(*deriv_to_new_deriv.values()))
-        uncovered_new_deriv_parts = filter(
-            lambda part : part not in covered_new_deriv_parts,
-            new_deriv
-        )
+        covered_new_deriv_parts = list(it.chain(*list(deriv_to_new_deriv.values())))
+        uncovered_new_deriv_parts = [part for part in new_deriv if part not in covered_new_deriv_parts]
         new_deriv.move_to(derivative)
         new_brace = Brace(new_deriv, DOWN)
 
@@ -322,16 +288,16 @@ class RefreshOnDerivativeDefinition(GraphScene):
             run_time = 2
         )
         self.play(ShowCreation(nudged_x_v_line))
-        self.dither()
+        self.wait()
         self.play(*[
             ReplacementTransform(*pair, run_time = 2)
-            for pair in deriv_to_new_deriv.items()
+            for pair in list(deriv_to_new_deriv.items())
         ]+[
             Transform(deriv_brace, new_brace),
             dx_to_0.next_to, new_brace, DOWN
         ])
         self.play(Write(VGroup(*uncovered_new_deriv_parts), run_time = 2))
-        self.dither()
+        self.wait()
 
         #Introduce limit notation
         lim = TexMobject("\\lim").scale(1.3)
@@ -350,10 +316,10 @@ class RefreshOnDerivativeDefinition(GraphScene):
         for sf, color in (1.2, YELLOW), (1/1.2, WHITE):
             self.play(
                 lim.scale_in_place, sf,
-                lim.highlight, color,
-                submobject_mode = "lagged_start"
+                lim.set_color, color,
+                lag_ratio = 0.5
             )
-        self.dither(2)
+        self.wait(2)
         self.animate_secant_slope_group_change(
             ss_group, target_dx = 0.01,
             run_time = 5,
@@ -361,7 +327,7 @@ class RefreshOnDerivativeDefinition(GraphScene):
                 Transform(nudged_x_v_line, start_x_v_line, run_time = 5)
             ]
         )
-        self.dither(2)
+        self.wait(2)
 
         #Record attributes for DiscussLowercaseDs below
         digest_locals(self)
@@ -373,12 +339,12 @@ class RantOpenAndClose(Scene):
                 start, "Rant on infinitesimals", "$>$",
                 arg_separator = ""
             )
-            for start in "$<$", "$<$/"
+            for start in ("$<$", "$<$/")
         ]
         self.play(FadeIn(opening))
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(opening, closing))
-        self.dither(2)
+        self.wait(2)
 
 class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedScene):
     CONFIG = {
@@ -427,12 +393,12 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             path_arc = np.pi/2,
         )
         self.blink()
-        self.dither()
+        self.wait()
         for tex in "\\Delta x", "h":
             dx_list_replacement = [
                 TexMobject(
                     tex
-                ).highlight(self.dx_color).move_to(dx, DOWN)
+                ).set_color(self.dx_color).move_to(dx, DOWN)
                 for dx in dx_list
             ]
             self.play(
@@ -442,7 +408,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
                 ),
                 self.pi_creature.change_mode, "raise_right_hand"
             )
-            self.dither()
+            self.wait()
         self.play(
             mover.scale, 0.9,
             mover.move_to, mover.initial_right, RIGHT,
@@ -451,7 +417,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         self.play(
             self.dx_to_0.next_to, self.lim, DOWN, SMALL_BUFF,
         )
-        self.dither()
+        self.wait()
 
     def compare_rhs_and_lhs(self):
         self.derivative.restore()
@@ -469,20 +435,20 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
                 lhs.get_part_by_tex(tex)[0],
                 stretch = True,
             ).scale_in_place(1.5).rotate_in_place(-np.pi/12)
-            for tex in "df", "dx"
+            for tex in ("df", "dx")
         ])
         d_words = TextMobject("""
             Limit idea is
             built in
         """)
         d_words.next_to(d_circles, DOWN)
-        d_words.highlight(d_circles[0].get_color())
+        d_words.set_color(d_circles[0].get_color())
 
         lhs_rect, rhs_rect = rects = [
             Rectangle(color = GREEN_B).replace(
                 mob, stretch = True
             )
-            for mob in lhs, rhs.target
+            for mob in (lhs, rhs.target)
         ]
         for rect in rects:
             rect.stretch_to_fit_width(rect.get_width()+2*MED_SMALL_BUFF)
@@ -490,9 +456,9 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         formal_definition_words = TextMobject("""
             Formal derivative definition 
         """)
-        formal_definition_words.scale_to_fit_width(rhs_rect.get_width())
+        formal_definition_words.set_width(rhs_rect.get_width())
         formal_definition_words.next_to(rhs_rect, UP)
-        formal_definition_words.highlight(rhs_rect.get_color())
+        formal_definition_words.set_color(rhs_rect.get_color())
         formal_definition_words.add_background_rectangle()
 
         df = VGroup(lhs.get_part_by_tex("df"))
@@ -518,36 +484,36 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             ]
         )
         self.change_mode("thinking")
-        self.dither(2)
+        self.wait(2)
         self.play(
             ShowCreation(lhs_rect),
             FadeOut(d_circles),
             FadeOut(d_words),
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             ReplacementTransform(lhs_rect, rhs_rect),
             self.pi_creature.change_mode, "raise_right_hand"
         )
-        self.dither(2)
+        self.wait(2)
         self.play(ReplacementTransform(
             df.copy(), df_target, 
             path_arc = -np.pi/2,
             run_time = 2
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(Indicate(
             VGroup(*rhs[:2]),
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
         self.play(Write(formal_definition_words))
         self.play(
             self.pi_creature.change_mode, "happy",
             self.pi_creature.look_at, formal_definition_words
         )
-        self.dither(2)
+        self.wait(2)
 
         lhs.add_background_rectangle()
         self.add(rhs_rect, rhs)
@@ -564,7 +530,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             self.pi_creature.change_mode, "sassy",
             self.pi_creature.look_at, 4*UP
         )
-        self.dither()
+        self.wait()
 
 
         words = TextMobject("No ``infinitely small''")
@@ -573,7 +539,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
             buff = LARGE_BUFF, 
         ) 
         arrow = Arrow(words.get_top(), self.rhs_rect.get_bottom())
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
 
         h_group = VGroup(
             self.rhs[1].get_part_by_tex("dx"),
@@ -584,32 +550,32 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         dx_group = VGroup()
         for h in h_group:
             dx = TexMobject("dx")
-            dx.highlight(h.get_color())
+            dx.set_color(h.get_color())
             dx.replace(h, dim_to_match = 1)
             dx_group.add(dx)
         moving_dx = dx_group[0]       
 
         self.play(Write(words), ShowCreation(arrow))
-        self.dither(2)
+        self.wait(2)
 
         self.play(
             moving_h.next_to, self.pi_creature.get_corner(UP+RIGHT), UP,
             self.pi_creature.change_mode, "raise_left_hand",
         )
-        self.dither()
+        self.wait()
         moving_dx.move_to(moving_h)
         h_group.save_state()
         self.play(Transform(
             h_group, dx_group, 
             path_arc = np.pi,
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(h_group.restore, path_arc = np.pi)
         self.play(
             moving_h.move_to, moving_h.original_center,
             self.pi_creature.change_mode, "plain"
         )
-        self.dither()
+        self.wait()
 
         #Zoom in
         self.activate_zooming()
@@ -617,27 +583,27 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
         lil_rect.move_to(self.ss_group)
         lil_rect.scale_in_place(3)
         lil_rect.save_state()
-        self.dither()
+        self.wait()
         self.add(self.rhs)
         self.play(
-            lil_rect.scale_to_fit_width,
+            lil_rect.set_width,
             self.ss_group.dx_line.get_width()*4,
             run_time = 4
         )
-        self.dither()
+        self.wait()
         dx = self.ss_group.dx_label
         dx.save_state()
         h = TexMobject("h")
-        h.highlight(dx.get_color())
+        h.set_color(dx.get_color())
         h.replace(dx, dim_to_match = 1)
         self.play(Transform(dx, h, path_arc = np.pi))
         self.play(Indicate(dx))
-        self.dither()
+        self.wait()
         self.play(dx.restore, path_arc = np.pi)
         self.play(lil_rect.restore, run_time = 4)
-        self.dither()
+        self.wait()
         self.disactivate_zooming()
-        self.dither()
+        self.wait()
 
         #Last approaching reference
         for target_dx in 3, 0.01, -2, 0.01:
@@ -645,7 +611,7 @@ class DiscussLowercaseDs(RefreshOnDerivativeDefinition, PiCreatureScene, ZoomedS
                 self.ss_group, target_dx = target_dx,
                 run_time = 4,
             )
-            self.dither()
+            self.wait()
 
 class OtherViewsOfDx(TeacherStudentsScene):
     def construct(self):
@@ -662,8 +628,8 @@ class OtherViewsOfDx(TeacherStudentsScene):
             "h" : GREEN,
             "2" : RED
         }
-        for tex, color in tex_to_color.items():
-            definition.highlight_by_tex(tex, color)
+        for tex, color in list(tex_to_color.items()):
+            definition.set_color_by_tex(tex, color)
         definition.scale(0.8)
         definition.to_corner(UP+LEFT)
         dx_group = VGroup(*definition.get_parts_by_tex("dx"))
@@ -683,8 +649,8 @@ class OtherViewsOfDx(TeacherStudentsScene):
             statement.h, statement.dx = [
                 VGroup(*statement.get_parts_by_tex(
                     tex, substring = False
-                )).highlight(GREEN)
-                for tex in "$h$", "$dx$"
+                )).set_color(GREEN)
+                for tex in ("$h$", "$dx$")
             ]
 
         #Question
@@ -696,10 +662,9 @@ class OtherViewsOfDx(TeacherStudentsScene):
         self.play(ReplacementTransform(
             statements[0].h.copy(), h_group,
             run_time = 2,
-            submobject_mode = "lagged_start",
-            lag_factor = 1.5,
+            lag_ratio = 0.5,
         ))
-        self.dither()
+        self.wait()
 
         #Teacher answer
         self.teacher_says(
@@ -711,7 +676,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
             statements[1].dx.copy(), dx_group, 
             run_time = 2,
         ))
-        self.dither()
+        self.wait()
 
         #First alternate view
         moving_dx = dx_group.copy()
@@ -732,7 +697,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
             RemovePiCreatureBubble(self.get_teacher()),
         )   
         self.play(self.get_teacher().change_mode, "erm")
-        self.dither()
+        self.wait()
 
         #Next alternate view
         bubble_intro = PiCreatureBubbleIntroduction(
@@ -761,7 +726,7 @@ class OtherViewsOfDx(TeacherStudentsScene):
                 for pi in self.get_students()[1:]
             ])
         )
-        self.dither(3)
+        self.wait(3)
 
 class GoalsListed(Scene):
     def construct(self):
@@ -773,19 +738,19 @@ class GoalsListed(Scene):
                 "L'Hôpital's rule",
             ])
         ])
-        goals.arrange_submobjects(
+        goals.arrange(
             DOWN, buff = LARGE_BUFF, aligned_edge = LEFT
         )
 
         for goal in goals:
             self.play(FadeIn(goal))
-            self.dither()
+            self.wait()
         for i, goal in enumerate(goals):
-            anims = [goal.highlight, YELLOW]
+            anims = [goal.set_color, YELLOW]
             if i > 0:
-                anims += [goals[i-1].highlight, WHITE]
+                anims += [goals[i-1].set_color, WHITE]
             self.play(*anims)
-            self.dither()
+            self.wait()
 
 class GraphLimitExpression(GraphScene):
     CONFIG = {
@@ -797,11 +762,11 @@ class GraphLimitExpression(GraphScene):
         "x_min" : -8,
         "x_max" : 5,
         "x_axis_label" : "$h$",
-        "x_labeled_nums" : range(-8, 6, 2),
+        "x_labeled_nums" : list(range(-8, 6, 2)),
         "y_min" : 0,
         "y_max" : 20,
         "y_tick_frequency" : 1,
-        "y_labeled_nums" : range(5, 25, 5),
+        "y_labeled_nums" : list(range(5, 25, 5)),
         "y_axis_label" : "",
         "big_delta" : 0.7,
         "small_delta" : 0.01,
@@ -833,8 +798,8 @@ class GraphLimitExpression(GraphScene):
             "2" : self.two_color
         }
         for tex_mob in expression, limit, derivative:
-            for tex, color in tex_to_color.items():
-                tex_mob.highlight_by_tex(tex, color)
+            for tex, color in list(tex_to_color.items()):
+                tex_mob.set_color_by_tex(tex, color)
             tex_mob.next_to(ORIGIN, RIGHT, LARGE_BUFF)
             tex_mob.to_edge(UP)
 
@@ -856,8 +821,7 @@ class GraphLimitExpression(GraphScene):
         for i, j, func in zip(indices, indices[1:], funcs):
             anims = [FadeIn(
                 VGroup(*expression[i:j]),
-                submobject_mode = "lagged_start",
-                lag_factor = 1.5
+                lag_ratio = 0.5,
             )]
             new_graph = self.get_graph(func, color = BLUE)
             if graph is None:
@@ -866,27 +830,27 @@ class GraphLimitExpression(GraphScene):
             else:
                 anims.append(Transform(graph, new_graph))
             self.play(*anims)
-            self.dither()
-        self.dither()
+            self.wait()
+        self.wait()
         self.play(
             MoveToTarget(expression),
-            FadeIn(limit, submobject_mode = "lagged_start"),
+            FadeIn(limit, lag_ratio = 0.5),
             GrowFromCenter(brace)
         )
         self.play(Write(derivative))
-        self.dither(2)
+        self.wait(2)
         self.play(
             expression.restore,
-            *map(FadeOut, [derivative, brace, limit])
+            *list(map(FadeOut, [derivative, brace, limit]))
         )
-        self.dither()
+        self.wait()
 
-        colored_graph = graph.copy().highlight(YELLOW)
+        colored_graph = graph.copy().set_color(YELLOW)
         self.play(ShowCreation(colored_graph))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(graph))
         self.remove(colored_graph)
-        self.dither()
+        self.wait()
 
         self.expression = expression
         self.limit = limit
@@ -899,20 +863,20 @@ class GraphLimitExpression(GraphScene):
         h_equals_0 = TexMobject("h", "=", "0", "?")
         h_equals_0.next_to(self.graph_origin, UP+RIGHT, LARGE_BUFF)
         for tex in "h", "0":
-            h_equals_0.highlight_by_tex(tex, GREEN)
+            h_equals_0.set_color_by_tex(tex, GREEN)
 
         arrow = Arrow(h_equals_0.get_left(), self.graph_origin)
-        arrow.highlight(WHITE)
+        arrow.set_color(WHITE)
 
         new_expression = expression.deepcopy()
         h_group = VGroup(*new_expression.get_parts_by_tex("h"))
         for h in h_group:
             zero = TexMobject("0")
-            zero.highlight(h.get_color())
+            zero.set_color(h.get_color())
             zero.replace(h, dim_to_match = 1)
             Transform(h, zero).update(1)
         rhs = TexMobject("=", "{\\, 0\\,", "\\over \\,", "0\\,}")
-        rhs.highlight_by_tex("0", GREEN)
+        rhs.set_color_by_tex("0", GREEN)
         rhs.next_to(new_expression, RIGHT)
         equation = VGroup(new_expression, rhs)
         equation.next_to(expression, DOWN, buff = LARGE_BUFF)
@@ -923,19 +887,19 @@ class GraphLimitExpression(GraphScene):
         undefined.to_edge(RIGHT)
 
         self.play(Write(h_equals_0, run_time = 2))
-        self.play(*map(ShowCreation, [arrow, dot]))
-        self.dither()
+        self.play(*list(map(ShowCreation, [arrow, dot])))
+        self.wait()
         self.play(ReplacementTransform(
             expression.copy(), new_expression
         ))
-        self.dither()
+        self.wait()
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(ud_brace),
             Write(undefined)
         )
-        self.dither(2)
+        self.wait(2)
 
         self.point_to_zero_group = VGroup(
             h_equals_0, arrow, dot
@@ -959,7 +923,7 @@ class GraphLimitExpression(GraphScene):
         colored_circle.set_fill(opacity = 0)
 
         self.play(GrowFromCenter(circle))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(colored_circle))
         self.play(ShowCreation(
             circle.copy().set_fill(opacity = 0),
@@ -971,7 +935,7 @@ class GraphLimitExpression(GraphScene):
             run_time = 2,
             rate_func = wiggle
         )
-        self.dither()
+        self.wait()
 
         self.limit_point_hole = circle
 
@@ -1008,7 +972,7 @@ class GraphLimitExpression(GraphScene):
             ReplacementTransform(dot, ed_group.input_range),
         )
         self.add(h_zero_hole)
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(
                 ed_group.input_range.copy(), 
@@ -1019,13 +983,13 @@ class GraphLimitExpression(GraphScene):
         self.remove(self.limit_point_hole)
 
         #Show approaching
-        self.play(*map(FadeOut, [brace, brace_text]))
+        self.play(*list(map(FadeOut, [brace, brace_text])))
         for v_line, h_line in (right_v_line, top_h_line), (left_v_line, bottom_h_line):
             self.play(
                 ShowCreation(v_line),
                 ShowCreation(h_line)
             )
-            self.dither()
+            self.wait()
             self.play(
                 v_line.move_to, self.coords_to_point(0, 0), DOWN,
                 h_line.move_to, self.coords_to_point(0, self.func(0)),
@@ -1034,7 +998,7 @@ class GraphLimitExpression(GraphScene):
             self.play(
                 VGroup(h_line, v_line).set_stroke, GREY, 2,
             )
-        self.dither()
+        self.wait()
 
         #Write limit
         limit = self.limit
@@ -1045,9 +1009,9 @@ class GraphLimitExpression(GraphScene):
         limit_group = VGroup(limit, rhs)
 
         self.play(Write(limit_group))
-        self.dither()
+        self.wait()
         self.play(twelve_copy.next_to, top_h_line, RIGHT)
-        self.dither()
+        self.wait()
 
         self.twelve_copy = twelve_copy
         self.rhs = rhs
@@ -1076,7 +1040,7 @@ class GraphLimitExpression(GraphScene):
         self.remove(self.twelve_copy)
         self.play(randy.look, OUT)
         self.play(Blink(randy))
-        self.dither()
+        self.wait()
         self.play(RemovePiCreatureBubble(
             randy, target_mode = "pondering",
             look_at_arg = self.limit_point_hole
@@ -1097,7 +1061,7 @@ class GraphLimitExpression(GraphScene):
             FadeIn(self.input_range_brace_group)
         )
         self.ed_group.epsilon_lines.restore()
-        self.dither()
+        self.wait()
         self.play(
             self.ed_group.delta_lines.restore, 
             Animation(self.input_range_brace_group),
@@ -1111,8 +1075,8 @@ class GraphLimitExpression(GraphScene):
                 run_time = 2
             )
         )
-        self.dither()
-        self.play(*map(GrowFromCenter, self.ed_group.epsilon_lines))
+        self.wait()
+        self.play(*list(map(GrowFromCenter, self.ed_group.epsilon_lines)))
         self.play(*[
             ApplyMethod(
                 line.copy().set_stroke(GREY, 2).move_to,
@@ -1123,7 +1087,7 @@ class GraphLimitExpression(GraphScene):
             )
             for line in self.ed_group.epsilon_lines
         ])
-        self.dither()
+        self.wait()
 
         holes = VGroup(
             self.ed_group.input_range.submobjects.pop(),
@@ -1143,7 +1107,7 @@ class GraphLimitExpression(GraphScene):
                 for hole in holes
             ]
         )
-        self.dither()
+        self.wait()
 
         self.holes = holes
 
@@ -1154,7 +1118,7 @@ class GraphLimitExpression(GraphScene):
         delta,
         limit_x = 0,
         dashed_line_stroke_width = 3,
-        dashed_line_length = 2*SPACE_HEIGHT,
+        dashed_line_length = FRAME_HEIGHT,
         input_range_color = YELLOW,
         input_range_stroke_width = 6,
         ):
@@ -1195,14 +1159,14 @@ class GraphLimitExpression(GraphScene):
                     (limit_x+basically_zero, limit_x+delta),
                 ]
             ]).set_stroke(width = input_range_stroke_width)
-            for func in (lambda h : 0), self.func
+            for func in ((lambda h : 0), self.func)
         ]
         result.epsilon_lines = VGroup(*[
             dashed_line.copy().move_to(
                 self.coords_to_point(limit_x, 0)[0]*RIGHT+\
                 result.output_range.get_edge_center(vect)[1]*UP
             )
-            for vect in DOWN, UP
+            for vect in (DOWN, UP)
         ])
 
         result.digest_mobject_attrs()
@@ -1237,12 +1201,12 @@ class LimitCounterExample(GraphLimitExpression):
     CONFIG = {
         "x_min" : -8,
         "x_max" : 8,
-        "x_labeled_nums" : range(-8, 10, 2),
-        "x_axis_width" : 2*SPACE_WIDTH - LARGE_BUFF,
+        "x_labeled_nums" : list(range(-8, 10, 2)),
+        "x_axis_width" : FRAME_WIDTH - LARGE_BUFF,
         "y_min" : -4,
         "y_max" : 4,
-        "y_labeled_nums" : range(-2, 4, 1),
-        "y_axis_height" : 2*SPACE_HEIGHT+2*LARGE_BUFF,
+        "y_labeled_nums" : list(range(-2, 4, 1)),
+        "y_axis_height" : FRAME_HEIGHT+2*LARGE_BUFF,
         "graph_origin" : DOWN,
         "graph_color" : BLUE,
         "hole_radius" : 0.075,
@@ -1289,11 +1253,11 @@ class LimitCounterExample(GraphLimitExpression):
         )
 
         self.play(ShowCreation(graph, run_time = 5))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             left_hole.copy().set_stroke(YELLOW), right_hole
         ))
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.graph_holes = VGroup(left_hole, right_hole)
@@ -1318,13 +1282,13 @@ class LimitCounterExample(GraphLimitExpression):
             return lines
 
         for lines in right_lines, left_lines:
-            self.play(*map(ShowCreation, lines))
+            self.play(*list(map(ShowCreation, lines)))
             self.play(UpdateFromAlphaFunc(
                 lines, update_lines,
                 run_time = 3
             ))
             self.play(lines.set_stroke, GREY, 3)
-            self.dither()
+            self.wait()
 
         self.ed_group = ed_group
 
@@ -1332,21 +1296,21 @@ class LimitCounterExample(GraphLimitExpression):
         limit = TexMobject(
             "\\lim", "_{h", "\\to 0}", "f(", "h", ")"
         )
-        limit.highlight_by_tex("h", GREEN)
+        limit.set_color_by_tex("h", GREEN)
         limit.move_to(self.coords_to_point(2, 1.5))
 
         words = TextMobject("is not defined")
-        words.highlight(RED)
+        words.set_color(RED)
         words.next_to(limit, RIGHT, align_using_submobjects = True)
 
         limit_group = VGroup(limit, words)
 
         self.play(Write(limit))
-        self.dither()
+        self.wait()
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(limit_group.to_corner, UP+LEFT)
-        self.dither()
+        self.wait()
 
     def show_epsilon_delta_intuition(self):
         ed_group = self.ed_group
@@ -1355,7 +1319,7 @@ class LimitCounterExample(GraphLimitExpression):
             ed_group.epsilon_lines.restore,
         )
         self.play(ShowCreation(ed_group.input_range))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             ed_group.input_range.copy(),
             ed_group.output_range,
@@ -1363,7 +1327,7 @@ class LimitCounterExample(GraphLimitExpression):
         ))
         self.graph.remove(*self.graph_holes)
         self.remove(*self.graph_holes)
-        self.dither()
+        self.wait()
         self.animate_epsilon_delta_group_change(
             ed_group, target_delta = self.small_delta,
             run_time = 6
@@ -1376,7 +1340,7 @@ class LimitCounterExample(GraphLimitExpression):
             GrowFromCenter(brace),
             Write(brace_text)
         )
-        self.dither()
+        self.wait()
         run_time_rate_func_pairs = [
             (3, lambda t : 1 - there_and_back(t)),
             (1, lambda t : 1 - 0.2*there_and_back(3*t % 1)),
@@ -1388,7 +1352,7 @@ class LimitCounterExample(GraphLimitExpression):
                 run_time = run_time,
                 rate_func = rate_func,
             )
-            self.dither()
+            self.wait()
 
     #####
 
@@ -1433,7 +1397,7 @@ class PrefaceToEpsilonDeltaDefinition(TeacherStudentsScene):
             self.get_teacher().change_mode, "raise_right_hand",
         )
         self.change_student_modes(*["confused"]*3)
-        self.dither()
+        self.wait()
         self.student_says(
             "Isn't that pretty \\\\ technical?",
             target_mode = "guilty",
@@ -1444,25 +1408,25 @@ class PrefaceToEpsilonDeltaDefinition(TeacherStudentsScene):
             ]
         )
         self.look_at(self.get_teacher().eyes, self.get_students())
-        self.dither()
+        self.wait()
         self.teacher_says("", bubble_kwargs = {"stroke_width" : 0})
         self.change_student_modes(
             *["pondering"]*3,
             look_at_arg = UP+LEFT,
             added_anims = [self.get_teacher().look_at, UP+LEFT]
         )
-        self.dither(3)
+        self.wait(3)
         words = TextMobject(
             "It's a glimpse of\\\\",
             "real analysis"
         )
-        words.highlight_by_tex("real", YELLOW)
+        words.set_color_by_tex("real", YELLOW)
         self.teacher_says(
             words, 
             bubble_kwargs = {"height" : 3, "width" : 6}
         )
         self.change_student_modes(*["happy"]*3)
-        self.dither(6)
+        self.wait(6)
 
 class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
     CONFIG = {
@@ -1492,10 +1456,10 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         self.revert_to_original_skipping_status()
 
     def introduce_epsilon(self):
-        epsilon_group, small_epsilon_group = map(
+        epsilon_group, small_epsilon_group = list(map(
             self.get_epsilon_group,
             self.epsilon_list[:2]
-        )
+        ))
 
         twelve_line = epsilon_group.limit_line
         twelve = self.rhs[-1]
@@ -1513,27 +1477,27 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         self.play(ShowCreation(twelve_line))
         self.play(Write(twelve_copy))
         self.play(ReplacementTransform(twelve_copy, twelve))
-        self.dither()
+        self.wait()
 
         self.play(*it.chain(
             [
                 ReplacementTransform(twelve_line.copy(), line)
                 for line in epsilon_group.epsilon_lines
             ], 
-            map(GrowFromCenter, epsilon_group.braces),
+            list(map(GrowFromCenter, epsilon_group.braces)),
         ))
-        self.play(*map(Write, epsilon_group.labels))
+        self.play(*list(map(Write, epsilon_group.labels)))
         self.play(
             Write(distance),
             ShowCreation(arrows)
         )
-        self.dither()
-        self.play(*map(FadeOut, [distance, arrows]))
+        self.wait()
+        self.play(*list(map(FadeOut, [distance, arrows])))
         self.play(Transform(
             epsilon_group, small_epsilon_group,
             run_time = 2
         ))
-        self.dither()
+        self.wait()
 
         self.epsilon_group = epsilon_group
 
@@ -1551,7 +1515,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         )
         self.ed_group.delta = self.delta_list[1]
         self.ed_group.input_range.make_jagged()
-        self.dither()
+        self.wait()
 
     def zoom_in(self):
         self.ed_group.input_range.make_jagged()
@@ -1561,15 +1525,15 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         lil_rect.move_to(self.graph_origin)
         lil_rect.scale_in_place(self.zoom_factor)
         self.add(self.holes)
-        self.dither()
+        self.wait()
         self.play(lil_rect.scale_in_place, 1./self.zoom_factor)
-        self.dither()
+        self.wait()
 
     def introduce_delta(self):
         delta_group = self.get_delta_group(self.delta_list[1])
-        self.play(*map(GrowFromCenter, delta_group.braces))
-        self.play(*map(Write, delta_group.labels))
-        self.dither()
+        self.play(*list(map(GrowFromCenter, delta_group.braces)))
+        self.play(*list(map(Write, delta_group.labels)))
+        self.wait()
         self.play(
             ReplacementTransform(
                 self.ed_group.input_range.copy(),
@@ -1582,7 +1546,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             VGroup(self.ed_group.output_range, self.holes[1]),
             direction = RIGHT
         ))
-        self.dither(2)
+        self.wait(2)
 
         self.delta_group = delta_group
 
@@ -1593,7 +1557,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             self.epsilon_group,
             self.get_epsilon_group(new_epsilon)
         ))
-        self.dither()
+        self.wait()
         self.animate_epsilon_delta_group_change(
             self.ed_group, target_delta = new_delta,
             added_anims = [
@@ -1607,18 +1571,18 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             ]
         )
         self.ed_group.input_range.make_jagged()
-        self.dither(2)
+        self.wait(2)
 
     ##
 
     def get_epsilon_group(self, epsilon, limit_value = 12):
         result = VGroup()
-        line_length = 2*SPACE_HEIGHT
+        line_length = FRAME_HEIGHT
         lines = [
             Line(
                 ORIGIN, line_length*RIGHT,
             ).move_to(self.coords_to_point(0, limit_value+nudge))
-            for nudge in 0, -epsilon, epsilon
+            for nudge in (0, -epsilon, epsilon)
         ]
         result.limit_line = lines[0]
         result.limit_line.set_stroke(RED, width = 3)
@@ -1626,10 +1590,10 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
         result.epsilon_lines.set_stroke(MAROON_B, width = 2)
         brace = Brace(Line(ORIGIN, 0.5*UP), RIGHT)
         result.braces = VGroup(*[
-            brace.copy().scale_to_fit_height(
+            brace.copy().set_height(
                 group.get_height()
             ).next_to(group, RIGHT, SMALL_BUFF)
-            for i in 1, 2
+            for i in (1, 2)
             for group in [VGroup(lines[0], lines[i])]
         ])
         result.labels = VGroup(*[
@@ -1637,7 +1601,7 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
             for brace in result.braces
         ])
         for label, brace in zip(result.labels, result.braces):
-            label.scale_to_fit_height(min(
+            label.set_height(min(
                 label.get_height(),
                 0.8*brace.get_height()
             ))
@@ -1648,12 +1612,12 @@ class EpsilonDeltaExample(GraphLimitExpression, ZoomedScene):
     def get_delta_group(self, delta):
         result = VGroup()
         brace = Brace(Line(ORIGIN, RIGHT), DOWN)
-        brace.scale_to_fit_width(
+        brace.set_width(
             (self.coords_to_point(delta, 0)-self.graph_origin)[0]
         )
         result.braces = VGroup(*[
             brace.copy().move_to(self.coords_to_point(x, 0))
-            for x in -delta/2, delta/2
+            for x in (-delta/2, delta/2)
         ])
         result.braces.shift(self.holes[0].get_height()*DOWN)
         result.labels = VGroup(*[
@@ -1697,18 +1661,18 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
                 )
                 for line in epsilon_group.epsilon_lines
             ],
-            map(GrowFromCenter, epsilon_group.braces)
+            list(map(GrowFromCenter, epsilon_group.braces))
         ))
-        self.play(*map(Write, epsilon_group.labels))
+        self.play(*list(map(Write, epsilon_group.labels)))
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
 
         self.epsilon_group = epsilon_group
 
     def introduce_epsilon_delta_group(self):
         ed_group = self.get_epsilon_delta_group(self.big_delta)
 
-        self.play(*map(ShowCreation, ed_group.delta_lines))
+        self.play(*list(map(ShowCreation, ed_group.delta_lines)))
         self.play(ShowCreation(ed_group.input_range))
         self.play(ReplacementTransform(
             ed_group.input_range.copy(),
@@ -1716,14 +1680,14 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
             run_time = 2
         ))
         self.remove(self.graph_holes)
-        self.play(*map(GrowFromCenter, ed_group.epsilon_lines))
-        self.dither(2)
+        self.play(*list(map(GrowFromCenter, ed_group.epsilon_lines)))
+        self.wait(2)
         self.animate_epsilon_delta_group_change(
             ed_group, target_delta = self.small_delta,
             run_time = 3
         )
         ed_group.delta = self.small_delta
-        self.dither()
+        self.wait()
 
         self.ed_group = ed_group
 
@@ -1735,9 +1699,9 @@ class EpsilonDeltaCounterExample(LimitCounterExample, EpsilonDeltaExample):
         ]
         for vect in vects:
             self.play(self.epsilon_group.shift, vect)
-            self.dither()
+            self.wait()
             self.shake_ed_group()
-            self.dither()
+            self.wait()
 
     ##
 
@@ -1759,12 +1723,12 @@ class TheoryHeavy(TeacherStudentsScene):
             "\\over \\,", "h}"
         )
         derivative = VGroup(lhs, equals, rhs)
-        derivative.arrange_submobjects(RIGHT)
+        derivative.arrange(RIGHT)
         for tex_mob in derivative:
-            tex_mob.highlight_by_tex("x", RED)
-            tex_mob.highlight_by_tex("h", GREEN)
-            tex_mob.highlight_by_tex("dx", GREEN)
-            tex_mob.highlight_by_tex("f", YELLOW)
+            tex_mob.set_color_by_tex("x", RED)
+            tex_mob.set_color_by_tex("h", GREEN)
+            tex_mob.set_color_by_tex("dx", GREEN)
+            tex_mob.set_color_by_tex("f", YELLOW)
         derivative.next_to(self.get_pi_creatures(), UP, buff = MED_LARGE_BUFF)
 
         lim = rhs.get_part_by_tex("lim")
@@ -1778,7 +1742,7 @@ class TheoryHeavy(TeacherStudentsScene):
             target_mode = "angry",
             content_introduction_kwargs = {"run_time" : 2},
         )
-        self.dither()
+        self.wait()
         student = self.get_students()[1]
         Scene.play(self,
             Write(lhs),
@@ -1816,12 +1780,12 @@ class TheoryHeavy(TeacherStudentsScene):
                 np.linspace(0, 0.5, len(part_tex_pairs))
             )
         ])
-        self.dither(2)
+        self.wait(2)
         self.play(
             Write(epsilon_delta),
             ShowCreation(arrow)
         )
-        self.dither(3)
+        self.wait(3)
         derivative.add(epsilon_delta, arrow)
         self.student_says(
             "How do you \\\\ compute limits?",
@@ -1832,21 +1796,21 @@ class TheoryHeavy(TeacherStudentsScene):
             ]
         )
         self.play(self.get_teacher().change_mode, "happy")
-        self.dither(2)
+        self.wait(2)
 
 class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, ReconfigurableScene):
     CONFIG = {
         "graph_origin" : ORIGIN,
-        "x_axis_width" : 2*SPACE_WIDTH,
+        "x_axis_width" : FRAME_WIDTH,
         "x_min" : -5,
         "x_max" : 5,
-        "x_labeled_nums" : range(-6, 8, 2),
+        "x_labeled_nums" : list(range(-6, 8, 2)),
         "x_axis_label" : "$x$",
-        "y_axis_height" : 2*SPACE_HEIGHT,
+        "y_axis_height" : FRAME_HEIGHT,
         "y_min" : -3.1,
         "y_max" : 3.1,
         "y_bottom_tick" : -4,
-        "y_labeled_nums" : range(-2, 4, 2),
+        "y_labeled_nums" : list(range(-2, 4, 2)),
         "y_axis_label" : "",
         "x_color" : RED,
         "hole_radius" : 0.07,
@@ -1859,7 +1823,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         "parabola_color" : YELLOW,
         "zoomed_canvas_corner" : DOWN+LEFT,
         "zoom_factor" : 10,
-        "zoomed_canvas_space_shape" : (5, 5),
+        "zoomed_canvas_frame_shape" : (5, 5),
         "zoomed_canvas_corner_buff" : MED_SMALL_BUFF,
         "zoomed_rect_center_coords" : (1 + 0.1, -0.03),
     }
@@ -1883,11 +1847,11 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
 
     def setup_axes(self):
         GraphScene.setup_axes(self)
-        self.x_axis_label_mob.highlight(self.x_color)
+        self.x_axis_label_mob.set_color(self.x_color)
 
     def introduce_function(self):
         graph = self.get_graph(self.func)
-        colored_graph = graph.copy().highlight(YELLOW)
+        colored_graph = graph.copy().set_color(YELLOW)
         func_label = self.get_func_label()
         func_label.next_to(ORIGIN, RIGHT, buff = LARGE_BUFF)
         func_label.to_edge(UP)
@@ -1904,14 +1868,14 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         self.play(ShowCreation(
             graph,
             run_time = 3,
-            rate_func = None
+            rate_func=linear
         ))
-        self.dither(4) ## Overly oscillation
+        self.wait(4) ## Overly oscillation
         self.play(ShowCreation(colored_graph, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(graph, run_time = 2))
         self.remove(colored_graph)
-        self.dither()
+        self.wait()
 
         self.graph = graph
         self.func_label = func_label
@@ -1919,7 +1883,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
     def show_non_definedness_at_one(self):
         morty = self.get_primary_pi_creature()
         words = TexMobject("\\text{Try }", "x", "=1")
-        words.highlight_by_tex("x", self.x_color, substring = False)
+        words.set_color_by_tex("x", self.x_color, substring = False)
 
         v_line, alt_v_line = [
             self.get_vertical_line_to_graph(
@@ -1927,11 +1891,11 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 line_class = DashedLine,
                 color = self.x_color
             )
-            for x in 1, -1
+            for x in (1, -1)
         ]
         hole, alt_hole = [
             self.get_hole(x, self.func(x))
-            for x in 1, -1
+            for x in (1, -1)
         ]
         ed_group = self.get_epsilon_delta_group(
             self.big_delta, limit_x = 1,
@@ -1945,7 +1909,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         func_1_group.add_to_back(BackgroundRectangle(func_1_group))
 
         lim = TexMobject("\\lim", "_{x", "\\to 1}")
-        lim.highlight_by_tex("x", self.x_color)
+        lim.set_color_by_tex("x", self.x_color)
         lim.move_to(self.func_label, LEFT)
         self.func_label.generate_target()
         self.func_label.target.next_to(lim, RIGHT)
@@ -1968,21 +1932,21 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 func_1
             )
         )
-        self.dither(2)
+        self.wait(2)
         self.play(Write(VGroup(*rhs[:-1])))
-        self.dither()
+        self.wait()
         self.play(Write(rhs[-1]))
-        self.dither()
+        self.wait()
         self.play(GrowFromCenter(hole))
-        self.dither()
+        self.wait()
 
         self.play(ShowCreation(alt_v_line))
         self.play(GrowFromCenter(alt_hole))
-        self.dither()
+        self.wait()
         alt_group = VGroup(alt_v_line, alt_hole)
         self.play(alt_group.set_stroke, GREY, 2)
         self.play(FocusOn(hole))
-        self.dither()
+        self.wait()
 
         self.play(GrowFromCenter(ed_group.input_range))
         self.play(
@@ -1990,15 +1954,15 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 ed_group.input_range.copy(),
                 ed_group.output_range
             ),
-            *map(ShowCreation, ed_group.delta_lines)
+            *list(map(ShowCreation, ed_group.delta_lines))
         )
-        self.play(*map(GrowFromCenter, ed_group.epsilon_lines))
+        self.play(*list(map(GrowFromCenter, ed_group.epsilon_lines)))
         self.play(morty.change_mode, "thinking")
         self.animate_epsilon_delta_group_change(
             ed_group, target_delta = self.small_delta,
             run_time = 4
         )
-        self.dither()
+        self.wait()
         self.play(
             Write(lim),
             MoveToTarget(self.func_label),
@@ -2006,12 +1970,12 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             morty.change_mode, "confused", 
             morty.look_at, lim
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             func_1_group.to_corner, UP+LEFT,
-            *map(FadeOut, [morty, ed_group])
+            *list(map(FadeOut, [morty, ed_group]))
         )
-        self.dither()
+        self.wait()
 
         self.lim_group = VGroup(lim, self.func_label, equals_q)
         for part in self.lim_group:
@@ -2027,7 +1991,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         rhs = TexMobject("= %.4f\\dots"%result)
         rhs.next_to(label, RIGHT)
         approx_group = VGroup(label, rhs)
-        approx_group.scale_to_fit_width(SPACE_WIDTH-2*MED_LARGE_BUFF)
+        approx_group.set_width(FRAME_X_RADIUS-2*MED_LARGE_BUFF)
         approx_group.next_to(ORIGIN, UP, buff = MED_LARGE_BUFF)
         approx_group.to_edge(RIGHT)
 
@@ -2035,9 +1999,9 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             self.func_label.copy(),
             label
         ))
-        self.dither()
+        self.wait()
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
 
         self.approx_group = approx_group
 
@@ -2063,7 +2027,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 "width" : 4,
             },
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             RemovePiCreatureBubble(
                 morty, target_mode = "raise_left_hand",
@@ -2074,7 +2038,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 morty.get_corner(UP+LEFT), DOWN+LEFT,
             self.func_1_group.shift, MED_LARGE_BUFF*UP,
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             morty.change_mode, "raise_right_hand",
             morty.look, UP+RIGHT,
@@ -2083,7 +2047,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             self.lim_group.next_to, 
                 morty.get_corner(UP+RIGHT), RIGHT,
         )
-        self.dither(2)
+        self.wait(2)
         self.play(
             FadeOut(self.func_1_group),
             self.lim_group.scale, self.tex_scale_value,
@@ -2092,7 +2056,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             # self.lim_group.to_edge, LEFT,
             morty.change_mode, "plain"
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(morty))
 
     def show_graph_of_numerator_and_denominator(self):
@@ -2114,13 +2078,13 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         )
         fader = VGroup(*[
             Rectangle(
-                width = 2*SPACE_WIDTH,
-                height = 2*SPACE_HEIGHT,
+                width = FRAME_WIDTH,
+                height = FRAME_HEIGHT,
                 stroke_width = 0,
                 fill_opacity = 0.75,
                 fill_color = BLACK,
             ).next_to(self.coords_to_point(1, 0), vect, MED_LARGE_BUFF)
-            for vect in LEFT, RIGHT
+            for vect in (LEFT, RIGHT)
         ])
 
         self.play(
@@ -2128,12 +2092,12 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             Animation(self.lim_group)
         )
         self.play(FadeIn(sine_label))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(parabola, run_time = 2))
         self.play(FadeIn(parabola_label))
-        self.dither()
+        self.wait()
         self.play(FadeIn(fader, run_time = 2))
-        self.dither()
+        self.wait()
         self.play(FadeOut(fader))
 
         self.sine_graph = sine_graph
@@ -2148,9 +2112,9 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         lil_rect.move_to(self.coords_to_point(
             *self.zoomed_rect_center_coords
         ))
-        self.dither()
+        self.wait()
         self.play(lil_rect.scale_in_place, 1./self.zoom_factor)
-        self.dither()
+        self.wait()
 
     def talk_through_sizes_of_nudges(self):
         arrow_tip_length = 0.15/self.zoom_factor
@@ -2179,7 +2143,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 tip_length = arrow_tip_length,
                 color = graph.get_color()
             )
-            for graph in self.sine_graph, self.parabola
+            for graph in (self.sine_graph, self.parabola)
         ]
         tex_arrow_pairs = [
             [("d\\big(", "\\sin(", "\\pi", "x", ")", "\\big)"), d_sine_arrow],
@@ -2190,8 +2154,8 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         d_labels = []
         for tex_args, arrow in tex_arrow_pairs:
             label = TexMobject(*tex_args)
-            label.highlight_by_tex("x", self.x_color)
-            label.highlight_by_tex("dx", self.dx_color)
+            label.set_color_by_tex("x", self.x_color)
+            label.set_color_by_tex("dx", self.dx_color)
             label.scale(zoom_tex_scale_factor)
             label.next_to(arrow, RIGHT, buff = SMALL_BUFF/self.zoom_factor)
             d_labels.append(label)
@@ -2200,18 +2164,18 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         #Show dx        
         self.play(ShowCreation(dx_arrow))
         self.play(Write(dx_label))
-        self.dither()
+        self.wait()
 
         #Show d_sine bump
         point = VectorizedPoint(self.coords_to_point(1, 0))
         self.play(ReplacementTransform(point, d_sine_arrow))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             VGroup(dx_label[1].copy()),
             d_sine_label,
             run_time = 2
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             d_sine_label.shift, d_sine_label.get_height()*UP
         )
@@ -2238,9 +2202,9 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 )
                 for t1, t2 in tex_pairs
             ])
-            self.dither()
+            self.wait()
         self.play(FadeOut(d_sine_label))
-        self.dither()
+        self.wait()
 
         #Substitute x = 1
         self.substitute_x_equals_1(cos_dx, zoom_tex_scale_factor)
@@ -2249,7 +2213,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         cos_pi = VGroup(*cos_dx[:-1])
         cos = VGroup(*cos_dx[:-2])
         brace = Brace(Line(LEFT, RIGHT), UP)
-        brace.scale_to_fit_width(cos_pi.get_width())
+        brace.set_width(cos_pi.get_width())
         brace.move_to(cos_pi.get_top(), DOWN)
         brace_text = TextMobject(
             """
@@ -2268,25 +2232,25 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
 
         self.play(GrowFromCenter(brace))
         self.play(Write(brace_text))
-        self.dither(2)
+        self.wait(2)
         self.play(
-            brace.scale_to_fit_width, cos.get_width(),
+            brace.set_width, cos.get_width(),
             brace.next_to, cos, UP, SMALL_BUFF/self.zoom_factor,
             FadeOut(brace_text)
         )
         neg_one.next_to(brace, UP, SMALL_BUFF/self.zoom_factor)
         self.play(Write(neg_one))
-        self.dither()
+        self.wait()
         self.play(FadeOut(cos))
         neg = neg_one.get_part_by_tex("-").copy()
         self.play(neg.next_to, cos_dx[-2], LEFT, SMALL_BUFF/self.zoom_factor)
-        self.play(*map(FadeOut, [neg_one, brace]))
+        self.play(*list(map(FadeOut, [neg_one, brace])))
         neg_pi_dx = VGroup(neg, *cos_dx[-2:])
         self.play(
             neg_pi_dx.next_to, d_sine_arrow, 
             RIGHT, SMALL_BUFF/self.zoom_factor
         )
-        self.dither()
+        self.wait()
 
         #Show d_parabola bump
         point = VectorizedPoint(self.coords_to_point(1, 0))
@@ -2296,7 +2260,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             d_parabola_label,
             run_time = 2
         ))
-        self.dither(2)
+        self.wait(2)
         self.play(
             d_parabola_label.shift, d_parabola_label.get_height()*UP
         )
@@ -2318,9 +2282,9 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
                 )
                 for t1, t2 in tex_pairs
             ])
-        self.dither()
+        self.wait()
         self.play(FadeOut(d_parabola_label))
-        self.dither()
+        self.wait()
 
         #Substitute x = 1
         self.substitute_x_equals_1(two_x_dx, zoom_tex_scale_factor)
@@ -2335,25 +2299,25 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             buff = MED_SMALL_BUFF/self.zoom_factor,
             aligned_edge = LEFT
         )
-        equation.highlight_by_tex("x", self.x_color)
-        equation.highlight_by_tex("1", self.x_color)
+        equation.set_color_by_tex("x", self.x_color)
+        equation.set_color_by_tex("1", self.x_color)
         dot_one = TexMobject("\\cdot", "1")
         dot_one.scale(zoom_tex_scale_factor)
-        dot_one.highlight(self.x_color)
+        dot_one.set_color(self.x_color)
         dot_one.move_to(x, DOWN+LEFT)
 
         self.play(x.move_to, eq_x)
-        self.dither()
+        self.wait()
         self.play(
             ReplacementTransform(x.copy(), eq_x),
             Transform(x, one),
             Write(equals)
         )
-        self.dither()
+        self.wait()
         self.play(Transform(x, dot_one))
-        self.dither()
-        self.play(*map(FadeOut, [eq_x, equals]))
-        self.dither()
+        self.wait()
+        self.play(*list(map(FadeOut, [eq_x, equals])))
+        self.wait()
 
     def show_final_ratio(self):
         lim, ratio, equals_q = self.lim_group
@@ -2383,25 +2347,25 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             self.play(ApplyWave(
                 mob, direction = UP+RIGHT, amplitude = 0.1
             ))
-            self.dither()
+            self.wait()
         self.play(ReplacementTransform(equals_q, rhs))
-        self.dither()
+        self.wait()
 
         #Cancel dx's
-        self.play(*map(ShowCreation, circles), run_time = 2)
-        self.dither()
+        self.play(*list(map(ShowCreation, circles)), run_time = 2)
+        self.wait()
         self.play(dxs.fade, 0.75, FadeOut(circles))
-        self.dither()
+        self.wait()
 
         #Shrink dx
         self.transition_to_alt_config(
             transformation_kwargs = {"run_time" : 2},
             dx = self.dx/10
         )
-        self.dither()
+        self.wait()
         self.play(Transform(approx, equals))
         self.play(Indicate(approx))
-        self.dither()
+        self.wait()
 
         self.final_ratio = rhs
 
@@ -2411,15 +2375,15 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
         height.add_background_rectangle()
         
         self.disactivate_zooming()
-        self.play(*map(FadeOut, [
+        self.play(*list(map(FadeOut, [
             self.sine_graph, self.sine_label,
             self.parabola, self.parabola_label,
-        ]) + [
+        ])) + [
             Animation(self.final_ratio)
         ])
         self.play(GrowFromCenter(brace))
         self.play(Write(height))
-        self.dither(2)
+        self.wait(2)
 
     ##
 
@@ -2439,7 +2403,7 @@ class LHopitalExample(LimitCounterExample, PiCreatureScene, ZoomedScene, Reconfi
             "{\\sin(\\pi ", in_tex, ")", " \\over \\,",
             in_tex, "^2 - 1}"
         )
-        result.highlight_by_tex(in_tex, self.x_color)
+        result.set_color_by_tex(in_tex, self.x_color)
         return result
 
     def get_epsilon_delta_group(self, delta, **kwargs):
@@ -2464,19 +2428,19 @@ class DerivativeLimitReciprocity(Scene):
     def construct(self):
         arrow = Arrow(LEFT, RIGHT, color = WHITE)
         lim = TexMobject("\\lim", "_{h", "\\to 0}")
-        lim.highlight_by_tex("h", GREEN)
+        lim.set_color_by_tex("h", GREEN)
         lim.next_to(arrow, LEFT)
         deriv = TexMobject("{df", "\\over\\,", "dx}")
-        deriv.highlight_by_tex("dx", GREEN)
-        deriv.highlight_by_tex("df", YELLOW)
+        deriv.set_color_by_tex("dx", GREEN)
+        deriv.set_color_by_tex("df", YELLOW)
         deriv.next_to(arrow, RIGHT)
 
-        self.play(FadeIn(lim, submobject_mode = "lagged_start"))
+        self.play(FadeIn(lim, lag_ratio = 0.5))
         self.play(ShowCreation(arrow))
-        self.play(FadeIn(deriv, submobject_mode = "lagged_start"))
-        self.dither()
+        self.play(FadeIn(deriv, lag_ratio = 0.5))
+        self.wait()
         self.play(Rotate(arrow, np.pi, run_time = 2))
-        self.dither()
+        self.wait()
 
 class GeneralLHoptial(LHopitalExample):
     CONFIG = {
@@ -2519,19 +2483,19 @@ class GeneralLHoptial(LHopitalExample):
         a_label = TexMobject("x = a")
         a_label.next_to(a_dot, UP, LARGE_BUFF)
         a_arrow = Arrow(a_label.get_bottom(), a_dot, buff = SMALL_BUFF)
-        VGroup(a_dot, a_label, a_arrow).highlight(self.x_color)
+        VGroup(a_dot, a_label, a_arrow).set_color(self.x_color)
 
         self.play(ShowCreation(f_graph), Write(f_label))
         self.play(ShowCreation(g_graph), Write(g_label))
-        self.dither()
+        self.wait()
 
         self.play(
             Write(a_label),
             ShowCreation(a_arrow),
             ShowCreation(a_dot),
         )
-        self.dither()
-        self.play(*map(FadeOut, [a_label, a_arrow]))
+        self.wait()
+        self.play(*list(map(FadeOut, [a_label, a_arrow])))
 
         self.a_dot = a_dot
         self.f_graph = f_graph
@@ -2546,19 +2510,19 @@ class GeneralLHoptial(LHopitalExample):
         lil_rect.move_to(self.coords_to_point(
             *self.zoomed_rect_center_coords
         ))
-        self.dither()
+        self.wait()
         self.play(
             lil_rect.scale_in_place, 1./self.zoom_factor,
             self.a_dot.scale_in_place, 1./self.zoom_factor,
             run_time = 3,
         )
-        self.dither()
+        self.wait()
 
     def show_limit_in_symbols(self):
         frac_a = self.get_frac("a", self.x_color)
         frac_x = self.get_frac("x")
         lim = TexMobject("\\lim", "_{x", "\\to", "a}")
-        lim.highlight_by_tex("a", self.x_color)
+        lim.set_color_by_tex("a", self.x_color)
         equals_zero_over_zero = TexMobject(
             "=", "{\\, 0 \\,", "\\over \\,", "0 \\,}"
         )
@@ -2581,9 +2545,9 @@ class GeneralLHoptial(LHopitalExample):
             Write(frac_a.over),
             run_time = 2
         )
-        self.dither()
+        self.wait()
         self.play(Write(equals_zero_over_zero))
-        self.dither(2)
+        self.wait(2)
         self.play(
             ReplacementTransform(
                 VGroup(*frac_a.get_parts_by_tex("a")),
@@ -2598,7 +2562,7 @@ class GeneralLHoptial(LHopitalExample):
         self.play(ReplacementTransform(
             equals_zero_over_zero, equals_q
         ))
-        self.dither()
+        self.wait()
 
         self.remove(frac_a)
         self.add(frac_x)
@@ -2636,7 +2600,7 @@ class GeneralLHoptial(LHopitalExample):
                 tip_length = arrow_tip_length,
                 color = graph.get_color()
             )
-            for graph in self.f_graph, self.g_graph
+            for graph in (self.f_graph, self.g_graph)
         ]
         v_labels = []
         for char, arrow in ("f", df_arrow), ("g", dg_arrow):
@@ -2644,8 +2608,8 @@ class GeneralLHoptial(LHopitalExample):
                 "\\frac{d%s}{dx}"%char, "(", "a", ")", "\\,dx"
             )
             label.scale(zoom_tex_scale_factor)
-            label.highlight_by_tex("a", self.x_color)
-            label.highlight_by_tex("frac", arrow.get_color())
+            label.set_color_by_tex("a", self.x_color)
+            label.set_color_by_tex("frac", arrow.get_color())
             label.next_to(arrow, RIGHT, z_small_buff)
             v_labels.append(label)
         df_label, dg_label = v_labels
@@ -2653,15 +2617,15 @@ class GeneralLHoptial(LHopitalExample):
         self.play(ShowCreation(dx_arrow))
         self.play(Write(dx_label))
         self.play(Indicate(dx_label))
-        self.dither(2)
+        self.wait(2)
 
         self.play(ShowCreation(df_arrow))
         self.play(Write(df_label))
-        self.dither()
+        self.wait()
 
         self.play(ShowCreation(dg_arrow))
         self.play(Write(dg_label))
-        self.dither()
+        self.wait()
 
     def show_derivative_ratio(self):
         q_marks = VGroup(*self.equals_q[1:])
@@ -2671,9 +2635,9 @@ class GeneralLHoptial(LHopitalExample):
             "\\over \\,",
             "\\frac{dg}{dx}", "(", "a", ")", "\\,dx}",
         )
-        deriv_ratio.highlight_by_tex("a", self.x_color)
-        deriv_ratio.highlight_by_tex("df", self.f_color)
-        deriv_ratio.highlight_by_tex("dg", self.g_color)
+        deriv_ratio.set_color_by_tex("a", self.x_color)
+        deriv_ratio.set_color_by_tex("df", self.f_color)
+        deriv_ratio.set_color_by_tex("dg", self.g_color)
         deriv_ratio.move_to(q_marks, LEFT)
 
         dxs = VGroup(*deriv_ratio.get_parts_by_tex("\\,dx"))
@@ -2684,18 +2648,18 @@ class GeneralLHoptial(LHopitalExample):
 
         self.play(FadeOut(q_marks))
         self.play(Write(deriv_ratio))
-        self.dither(2)
+        self.wait(2)
 
         self.play(FadeIn(circles))
-        self.dither()
+        self.wait()
         self.play(FadeOut(circles), dxs.fade, 0.75)
-        self.dither(2)
+        self.wait(2)
 
         self.transition_to_alt_config(
             transformation_kwargs = {"run_time" : 2},
             dx = self.dx/10,
         )
-        self.dither()
+        self.wait()
 
     def show_example(self):
         lhs = TexMobject(
@@ -2711,7 +2675,7 @@ class GeneralLHoptial(LHopitalExample):
         equation = VGroup(lhs, rhs)
         equation.to_corner(UP+RIGHT)
         for part in equation:
-            part.highlight_by_tex("0", self.x_color)
+            part.set_color_by_tex("0", self.x_color)
         brace = Brace(lhs, DOWN)
         brace_text = brace.get_text("Looks like 0/0")
         brace_text.add_background_rectangle()
@@ -2720,28 +2684,28 @@ class GeneralLHoptial(LHopitalExample):
             "``", "L'Hôpital's", " rule", "''",
             arg_separator = ""
         )
-        name.shift(SPACE_WIDTH*RIGHT/2)
+        name.shift(FRAME_X_RADIUS*RIGHT/2)
         name.to_edge(UP)
 
         self.play(Write(lhs))
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(brace),
             Write(brace_text)
         )
-        self.dither()
+        self.wait()
         self.play(Write(rhs[0]), ReplacementTransform(
             VGroup(*lhs[3:6]).copy(),
             VGroup(*rhs[1:4])
         ))
-        self.dither()
+        self.wait()
         self.play(ReplacementTransform(
             VGroup(*lhs[6:8]).copy(),
             VGroup(*rhs[4:6]),
         ))
-        self.dither()
+        self.wait()
         self.play(Write(VGroup(*rhs[6:])))
-        self.dither(2)
+        self.wait(2)
 
         ##Slide away
         example = VGroup(lhs, rhs, brace, brace_text)
@@ -2751,7 +2715,7 @@ class GeneralLHoptial(LHopitalExample):
             path_arc = 7*np.pi/6,
         )
         self.play(Write(name))
-        self.dither(2)
+        self.wait(2)
 
         self.rule_name = name
 
@@ -2768,7 +2732,7 @@ class GeneralLHoptial(LHopitalExample):
         bernoulli_image = ImageMobject("Johann_Bernoulli2")
         lhopital_image = ImageMobject("Guillaume_de_L'Hopital")
         for image in bernoulli_image, lhopital_image:
-            image.scale_to_fit_height(self.image_height)
+            image.set_height(self.image_height)
             image.to_edge(UP)
 
         arrow = Arrow(ORIGIN, DOWN, buff = 0, color = GREEN)
@@ -2777,7 +2741,7 @@ class GeneralLHoptial(LHopitalExample):
         for dollar, alpha in zip(dollars, np.linspace(0, 1, len(dollars))):
             angle = alpha*np.pi
             dollar.move_to(np.sin(angle)*RIGHT + np.cos(angle)*UP)
-        dollars.highlight(GREEN)
+        dollars.set_color(GREEN)
         dollars.next_to(arrow, RIGHT, MED_LARGE_BUFF)
         dollars[0].set_fill(opacity = 0)
         dollars.save_state()
@@ -2787,7 +2751,7 @@ class GeneralLHoptial(LHopitalExample):
             Write(bernoulli_name),
             FadeIn(bernoulli_image)
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(lhopital_image),
             bernoulli_image.next_to, arrow, DOWN, SMALL_BUFF,
@@ -2817,9 +2781,9 @@ class GeneralLHoptial(LHopitalExample):
             "{f", "(", input_tex, ")", "\\over \\,",
             "g", "(", input_tex, ")}"
         )
-        result.highlight_by_tex("f", self.f_color)
-        result.highlight_by_tex("g", self.g_color)
-        result.highlight_by_tex(input_tex, color)
+        result.set_color_by_tex("f", self.f_color)
+        result.set_color_by_tex("g", self.g_color)
+        result.set_color_by_tex(input_tex, color)
 
         result.numerator = VGroup(*result[:4])
         result.denominator = VGroup(*result[-4:])
@@ -2837,10 +2801,10 @@ class CannotUseLHopital(TeacherStudentsScene):
             "\\over \\,", "h}"
         )
         deriv.to_edge(UP)
-        deriv.highlight_by_tex("x", RED)
-        deriv.highlight_by_tex("dx", GREEN)
-        deriv.highlight_by_tex("h", GREEN)
-        deriv.highlight_by_tex("e^", YELLOW)
+        deriv.set_color_by_tex("x", RED)
+        deriv.set_color_by_tex("dx", GREEN)
+        deriv.set_color_by_tex("h", GREEN)
+        deriv.set_color_by_tex("e^", YELLOW)
 
         self.play(
             Write(deriv),
@@ -2849,25 +2813,25 @@ class CannotUseLHopital(TeacherStudentsScene):
                 for pi in self.get_pi_creatures()
             ])
         )
-        self.dither()
+        self.wait()
         self.student_says(
             "Use L'Hôpital's rule!", 
             target_mode = "hooray"
         )
-        self.dither()
+        self.wait()
         answer = TexMobject(
             "\\text{That requires knowing }",
             "{d(e^x)", "\\over \\,", "dx}"
         )
-        answer.highlight_by_tex("e^", YELLOW)
-        answer.highlight_by_tex("dx", GREEN)
+        answer.set_color_by_tex("e^", YELLOW)
+        answer.set_color_by_tex("dx", GREEN)
         self.teacher_says(
             answer,
             bubble_kwargs = {"height" : 2.5},
             target_mode = "hesitant"
         )
         self.change_student_modes(*["confused"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class NextVideo(TeacherStudentsScene):
     def construct(self):
@@ -2882,20 +2846,20 @@ class NextVideo(TeacherStudentsScene):
             "{dF", "\\over \\,", "dx}", "(x)", "dx"
         )
         for tex_mob in integral, ftc:
-            tex_mob.highlight_by_tex("dx", GREEN)
-            tex_mob.highlight_by_tex("f", YELLOW)
-            tex_mob.highlight_by_tex("F", YELLOW)
+            tex_mob.set_color_by_tex("dx", GREEN)
+            tex_mob.set_color_by_tex("f", YELLOW)
+            tex_mob.set_color_by_tex("F", YELLOW)
             tex_mob.next_to(brace, DOWN)
 
         self.add(series)
         self.play(
             GrowFromCenter(brace),
-            next_video.highlight, YELLOW,
+            next_video.set_color, YELLOW,
             self.get_teacher().change_mode, "raise_right_hand",
             self.get_teacher().look_at, next_video
         )
         self.play(Write(integral))
-        self.dither(2)
+        self.wait(2)
         self.play(*[
             ReplacementTransform(
                 VGroup(*integral.get_parts_by_tex(p1)),
@@ -2911,10 +2875,10 @@ class NextVideo(TeacherStudentsScene):
             ])
         ]+[
             Write(VGroup(*ftc.get_parts_by_tex(part)))
-            for part in "-", "=", "over", "(x)"
+            for part in ("-", "=", "over", "(x)")
         ])
         self.change_student_modes(*["pondering"]*3)
-        self.dither(3)
+        self.wait(3)
 
 class Chapter7PatreonThanks(PatreonThanks):
     CONFIG = {
@@ -2959,8 +2923,8 @@ class Chapter7PatreonThanks(PatreonThanks):
 class Thumbnail(Scene):
     def construct(self):
         lim = TexMobject("\\lim", "_{h", "\\to 0}")
-        lim.highlight_by_tex("h", GREEN)
-        lim.scale_to_fit_height(5)
+        lim.set_color_by_tex("h", GREEN)
+        lim.set_height(5)
         self.add(lim)
 
 

@@ -1,18 +1,14 @@
 #!/usr/bin/env python
 
+
 import numpy as np
 import itertools as it
 from copy import deepcopy
 import sys
 
-
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
+from manimlib.imports import *
 from script_wrapper import command_line_create_scene
-from inventing_math import divergent_sum, draw_you
+from .inventing_math import divergent_sum, draw_you
 
 
 
@@ -34,7 +30,7 @@ class SimpleText(Scene):
     ]
     @staticmethod
     def args_to_string(text):
-        return initials(filter(lambda c : c in string.letters + " ", text))
+        return initials([c for c in text if c in string.letters + " "])
 
     def construct(self, text):
         self.add(TextMobject(text))

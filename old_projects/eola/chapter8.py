@@ -1,25 +1,5 @@
-from mobject.tex_mobject import TexMobject
-from mobject import Mobject
-from mobject.image_mobject import ImageMobject
-from mobject.vectorized_mobject import VMobject
-
-from animation.animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from topics.geometry import *
-from topics.characters import *
-from topics.functions import *
-from topics.number_line import *
-from topics.numerals import *
-from scene import Scene
-from camera import Camera
-from mobject.svg_mobject import *
-from mobject.tex_mobject import *
-from mobject.vectorized_mobject import *
-
-from topics.matrix import *
-from topics.vector_space_scene import *
-from eola.chapter5 import get_det_text, RightHandRule
+from manimlib.imports import *
+from old_projects.eola.chapter5 import get_det_text, RightHandRule
 
 
 U_COLOR = ORANGE
@@ -43,13 +23,13 @@ class OpeningQuote(Scene):
         words = TextMobject("``Every dimension is special.''")
         words.to_edge(UP)
         author = TextMobject("-Jeff Lagarias")
-        author.highlight(YELLOW)
+        author.set_color(YELLOW)
         author.next_to(words, DOWN, buff = 0.5)
 
         self.play(FadeIn(words))
-        self.dither(1)
+        self.wait(1)
         self.play(Write(author, run_time = 3))
-        self.dither()
+        self.wait()
 
 class LastVideo(Scene):
     def construct(self):
@@ -58,17 +38,17 @@ class LastVideo(Scene):
         """)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 class DoTheSameForCross(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Let's do the same \\\\ for", "cross products")
-        words.highlight_by_tex("cross products", YELLOW)
+        words.set_color_by_tex("cross products", YELLOW)
         self.teacher_says(words, target_mode = "surprised")
         self.random_blink(2)
         self.change_student_modes("pondering")
@@ -81,16 +61,16 @@ class ListSteps(Scene):
     def construct(self):
         title = TextMobject("Two part chapter")
         title.to_edge(UP)
-        h_line = Line(LEFT, RIGHT).scale(SPACE_WIDTH)
+        h_line = Line(LEFT, RIGHT).scale(FRAME_X_RADIUS)
         h_line.next_to(title, DOWN)
         randy = Randolph().flip().to_corner(DOWN+RIGHT)
         randy.look(UP+LEFT)
 
         step_1 = TextMobject("This video: Standard introduction")
         step_2 = TextMobject("Next video: Deeper understanding with ", "linear transformations")
-        step_2.highlight_by_tex("linear transformations", BLUE)
+        step_2.set_color_by_tex("linear transformations", BLUE)
         steps = VGroup(step_1, step_2)
-        steps.arrange_submobjects(DOWN, aligned_edge = LEFT, buff = LARGE_BUFF)
+        steps.arrange(DOWN, aligned_edge = LEFT, buff = LARGE_BUFF)
         steps.next_to(randy, UP)
         steps.to_edge(LEFT, buff = LARGE_BUFF)
 
@@ -98,12 +78,12 @@ class ListSteps(Scene):
         self.play(ShowCreation(h_line))
         for step in steps:
             self.play(Write(step))
-            self.dither()
+            self.wait()
         for step in steps:
             target = step.copy()
             target.scale_in_place(1.1)
-            target.highlight(YELLOW)
-            target.highlight_by_tex("linear transformations", BLUE)
+            target.set_color(YELLOW)
+            target.set_color_by_tex("linear transformations", BLUE)
             step.target = target
             step.save_state()
         self.play(FadeIn(randy))
@@ -120,7 +100,7 @@ class ListSteps(Scene):
             randy.look, LEFT
         )
         self.play(randy.change_mode, "erm")
-        self.dither(2)
+        self.wait(2)
         self.play(randy.change_mode, "pondering")
         self.play(Blink(randy))
 
@@ -157,21 +137,21 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
         self.square.apply_function(transform)
         self.play(
             ShowCreation(self.square),
-            *map(Animation, [self.v, self.w])
+            *list(map(Animation, [self.v, self.w]))
         )
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.square))
         v_copy = self.v.copy()
         w_copy = self.w.copy()
         self.play(v_copy.shift, self.w.get_end())
         self.play(w_copy.shift, self.v.get_end())
-        self.dither()
+        self.wait()
         self.play(
             FadeIn(self.square),
-            *map(Animation, [self.v, self.w, v_copy, w_copy])
+            *list(map(Animation, [self.v, self.w, v_copy, w_copy]))
         )
-        self.dither()
-        self.play(*map(FadeOut, [v_copy, w_copy]))
+        self.wait()
+        self.play(*list(map(FadeOut, [v_copy, w_copy])))
 
     def write_area_words(self):
         times = TexMobject("\\times")
@@ -179,7 +159,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             vect.label.target = vect.label.copy()
             vect.label.target.save_state()
         cross = VGroup(self.v.label.target, times, self.w.label.target)
-        cross.arrange_submobjects(aligned_edge = DOWN)
+        cross.arrange(aligned_edge = DOWN)
         cross.scale(1.5)        
         cross.shift(2.5*UP).to_edge(LEFT)
         cross_rect = BackgroundRectangle(cross)
@@ -203,19 +183,19 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
                     vect.label.target.restore, 
                     rate_func = lambda t : smooth(1-t)
                 )
-                for vect in self.v, self.w
+                for vect in (self.v, self.w)
             ]
         )
-        self.dither()
+        self.wait()
         self.play(ApplyFunction(
-            lambda m : m.scale_in_place(1.2).highlight(RED),
+            lambda m : m.scale_in_place(1.2).set_color(RED),
             times,
             rate_func = there_and_back
         ))
-        self.dither()
+        self.wait()
         self.play(Write(words), Write(equals))
         self.play(ShowCreation(arrow))
-        self.dither()
+        self.wait()
         self.play(FadeOut(arrow))
 
         self.area_words = words
@@ -241,8 +221,8 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
         square.target = self.square
         self.square = square
 
-        positive = TextMobject("Positive").highlight(GREEN)
-        negative = TextMobject("Negative").highlight(RED)
+        positive = TextMobject("Positive").set_color(GREEN)
+        negative = TextMobject("Negative").set_color(RED)
         for word in positive, negative:
             word.add_background_rectangle()
             word.arrow = Arrow(
@@ -255,25 +235,25 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
                 buff = SMALL_BUFF
             )
         minus_sign = TexMobject("-")
-        minus_sign.highlight(RED)
+        minus_sign.set_color(RED)
         minus_sign.move_to(self.area_words, aligned_edge = LEFT)
         self.area_words.target = self.area_words.copy()
         self.area_words.target.next_to(minus_sign, RIGHT)
 
-        self.play(*map(MoveToTarget, [square, self.v, self.w]))
+        self.play(*list(map(MoveToTarget, [square, self.v, self.w])))
         arc = self.get_arc(self.v, self.w, radius = 1.5)
-        arc.highlight(GREEN)
+        arc.set_color(GREEN)
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
         self.play(Write(positive), ShowCreation(positive.arrow))
         self.remove(arc)
         self.play(
             FadeOut(positive), 
             FadeOut(positive.arrow),
-            *[mob.restore for mob in square, self.v, self.w]
+            *[mob.restore for mob in (square, self.v, self.w)]
         )
         arc = self.get_arc(self.v, self.w, radius = 1.5)
-        arc.highlight(RED)
+        arc.set_color(RED)
         self.play(ShowCreation(arc))
         self.play(
             Write(negative),
@@ -281,12 +261,12 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             Write(minus_sign),
             MoveToTarget(self.area_words)
         )
-        self.dither()
-        self.play(*map(FadeOut, [negative, negative.arrow, arc]))
+        self.wait()
+        self.play(*list(map(FadeOut, [negative, negative.arrow, arc])))
 
     def swap_v_and_w(self):
         new_cross = self.cross.copy()
-        new_cross.arrange_submobjects(LEFT, aligned_edge = DOWN)
+        new_cross.arrange(LEFT, aligned_edge = DOWN)
         new_cross.move_to(self.area_words, aligned_edge = LEFT)
         for vect in self.v, self.w:
             vect.remove(vect.label)
@@ -295,7 +275,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             FadeOut(self.area_words),
             Transform(self.cross.copy(), new_cross, path_arc = np.pi/2)
         )
-        self.dither()
+        self.wait()
 
         curr_matrix = np.array([self.v.get_end()[:2], self.w.get_end()[:2]])
         new_matrix = np.array(list(reversed(curr_matrix)))
@@ -310,7 +290,7 @@ class SimpleDefine2dCrossProduct(LinearTransformationScene):
             rate_func = there_and_back,
             run_time = 3
         )
-        self.dither()
+        self.wait()
 
 
     def get_arc(self, v, w, radius = 2):
@@ -344,11 +324,11 @@ class CrossBasisVectors(LinearTransformationScene):
         i_label.target.scale(1.5)
         j_label.target.scale(1.2)
 
-        self.dither()
+        self.wait()
 
         times = TexMobject("\\times")
         cross = VGroup(i_label.target, times, j_label.target)
-        cross.arrange_submobjects()
+        cross.arrange()
         cross.next_to(ORIGIN).shift(1.5*UP)
         cross_rect = BackgroundRectangle(cross)
         eq = TexMobject("= + 1")
@@ -362,11 +342,11 @@ class CrossBasisVectors(LinearTransformationScene):
             Write(times),
         )
         self.play(Write(eq))
-        self.dither()
+        self.wait()
         arc = self.get_arc(self.i_hat, self.j_hat, radius = 1)
-        # arc.highlight(GREEN)
+        # arc.set_color(GREEN)
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
 
 
     def get_arc(self, v, w, radius = 2):
@@ -397,21 +377,21 @@ class VisualExample(SimpleDefine2dCrossProduct):
         val = TexMobject(str(int(abs(result)))).scale(2)
         val.move_to(self.square.get_center())
         arc = self.get_arc(self.v, self.w, radius = 1)
-        arc.highlight(RED)
-        minus = TexMobject("-").highlight(RED)
+        arc.set_color(RED)
+        minus = TexMobject("-").set_color(RED)
         minus.scale(1.5)
         minus.move_to(self.area_words, aligned_edge = LEFT)
 
         self.play(ShowCreation(val))
-        self.dither()
+        self.wait()
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
         self.play(FadeOut(self.area_words))
         self.play(
             Transform(arc, minus),
             val.next_to, minus, RIGHT
         )
-        self.dither()
+        self.wait()
 
     def show_coords(self):
         for vect, edge in (self.v, DOWN), (self.w, UP):        
@@ -444,19 +424,19 @@ class ContrastDotAndCross(Scene):
     def add_t_chart(self):
         for word, vect, color in ("Dot", LEFT, BLUE_C), ("Cross", RIGHT, YELLOW):
             title = TextMobject("%s product"%word)
-            title.shift(vect*SPACE_WIDTH/2)
+            title.shift(vect*FRAME_X_RADIUS/2)
             title.to_edge(UP)
-            title.highlight(color)
+            title.set_color(color)
             self.add(title)
-        v_line = Line(UP, DOWN).scale(SPACE_HEIGHT)
-        l_h_line = Line(LEFT, ORIGIN).scale(SPACE_WIDTH)
-        r_h_line = Line(ORIGIN, RIGHT).scale(SPACE_WIDTH)
+        v_line = Line(UP, DOWN).scale(FRAME_Y_RADIUS)
+        l_h_line = Line(LEFT, ORIGIN).scale(FRAME_X_RADIUS)
+        r_h_line = Line(ORIGIN, RIGHT).scale(FRAME_X_RADIUS)
         r_h_line.next_to(title, DOWN)
         l_h_line.next_to(r_h_line, LEFT, buff = 0)
         self.add(v_line, l_h_line, r_h_line)
         self.l_h_line, self.r_h_line = l_h_line, r_h_line
 
-    def add_dot_products(self, max_width = SPACE_WIDTH-1, dims = [2, 5]):
+    def add_dot_products(self, max_width = FRAME_X_RADIUS-1, dims = [2, 5]):
         colors = [X_COLOR, Y_COLOR, Z_COLOR, MAROON_B, TEAL]
         last_mob = self.l_h_line
         dot_products = []
@@ -465,32 +445,32 @@ class ContrastDotAndCross(Scene):
                 [random.randint(0, 9) for in_count in range(dim)]
                 for out_count in range(2)
             ]
-            m1, m2 = map(Matrix, arrays)
+            m1, m2 = list(map(Matrix, arrays))
             for matrix in m1, m2:
                 for entry, color in zip(matrix.get_entries(), colors):
-                    entry.highlight(color)
+                    entry.set_color(color)
                     entry.target = entry.copy()
-            syms = VGroup(*map(TexMobject, ["="] + ["+"]*(dim-1)))
+            syms = VGroup(*list(map(TexMobject, ["="] + ["+"]*(dim-1))))
             def get_dot():
                 dot = TexMobject("\\cdot")
                 syms.add(dot)
                 return dot
-            result = VGroup(*it.chain(*zip(
+            result = VGroup(*it.chain(*list(zip(
                 syms,
                 [
                     VGroup(
                         e1.target, get_dot(), e2.target
-                    ).arrange_submobjects()
+                    ).arrange()
                     for e1, e2 in zip(m1.get_entries(), m2.get_entries())
                 ]
-            )))
-            result.arrange_submobjects(RIGHT)
+            ))))
+            result.arrange(RIGHT)
             dot_prod = VGroup(
                 m1, TexMobject("\\cdot"), m2, result
             )
-            dot_prod.arrange_submobjects(RIGHT)
+            dot_prod.arrange(RIGHT)
             if dot_prod.get_width() > max_width:
-                dot_prod.scale_to_fit_width(max_width)
+                dot_prod.set_width(max_width)
             dot_prod.next_to(last_mob, DOWN, buff = MED_SMALL_BUFF)
             last_mob = dot_prod
             dot_prod.to_edge(LEFT)
@@ -511,7 +491,7 @@ class ContrastDotAndCross(Scene):
                 ],
                 run_time = 2
             )
-        self.dither()
+        self.wait()
 
     def add_cross_product(self):
         colors = [X_COLOR, Y_COLOR, Z_COLOR]
@@ -520,18 +500,18 @@ class ContrastDotAndCross(Scene):
             [random.randint(0, 9) for in_count in range(3)]
             for out_count in range(2)
         ]
-        matrices = map(Matrix, arrays)
+        matrices = list(map(Matrix, arrays))
         for matrix in matrices:
             for entry, color in zip(matrix.get_entries(), colors):
-                entry.highlight(color)
+                entry.set_color(color)
         m1, m2 = matrices
         cross_product = VGroup(m1, TexMobject("\\times"), m2)
-        cross_product.arrange_submobjects()
+        cross_product.arrange()
 
         index_to_cross_enty = {}
         syms = VGroup()
         movement_sets = []
-        for a, b, c in it.permutations(range(3)):
+        for a, b, c in it.permutations(list(range(3))):
             e1, e2 = m1.get_entries()[b], m2.get_entries()[c]
             for e in e1, e2:
                 e.target = e.copy()
@@ -539,7 +519,7 @@ class ContrastDotAndCross(Scene):
             dot = TexMobject("\\cdot")
             syms.add(dot)
             cross_entry = VGroup(e1.target, dot, e2.target)
-            cross_entry.arrange_submobjects()
+            cross_entry.arrange()
             if a not in index_to_cross_enty:
                 index_to_cross_enty[a] = []
             index_to_cross_enty[a].append(cross_entry)
@@ -548,18 +528,18 @@ class ContrastDotAndCross(Scene):
             prod1, prod2 = index_to_cross_enty[a]
             if a == 1:
                 prod1, prod2 = prod2, prod1
-            prod2.arrange_submobjects(LEFT)
+            prod2.arrange(LEFT)
             minus = TexMobject("-")
             syms.add(minus)
             entry = VGroup(prod1, minus, prod2)
-            entry.arrange_submobjects(RIGHT)
+            entry.arrange(RIGHT)
             result_entries.append(entry)
 
         result = Matrix(result_entries)
         full_cross_product = VGroup(
             cross_product, TexMobject("="), result
         )
-        full_cross_product.arrange_submobjects()
+        full_cross_product.arrange()
         full_cross_product.scale(0.75)
         full_cross_product.next_to(self.r_h_line, DOWN, buff = MED_SMALL_BUFF/2)
         full_cross_product.remove(result)
@@ -586,36 +566,36 @@ class ContrastDotAndCross(Scene):
             *movements,
             run_time = 2
         )
-        self.dither()
+        self.wait()
 
         self.cross_result = result
         self.only_3d_text = brace_text
 
     def add_2d_cross_product(self):
-        h_line = DashedLine(ORIGIN, SPACE_WIDTH*RIGHT)
+        h_line = DashedLine(ORIGIN, FRAME_X_RADIUS*RIGHT)
         h_line.next_to(self.only_3d_text, DOWN, buff = MED_SMALL_BUFF/2)
         h_line.to_edge(RIGHT, buff = 0)
         arrays = np.random.randint(0, 9, (2, 2))
-        m1, m2 = matrices = map(Matrix, arrays)
+        m1, m2 = matrices = list(map(Matrix, arrays))
         for m in matrices:
             for e, color in zip(m.get_entries(), [X_COLOR, Y_COLOR]):
-                e.highlight(color)
+                e.set_color(color)
         cross_product = VGroup(m1, TexMobject("\\times"), m2)
-        cross_product.arrange_submobjects()
+        cross_product.arrange()
         (x1, x2), (x3, x4) = tuple(m1.get_entries()), tuple(m2.get_entries())
         entries = [x1, x2, x3, x4]
         for entry in entries:
             entry.target = entry.copy()
-        eq, dot1, minus, dot2 = syms = map(TexMobject, 
+        eq, dot1, minus, dot2 = syms = list(map(TexMobject, 
             ["=", "\\cdot", "-", "\\cdot"]
-        )
+        ))
         result = VGroup(
             eq, x1.target, dot1, x4.target,
             minus, x3.target, dot2, x2.target,
         )
-        result.arrange_submobjects(RIGHT)
+        result.arrange(RIGHT)
         full_cross_product = VGroup(cross_product, result)
-        full_cross_product.arrange_submobjects(RIGHT)
+        full_cross_product.arrange(RIGHT)
         full_cross_product.next_to(h_line, DOWN, buff = MED_SMALL_BUFF/2)
 
         self.play(ShowCreation(h_line))
@@ -627,7 +607,7 @@ class ContrastDotAndCross(Scene):
                 for entry in entries
             ]
         )
-        self.dither()
+        self.wait()
         self.two_d_result = VGroup(*result[1:])
 
     def emphasize_output_type(self):
@@ -640,27 +620,27 @@ class ContrastDotAndCross(Scene):
             GrowFromCenter(two_d_brace),
             Write(number)
         )
-        self.dither()
+        self.wait()
         self.play(
             GrowFromCenter(three_d_brace),
             Write(vector)
         )
-        self.dither()
+        self.wait()
 
 class PrereqDeterminant(Scene):
     def construct(self):
         title = TextMobject("""
             Prerequisite: Understanding determinants
         """)
-        title.scale_to_fit_width(2*SPACE_WIDTH - 2)
+        title.set_width(FRAME_WIDTH - 2)
         title.to_edge(UP)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()  
+        self.wait()  
 
 class Define2dCrossProduct(LinearTransformationScene):
     CONFIG = {
@@ -705,7 +685,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             v.label.target, times, w.label.target
         )
 
-        cross_product.arrange_submobjects()
+        cross_product.arrange()
         matrix = Matrix(np.array([
             list(v.coords.target),
             list(w.coords.target)
@@ -714,7 +694,7 @@ class Define2dCrossProduct(LinearTransformationScene):
         full_det = VGroup(det_text, matrix)
         equals = TexMobject("=")
         equation = VGroup(cross_product, equals, full_det)
-        equation.arrange_submobjects()
+        equation.arrange()
         equation.to_corner(UP+LEFT)
 
         matrix_background = BackgroundRectangle(matrix)
@@ -722,7 +702,7 @@ class Define2dCrossProduct(LinearTransformationScene):
 
         disclaimer = TextMobject("$^*$ See ``Note on conventions'' in description")
         disclaimer.scale(0.7)
-        disclaimer.highlight(RED)
+        disclaimer.set_color(RED)
         disclaimer.next_to(
             det_text.get_corner(UP+RIGHT), RIGHT, buff = 0
         )
@@ -734,7 +714,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             Transform(w.label.copy(), w.label.target),
             Write(times),
         )
-        self.dither()
+        self.wait()
         self.play(
             ShowCreation(matrix_background),            
             Write(matrix.get_brackets()), 
@@ -743,17 +723,17 @@ class Define2dCrossProduct(LinearTransformationScene):
         self.play(Transform(v.coords.copy(), v.coords.target))
         self.play(Transform(w.coords.copy(), w.coords.target))
         matrix.add_to_back(matrix_background)
-        self.dither()
+        self.wait()
         self.play(
             Write(equals),
             Write(det_text),
             Animation(matrix),
         )
-        self.dither()
+        self.wait()
         self.play(FadeIn(disclaimer))
-        self.dither()
+        self.wait()
         self.play(FadeOut(disclaimer))
-        self.dither()
+        self.wait()
 
         cross_product.add_to_back(cross_background)
         cross_product.add(equals)
@@ -768,7 +748,7 @@ class Define2dCrossProduct(LinearTransformationScene):
         everything.remove(self.plane)
         everything.remove(self.background_plane)
         self.play(
-            *map(FadeOut, everything) + [
+            *list(map(FadeOut, everything)) + [
             Animation(self.background_plane),
             self.plane.restore,            
             Animation(matrix),
@@ -782,7 +762,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             ShowCreation(j_hat),
             Write(basis_labels)
         )
-        self.dither()
+        self.wait()
 
         side_brace = Brace(matrix, RIGHT)
         transform_words = side_brace.get_text("Linear transformation")
@@ -790,13 +770,13 @@ class Define2dCrossProduct(LinearTransformationScene):
 
         col1, col2 = [
             VGroup(*matrix.get_mob_matrix()[i,:])
-            for i in 0, 1
+            for i in (0, 1)
         ]
 
         both_words = []
         for char, color, col in ("i", X_COLOR, col1), ("j", Y_COLOR, col2):
             words = TextMobject("Where $\\hat\\%smath$ lands"%char)
-            words.highlight(color)
+            words.set_color(color)
             words.add_background_rectangle()
             words.next_to(col, DOWN, buff = LARGE_BUFF)
             words.arrow = Arrow(words.get_top(), col.get_bottom(), color = color)
@@ -810,31 +790,31 @@ class Define2dCrossProduct(LinearTransformationScene):
         self.play(
             Write(i_words),
             ShowCreation(i_words.arrow),
-            col1.highlight, X_COLOR
+            col1.set_color, X_COLOR
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(i_words, j_words),
             Transform(i_words.arrow, j_words.arrow),
-            col2.highlight, Y_COLOR
+            col2.set_color, Y_COLOR
         )
-        self.dither()
-        self.play(*map(FadeOut, [i_words, i_words.arrow, basis_labels]))
+        self.wait()
+        self.play(*list(map(FadeOut, [i_words, i_words.arrow, basis_labels])))
 
         self.add_vector(i_hat, animate = False)
         self.add_vector(j_hat, animate = False)
-        self.play(*map(FadeOut, [side_brace, transform_words]))
+        self.play(*list(map(FadeOut, [side_brace, transform_words])))
         self.add_foreground_mobject(matrix)
         self.apply_transposed_matrix([self.v_coords, self.w_coords])
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(self.plane),
-            *map(Animation, [
+            *list(map(Animation, [
                 self.background_plane,
                 matrix,
                 i_hat,
                 j_hat,
-            ])
+            ]))
         )
         self.play(
             ShowCreation(self.v),
@@ -843,9 +823,9 @@ class Define2dCrossProduct(LinearTransformationScene):
             FadeIn(self.w.label),
             FadeIn(self.v.coord_array),
             FadeIn(self.w.coord_array),
-            matrix.highlight_columns, V_COLOR, W_COLOR
+            matrix.set_column_colors, V_COLOR, W_COLOR
         )
-        self.dither()
+        self.wait()
         self.i_hat, self.j_hat = i_hat, j_hat
         self.matrix = matrix
 
@@ -856,13 +836,13 @@ class Define2dCrossProduct(LinearTransformationScene):
 
         vect_stuffs = VGroup(*it.chain(*[
             [m, m.label, m.coord_array]
-            for m in self.v, self.w
+            for m in (self.v, self.w)
         ]))
         to_restore = [self.plane, self.i_hat, self.j_hat]
         for mob in to_restore:
             mob.fade(1)
 
-        self.play(*map(FadeOut, vect_stuffs))
+        self.play(*list(map(FadeOut, vect_stuffs)))
         self.play(
             *[m.restore for m in to_restore] + [
                 Animation(self.matrix)
@@ -870,15 +850,15 @@ class Define2dCrossProduct(LinearTransformationScene):
         )
         self.add_unit_square(animate = True, opacity = 0.2)
         self.square.save_state()
-        self.dither()
+        self.wait()
         self.apply_transposed_matrix(
             [self.v_coords, self.w_coords]
         )
-        self.dither()
+        self.wait()
         self.play(
             FadeOut(self.plane),
             Animation(self.matrix),
-            *map(FadeIn, vect_stuffs)
+            *list(map(FadeIn, vect_stuffs))
         )
         self.play(Write(self.cross_product))
 
@@ -895,21 +875,21 @@ class Define2dCrossProduct(LinearTransformationScene):
             Write(area_words),
             ShowCreation(area_arrow)
         )
-        self.dither()
+        self.wait()
 
-        pm = VGroup(*map(TexMobject, ["+", "-"]))
-        pm.gradient_highlight(GREEN, RED)
-        pm.arrange_submobjects(DOWN, buff = SMALL_BUFF)
+        pm = VGroup(*list(map(TexMobject, ["+", "-"])))
+        pm.set_color_by_gradient(GREEN, RED)
+        pm.arrange(DOWN, buff = SMALL_BUFF)
         pm.add_to_back(BackgroundRectangle(pm))
         pm.next_to(area_words[0], LEFT, aligned_edge = DOWN)
         self.play(
             Transform(self.square.get_point_mobject(), pm),
             path_arc = -np.pi/2
         )
-        self.dither()
-        self.play(*map(FadeOut, [
+        self.wait()
+        self.play(*list(map(FadeOut, [
             area_arrow, self.v.coord_array, self.w.coord_array
-        ]))
+        ])))
 
     def show_orientation_rule(self):
         self.remove(self.i_hat, self.j_hat)
@@ -935,44 +915,44 @@ class Define2dCrossProduct(LinearTransformationScene):
         movers.save_state()
         self.remove(self.square)
         self.play(Transform(movers, movers.target))
-        self.dither()
+        self.wait()
 
-        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in "v", "w"]
+        v_tex, w_tex = ["\\vec{\\textbf{%s}}"%s for s in ("v", "w")]
         positive_words, negative_words = words_list = [
             TexMobject(v_tex, "\\times", w_tex, "\\text{ is }", word)
-            for word in "\\text{positive}", "\\text{negative}"
+            for word in ("\\text{positive}", "\\text{negative}")
         ]
         for words in words_list:
-            words.highlight_by_tex(v_tex, V_COLOR)
-            words.highlight_by_tex(w_tex, W_COLOR)
-            words.highlight_by_tex("\\text{positive}", GREEN)
-            words.highlight_by_tex("\\text{negative}", RED)
+            words.set_color_by_tex(v_tex, V_COLOR)
+            words.set_color_by_tex(w_tex, W_COLOR)
+            words.set_color_by_tex("\\text{positive}", GREEN)
+            words.set_color_by_tex("\\text{negative}", RED)
             words.add_background_rectangle()
             words.next_to(self.square, UP)
         arc = self.get_arc(self.v, self.w)
-        arc.highlight(GREEN)
+        arc.set_color(GREEN)
         self.play(
             Write(positive_words),
             ShowCreation(arc)
         )
-        self.dither()
+        self.wait()
         self.remove(arc)
         self.play(movers.restore)
         arc = self.get_arc(self.v, self.w)
-        arc.highlight(RED)
+        arc.set_color(RED)
         self.play(
             Transform(positive_words, negative_words),
             ShowCreation(arc)
         )
-        self.dither()
+        self.wait()
 
         anticommute = TexMobject(
             v_tex, "\\times", w_tex, "=-", w_tex, "\\times", v_tex
         )
-        anticommute.shift(SPACE_WIDTH*RIGHT/2)
+        anticommute.shift(FRAME_X_RADIUS*RIGHT/2)
         anticommute.to_edge(UP)
-        anticommute.highlight_by_tex(v_tex, V_COLOR)
-        anticommute.highlight_by_tex(w_tex, W_COLOR)
+        anticommute.set_color_by_tex(v_tex, V_COLOR)
+        anticommute.set_color_by_tex(w_tex, W_COLOR)
         anticommute.add_background_rectangle()
         for v1, v2 in (self.v, self.w), (self.w, self.v):
             v1.label[0].set_fill(opacity = 0)
@@ -992,7 +972,7 @@ class Define2dCrossProduct(LinearTransformationScene):
             rate_func = there_and_back,
             run_time = 2,
         )
-        self.dither()
+        self.wait()
 
     def get_arc(self, v, w, radius = 2):
         v_angle, w_angle = v.get_angle(), w.get_angle()
@@ -1020,8 +1000,8 @@ class TwoDCrossProductExample(Define2dCrossProduct):
         w.coords = Matrix(self.w_coords)
         v.coords.next_to(v.get_end(), LEFT)
         w.coords.next_to(w.get_end(), RIGHT)
-        v.coords.highlight(v.get_color())
-        w.coords.highlight(w.get_color())
+        v.coords.set_color(v.get_color())
+        w.coords.set_color(w.get_color())
         for coords in v.coords, w.coords:
             coords.background_rectangle = BackgroundRectangle(coords)
             coords.add_to_back(coords.background_rectangle)
@@ -1039,14 +1019,14 @@ class TwoDCrossProductExample(Define2dCrossProduct):
         det_text = get_det_text(matrix)
         v_tex, w_tex = get_vect_tex("v", "w")
         cross_product = TexMobject(v_tex, "\\times", w_tex, "=")
-        cross_product.highlight_by_tex(v_tex, V_COLOR)
-        cross_product.highlight_by_tex(w_tex, W_COLOR)
+        cross_product.set_color_by_tex(v_tex, V_COLOR)
+        cross_product.set_color_by_tex(w_tex, W_COLOR)
         cross_product.add_background_rectangle()
         equation_start = VGroup(
             cross_product, 
             VGroup(matrix_background, det_text, matrix)
         )
-        equation_start.arrange_submobjects()
+        equation_start.arrange()
         equation_start.next_to(ORIGIN, DOWN).to_edge(LEFT)
 
 
@@ -1056,7 +1036,7 @@ class TwoDCrossProductExample(Define2dCrossProduct):
                 Write(vect.coords),
                 Write(vect.label)
             )
-            self.dither()
+            self.wait()
         self.play(
             Transform(v.coords.background_rectangle, matrix_background),
             Transform(w.coords.background_rectangle, matrix_background),
@@ -1065,7 +1045,7 @@ class TwoDCrossProductExample(Define2dCrossProduct):
             Transform(v.coords.get_brackets(), matrix.get_brackets()),
             Transform(w.coords.get_brackets(), matrix.get_brackets()),
         )
-        self.play(*map(Write, [det_text, cross_product]))
+        self.play(*list(map(Write, [det_text, cross_product])))
 
 
         v1, v2 = v.coords.get_entries()
@@ -1074,16 +1054,16 @@ class TwoDCrossProductExample(Define2dCrossProduct):
         for entry in entries:
             entry.target = entry.copy()
         det = np.linalg.det([self.v_coords, self.w_coords])
-        equals, dot1, minus, dot2, equals_result = syms = VGroup(*map(
+        equals, dot1, minus, dot2, equals_result = syms = VGroup(*list(map(
             TexMobject,
             ["=", "\\cdot", "-", "\\cdot", "=%d"%det]
-        ))
+        )))
 
         equation_end = VGroup(
             equals, v1.target, dot1, w2.target, 
             minus, w1.target, dot2, v2.target, equals_result
         )
-        equation_end.arrange_submobjects()
+        equation_end.arrange()
         equation_end.next_to(equation_start)
         syms_rect = BackgroundRectangle(syms)
         syms.add_to_back(syms_rect)
@@ -1104,7 +1084,7 @@ class TwoDCrossProductExample(Define2dCrossProduct):
             ),
             run_time = 3
         )
-        self.dither()
+        self.wait()
         self.play(Write(equals_result))
 
         self.add_foreground_mobject(equation_start, equation_end)
@@ -1113,15 +1093,15 @@ class TwoDCrossProductExample(Define2dCrossProduct):
         det_sym.scale(1.5)
         det_sym.next_to(v.get_end()+w.get_end(), DOWN+RIGHT, buff = MED_SMALL_BUFF/2)
         arc = self.get_arc(v, w, radius = 1)
-        arc.highlight(RED)
+        arc.set_color(RED)
         self.play(Write(det_sym))
         self.play(ShowCreation(arc))
-        self.dither()
+        self.wait()
 
 
     def show_transformation(self, v, w):
         i_hat, j_hat = self.get_basis_vectors()
-        self.play(*map(ShowCreation, [i_hat, j_hat]))
+        self.play(*list(map(ShowCreation, [i_hat, j_hat])))
         self.add_unit_square(animate = True, opacity = 0.2)
         self.apply_transposed_matrix(
             [v.get_end()[:2], w.get_end()[:2]],
@@ -1157,16 +1137,16 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
         arrow = TextMobject("\\Rightarrow")
         v_tex, w_tex = get_vect_tex("v", "w")
         cross_is = TexMobject(v_tex, "\\times", w_tex, "\\text{ is }")
-        cross_is.highlight_by_tex(v_tex, V_COLOR)
-        cross_is.highlight_by_tex(w_tex, W_COLOR)
+        cross_is.set_color_by_tex(v_tex, V_COLOR)
+        cross_is.set_color_by_tex(w_tex, W_COLOR)
         bigger = TextMobject("bigger")
         smaller = TextMobject("smaller")
         bigger.scale(1.5)
         smaller.scale(0.75)
-        bigger.highlight(PINK)
-        smaller.highlight(TEAL)
+        bigger.set_color(PINK)
+        smaller.set_color(TEAL)
         group = VGroup(start_words, arrow, cross_is, bigger)
-        group.arrange_submobjects()
+        group.arrange()
         group.to_edge(UP)
         end_words.move_to(start_words, aligned_edge = RIGHT)
         smaller.next_to(cross_is, buff = MED_SMALL_BUFF/2, aligned_edge = DOWN)
@@ -1179,7 +1159,7 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
         w.target = w.copy().rotate(np.pi/5)
         transforms = [
             self.get_matrix_transformation([v1.get_end()[:2], v2.get_end()[:2]])
-            for v1, v2 in (v, w), (v.target, w.target)
+            for v1, v2 in [(v, w), (v.target, w.target)]
         ]
         start_square, end_square = [
             square.copy().apply_function(transform)
@@ -1192,10 +1172,10 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
         self.play(
             FadeIn(group), 
             ShowCreation(start_square),
-            *map(Animation, [v, w])
+            *list(map(Animation, [v, w]))
         )
         self.play(GrowFromCenter(bigger))
-        self.dither()
+        self.wait()
         self.play(
             Transform(start_square, end_square),            
             Transform(v, v.target),
@@ -1205,7 +1185,7 @@ class BiggerWhenPerpendicular(LinearTransformationScene):
             Transform(start_words, end_words),
             Transform(bigger, smaller)
         )
-        self.dither()
+        self.wait()
 
 class ScalingRule(LinearTransformationScene):
     CONFIG = {
@@ -1244,10 +1224,10 @@ class ScalingRule(LinearTransformationScene):
         rhs = TexMobject("=3(", v_tex, "\\times", w_tex, ")")
         three_v = TexMobject("(3", v_tex, ")")
         for tex_mob in cross_product, rhs, three_v:
-            tex_mob.highlight_by_tex(v_tex, V_COLOR)
-            tex_mob.highlight_by_tex(w_tex, W_COLOR)
+            tex_mob.set_color_by_tex(v_tex, V_COLOR)
+            tex_mob.set_color_by_tex(w_tex, W_COLOR)
         equation = VGroup(cross_product, rhs)
-        equation.arrange_submobjects()
+        equation.arrange()
         equation.to_edge(UP)
         v_tex_mob = cross_product[0]
         three_v.move_to(v_tex_mob, aligned_edge = RIGHT)
@@ -1259,22 +1239,22 @@ class ScalingRule(LinearTransformationScene):
         self.play(ShowCreation(w))
         self.play(
             ShowCreation(square),
-            *map(Animation, [v, w])
+            *list(map(Animation, [v, w]))
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(v, new_v),
             Transform(v_tex_mob, three_v),
         )
-        self.dither()
+        self.wait()
         self.play(
             Transform(square, new_squares),
-            *map(Animation, [v, w]),
+            *list(map(Animation, [v, w])),
             path_arc = -np.pi/6
         )
-        self.dither()
+        self.wait()
         self.play(Write(rhs))
-        self.dither()
+        self.wait()
 
 class TechnicallyNotTheDotProduct(TeacherStudentsScene):
     def construct(self):
@@ -1296,45 +1276,45 @@ class WriteAreaOfParallelogram(Scene):
             "Area of ", "parallelogram", " $=$ ", "$2.5$",
             arg_separator = ""
         )
-        words.highlight_by_tex("parallelogram", BLUE)
-        words.highlight_by_tex("$2.5$", BLUE)
+        words.set_color_by_tex("parallelogram", BLUE)
+        words.set_color_by_tex("$2.5$", BLUE)
         result = words[-1]
         words.remove(result)
 
         self.play(Write(words))
-        self.dither()
+        self.wait()
         self.play(Write(result, run_time = 1))
-        self.dither()
+        self.wait()
 
 class WriteCrossProductProperties(Scene):
     def construct(self):
         v_tex, w_tex, p_tex = texs = get_vect_tex(*"vwp")
         v_cash, w_cash, p_cash = ["$%s$"%tex for tex in texs]
         cross_product = TexMobject(v_tex, "\\times", w_tex, "=", p_tex)
-        cross_product.highlight_by_tex(v_tex, V_COLOR)
-        cross_product.highlight_by_tex(w_tex, W_COLOR)
-        cross_product.highlight_by_tex(p_tex, P_COLOR)
+        cross_product.set_color_by_tex(v_tex, V_COLOR)
+        cross_product.set_color_by_tex(w_tex, W_COLOR)
+        cross_product.set_color_by_tex(p_tex, P_COLOR)
         cross_product.to_edge(UP, buff = LARGE_BUFF)
         p_mob = cross_product[-1]
         brace = Brace(p_mob)
         brace.do_in_place(brace.stretch, 2, 0)
         vector = brace.get_text("vector")
-        vector.highlight(P_COLOR)
+        vector.set_color(P_COLOR)
         length_words = TextMobject(
             "Length of ", p_cash, "\\\\ = ", 
             "(parallelogram's area)"
         )
-        length_words.highlight_by_tex(p_cash, P_COLOR)
-        length_words.scale_to_fit_width(SPACE_WIDTH - 1)
-        length_words.highlight_by_tex("(parallelogram's area)", BLUE)
+        length_words.set_color_by_tex(p_cash, P_COLOR)
+        length_words.set_width(FRAME_X_RADIUS - 1)
+        length_words.set_color_by_tex("(parallelogram's area)", BLUE)
         length_words.next_to(VGroup(cross_product, vector), DOWN, buff = LARGE_BUFF)
         perpendicular = TextMobject(
             "\\centering Perpendicular to",
             v_cash, "and", w_cash
         )
-        perpendicular.scale_to_fit_width(SPACE_WIDTH - 1)        
-        perpendicular.highlight_by_tex(v_cash, V_COLOR)
-        perpendicular.highlight_by_tex(w_cash, W_COLOR)
+        perpendicular.set_width(FRAME_X_RADIUS - 1)        
+        perpendicular.set_color_by_tex(v_cash, V_COLOR)
+        perpendicular.set_color_by_tex(w_cash, W_COLOR)
         perpendicular.next_to(length_words, DOWN, buff = LARGE_BUFF)
 
 
@@ -1343,11 +1323,11 @@ class WriteCrossProductProperties(Scene):
             GrowFromCenter(brace),
             Write(vector, run_time = 1)
         )
-        self.dither()
+        self.wait()
         self.play(Write(length_words, run_time = 1))
-        self.dither()
+        self.wait()
         self.play(Write(perpendicular))
-        self.dither()
+        self.wait()
 
 def get_cross_product_right_hand_rule_labels():
     v_tex, w_tex = get_vect_tex(*"vw")
@@ -1376,18 +1356,18 @@ class LabelingExampleVectors(Scene):
             ),
         ]
         for eq, color in zip(equations, colors):
-            eq.highlight(color)
+            eq.set_color(color)
             eq.scale(2)
 
         area_words = TextMobject("Area", "=4")
-        area_words[0].highlight(BLUE)
+        area_words[0].set_color(BLUE)
         area_words.scale(2)
         for mob in equations[:2] + [area_words, equations[2]]:
             self.fade_in_out(mob)
 
     def fade_in_out(self, mob):            
         self.play(FadeIn(mob))
-        self.dither()
+        self.wait()
         self.play(FadeOut(mob))
 
 class ThreeDTwoPossiblePerpendicularVectors(Scene):
@@ -1402,20 +1382,20 @@ class ShowCrossProductFormula(Scene):
 
         arrays = [
             ["%s_%d"%(s, i) for i in range(1, 4)]
-            for s in "v", "w"
+            for s in ("v", "w")
         ]
-        matrices = map(Matrix, arrays)
+        matrices = list(map(Matrix, arrays))
         for matrix in matrices:
             for entry, color in zip(matrix.get_entries(), colors):
-                entry.highlight(color)
+                entry.set_color(color)
         m1, m2 = matrices
         cross_product = VGroup(m1, TexMobject("\\times"), m2)
-        cross_product.arrange_submobjects()
+        cross_product.arrange()
         cross_product.shift(2*LEFT)
 
         entry_dicts = [{} for x in range(3)]
         movement_sets = []
-        for a, b, c in it.permutations(range(3)):
+        for a, b, c in it.permutations(list(range(3))):
             sign = get_perm_sign(a, b, c)
             e1, e2 = m1.get_entries()[b], m2.get_entries()[c]
             for e in e1, e2:
@@ -1427,13 +1407,13 @@ class ShowCrossProductFormula(Scene):
                 minus = TexMobject("-")
                 syms.add(minus)
                 cross_entry = VGroup(minus, e2.target, dot, e1.target)
-                cross_entry.arrange_submobjects()
+                cross_entry.arrange()
                 entry_dicts[a]["negative"] = cross_entry
             else:
                 cross_entry = VGroup(e1.target, dot, e2.target)
-                cross_entry.arrange_submobjects()
+                cross_entry.arrange()
                 entry_dicts[a]["positive"] = cross_entry
-            cross_entry.arrange_submobjects()
+            cross_entry.arrange()
             movement_sets.append([
                 e1, e1.target,
                 e2, e2.target,
@@ -1444,7 +1424,7 @@ class ShowCrossProductFormula(Scene):
             VGroup(
                 entry_dict["positive"],
                 entry_dict["negative"],
-            ).arrange_submobjects()
+            ).arrange()
             for entry_dict in entry_dicts
         ])
         equals = TexMobject("=").next_to(cross_product)
@@ -1455,7 +1435,7 @@ class ShowCrossProductFormula(Scene):
             Write(equals),
             Write(result.get_brackets())
         )
-        self.dither()
+        self.wait()
         movement_sets[2], movement_sets[3] = movement_sets[3], movement_sets[2]
         for e1, e1_target, e2, e2_target, syms in movement_sets:
             e1.save_state()
@@ -1472,7 +1452,7 @@ class ShowCrossProductFormula(Scene):
                 e2.restore,
                 path_arc = -np.pi/2
             )
-        self.dither()
+        self.wait()
 
 class ThisGetsWeird(TeacherStudentsScene):
     def construct(self):
@@ -1486,16 +1466,16 @@ class DeterminantTrick(Scene):
     def construct(self):
         v_terms, w_terms = [
             ["%s_%d"%(s, d) for d in range(1, 4)]
-            for s in "v", "w"
+            for s in ("v", "w")
         ]
         v = Matrix(v_terms)
         w = Matrix(w_terms)
-        v.highlight(V_COLOR)
-        w.highlight(W_COLOR)
+        v.set_color(V_COLOR)
+        w.set_color(W_COLOR)
         matrix = Matrix(np.array([
             [
                 TexMobject("\\hat{%s}"%s)
-                for s in "\\imath", "\\jmath", "k"
+                for s in ("\\imath", "\\jmath", "k")
             ],
             list(v.get_entries().copy()),
             list(w.get_entries().copy()),
@@ -1513,17 +1493,17 @@ class DeterminantTrick(Scene):
         ##
 
         for color, entry in zip(colors, col1):
-            entry.highlight(color)
+            entry.set_color(color)
         det_text = get_det_text(matrix)
         equals = TexMobject("=")
         equation = VGroup(
             v, TexMobject("\\times"), w,
             equals, VGroup(det_text, matrix)
         )
-        equation.arrange_submobjects()
+        equation.arrange()
 
         self.add(*equation[:-2])
-        self.dither()
+        self.wait()
         self.play(Write(matrix.get_brackets()))
         for col, vect in (col2, v), (col3, w):
             col.save_state()
@@ -1534,16 +1514,16 @@ class DeterminantTrick(Scene):
             )
         for entry in col1:
             self.play(Write(entry))
-        self.dither()
-        self.play(*map(Write, [equals, det_text]))
-        self.dither()
+        self.wait()
+        self.play(*list(map(Write, [equals, det_text])))
+        self.wait()
 
         disclaimer = TextMobject("$^*$ See ``Note on conventions'' in description")
         disclaimer.scale(0.7)
-        disclaimer.highlight(RED)
+        disclaimer.set_color(RED)
         disclaimer.next_to(equation, DOWN)
         self.play(FadeIn(disclaimer))
-        self.dither()
+        self.wait()
         self.play(FadeOut(disclaimer))
 
         circle = Circle()
@@ -1560,7 +1540,7 @@ class DeterminantTrick(Scene):
             ShowCreation(circle)
         )
         self.play(randy.look, RIGHT)
-        self.dither()
+        self.wait()
         self.play(FadeOut(circle))
 
         self.play(
@@ -1583,13 +1563,13 @@ class DeterminantTrick(Scene):
                 mob.save_state()
             basis = quint[0]
             basis.t.scale(1/0.8)
-            lp, minus, rp = syms = VGroup(*map(TexMobject, "(-)"))
+            lp, minus, rp = syms = VGroup(*list(map(TexMobject, "(-)")))
             term = VGroup(
                 basis.t, lp,
                 quint[1].t, quint[2].t, minus,
                 quint[3].t, quint[4].t, rp
             )
-            term.arrange_submobjects()
+            term.arrange()
             if last_mob:
                 plus = TexMobject("+")
                 syms.add(plus)
@@ -1603,7 +1583,7 @@ class DeterminantTrick(Scene):
                 [mob.scale_in_place, 1.2]
                 for mob in quint
             ]))
-            self.dither() 
+            self.wait() 
             self.play(*[
                 Transform(mob.copy(), mob.t) 
                 for mob in quint
@@ -1614,19 +1594,19 @@ class DeterminantTrick(Scene):
             ], 
                 run_time = 2
             )
-            self.dither()
+            self.wait()
             paren_sets.append(VGroup(lp, rp))
-        self.dither()
+        self.wait()
         self.play(randy.change_mode, "pondering")
         for parens in paren_sets:
             brace = Brace(parens)
             text = brace.get_text("Some number")
-            text.scale_to_fit_width(brace.get_width())
+            text.set_width(brace.get_width())
             self.play(
                 GrowFromCenter(brace),
                 Write(text, run_time = 2)
             )
-        self.dither()
+        self.wait()
 
 class ThereIsAReason(TeacherStudentsScene):
     def construct(self):
@@ -1638,7 +1618,7 @@ class ThereIsAReason(TeacherStudentsScene):
             "\\centering but there is a\\\\", 
             "reason", "for doing it"
         )
-        words.highlight_by_tex("reason", YELLOW)
+        words.set_color_by_tex("reason", YELLOW)
         self.teacher_says(words, target_mode = "surprised")
         self.change_student_modes(
             "raise_right_hand", "confused", "raise_left_hand"
@@ -1648,7 +1628,7 @@ class ThereIsAReason(TeacherStudentsScene):
 class RememberDuality(TeacherStudentsScene):
     def construct(self):
         words = TextMobject("Remember ", "duality", "?", arg_separator = "")
-        words[1].gradient_highlight(BLUE, YELLOW)
+        words[1].set_color_by_gradient(BLUE, YELLOW)
         self.teacher_says(words, target_mode = "sassy")
         self.random_blink(2)
 
@@ -1658,15 +1638,15 @@ class NextVideo(Scene):
             Next video: Cross products in the
             light of linear transformations
         """)
-        title.scale_to_fit_height(1.2)
+        title.set_height(1.2)
         title.to_edge(UP, buff = MED_SMALL_BUFF/2)
         rect = Rectangle(width = 16, height = 9, color = BLUE)
-        rect.scale_to_fit_height(6)
+        rect.set_height(6)
         rect.next_to(title, DOWN)
 
         self.add(title)
         self.play(ShowCreation(rect))
-        self.dither()
+        self.wait()
 
 class CrossAndDualWords(Scene):
     def construct(self):
@@ -1678,7 +1658,7 @@ class CrossAndDualWords(Scene):
             p_tex, "=", v_tex, "\\times", w_tex
         )
         for tex, color in zip([v_tex, w_tex, p_tex], [U_COLOR, W_COLOR, P_COLOR]):
-            cross.highlight_by_tex(tex, color)
+            cross.set_color_by_tex(tex, color)
         input_array_tex = matrix_to_tex_string(["x", "y", "z"])
         func = TexMobject("L\\left(%s\\right) = "%input_array_tex)
         matrix = Matrix(np.array([
@@ -1686,20 +1666,20 @@ class CrossAndDualWords(Scene):
             ["v_1", "v_2", "v_3"],
             ["w_1", "w_2", "w_3"],
         ]).T)
-        matrix.highlight_columns(WHITE, U_COLOR, W_COLOR)
+        matrix.set_column_colors(WHITE, U_COLOR, W_COLOR)
         det_text = get_det_text(matrix, background_rect = False)
         det_text.add(matrix)
         dot_with_cross = TexMobject(
             "%s \\cdot ( "%input_array_tex,
             v_tex, "\\times", w_tex, ")"
         )
-        dot_with_cross.highlight_by_tex(v_tex, U_COLOR)
-        dot_with_cross.highlight_by_tex(w_tex, W_COLOR)
+        dot_with_cross.set_color_by_tex(v_tex, U_COLOR)
+        dot_with_cross.set_color_by_tex(w_tex, W_COLOR)
         transform = VGroup(func, det_text)
-        transform.arrange_submobjects()
+        transform.arrange()
 
         VGroup(transform, dot_with_cross).scale(0.7)
-        VGroup(vector_word, cross).arrange_submobjects(
+        VGroup(vector_word, cross).arrange(
             RIGHT, buff = MED_SMALL_BUFF
         ).center().shift(LEFT).to_edge(UP)
         transform_word.next_to(vector_word, DOWN, buff = MED_SMALL_BUFF, aligned_edge = LEFT)
@@ -1708,12 +1688,12 @@ class CrossAndDualWords(Scene):
 
         self.add(vector_word)
         self.play(Write(cross))
-        self.dither()
+        self.wait()
         self.play(FadeIn(transform_word))
         self.play(Write(transform))
-        self.dither()
+        self.wait()
         self.play(Transform(det_text, dot_with_cross))
-        self.dither()
+        self.wait()
 
 
 

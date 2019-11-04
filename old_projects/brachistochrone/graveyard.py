@@ -1,27 +1,9 @@
 import numpy as np
 import itertools as it
 
-from helpers import *
+from manimlib.imports import *
 
-from mobject.tex_mobject import TexMobject, TextMobject, Brace
-from mobject import Mobject, Mobject1D
-from mobject.image_mobject import \
-    ImageMobject, MobjectFromPixelArray
-from topics.three_dimensions import Stars
-
-from animation import Animation
-from animation.transform import *
-from animation.simple_animations import *
-from animation.playground import TurnInsideOut, Vibrate
-from topics.geometry import *
-from topics.characters import Randolph, Mathematician
-from topics.functions import *
-from topics.number_line import *
-from mobject.region import  Region, region_from_polygon_vertices
-from scene import Scene
-from scene.zoomed_scene import ZoomedScene
-
-from brachistochrone.curves import Cycloid
+from old_projects.brachistochrone.curves import Cycloid
 
 class MultilayeredGlass(PhotonScene, ZoomedScene):
     CONFIG = {
@@ -29,12 +11,12 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         "num_variables" : 3,
         "top_color" : BLUE_E,
         "bottom_color" : BLUE_A,
-        "zoomed_canvas_space_shape" : (5, 5),
+        "zoomed_canvas_frame_shape" : (5, 5),
         "square_color" : GREEN_B,
     }
     def construct(self):
         self.cycloid = Cycloid(end_theta = np.pi)
-        self.cycloid.highlight(YELLOW)
+        self.cycloid.set_color(YELLOW)
         self.top = self.cycloid.get_top()[1]
         self.bottom = self.cycloid.get_bottom()[1]-1
         self.generate_layers()
@@ -62,22 +44,22 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         self.add(*self.layers)
         continuous = self.get_continuous_background()
         self.add(continuous)
-        self.dither()
+        self.wait()
         self.play(ShowCreation(
             continuous,
             rate_func = lambda t : smooth(1-t)
         ))
         self.remove(continuous)
-        self.dither()
+        self.wait()
         
     def get_continuous_background(self):
         glass = FilledRectangle(
             height = self.top-self.bottom,
-            width = 2*SPACE_WIDTH,
+            width = FRAME_WIDTH,
         )
         glass.sort_points(lambda p : -p[1])
         glass.shift((self.top-glass.get_top()[1])*UP)
-        glass.gradient_highlight(self.top_color, self.bottom_color)
+        glass.set_color_by_gradient(self.top_color, self.bottom_color)
         return glass
 
     def generate_layer_info(self):
@@ -87,7 +69,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         )
         top_rgb, bottom_rgb = [
             np.array(Color(color).get_rgb())
-            for color in self.top_color, self.bottom_color
+            for color in (self.top_color, self.bottom_color)
         ]
         epsilon = 1./(self.num_discrete_layers-1)
         self.layer_colors = [
@@ -131,14 +113,14 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 angle_of_vector(start_point-end_point)-np.pi/2
             )
         self.discrete_path.add_line(
-            points[end], SPACE_WIDTH*RIGHT+(self.layer_tops[-1]-1)*UP
+            points[end], FRAME_X_RADIUS*RIGHT+(self.layer_tops[-1]-1)*UP
         )
 
     def show_layer_variables(self):
-        layer_top_pairs = zip(
+        layer_top_pairs = list(zip(
             self.layer_tops[:self.num_variables], 
             self.layer_tops[1:]
-        )
+        ))
         v_equations = []
         start_ys = []
         end_ys = []
@@ -153,8 +135,8 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
             eq_mob.shift(midpoint)
             v_eq = eq_mob.split()
             center_paths.append(Line(
-                midpoint+SPACE_WIDTH*LEFT, 
-                midpoint+SPACE_WIDTH*RIGHT
+                midpoint+FRAME_X_RADIUS*LEFT, 
+                midpoint+FRAME_X_RADIUS*RIGHT
             ))            
             brace_endpoints = Mobject(
                 Point(self.top*UP+x*RIGHT),
@@ -176,19 +158,19 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
         for v_eq, path, time in zip(v_equations, center_paths, [2, 1, 0.5]):
             photon_run = self.photon_run_along_path(
                 path,
-                rate_func = None
+                rate_func=linear
             )
             self.play(
                 ShimmerIn(v_eq[0]),
                 photon_run,
                 run_time = time
             )
-        self.dither()
+        self.wait()
         for start_y, brace in zip(start_ys, braces):
             self.add(start_y)            
             self.play(GrowFromCenter(brace))
-        self.dither()
-        quads = zip(v_equations, start_ys, end_ys, braces)
+        self.wait()
+        quads = list(zip(v_equations, start_ys, end_ys, braces))
         self.equations = []
         for v_eq, start_y, end_y, brace in quads:
             self.remove(brace)
@@ -241,8 +223,8 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 bend_point - little_square.get_center(),
                 run_time = 2
             ))
-            self.play(*map(ShowCreation, figure_marks))
-            self.dither()
+            self.play(*list(map(ShowCreation, figure_marks)))
+            self.wait()
             equation_frame = little_square.copy()
             equation_frame.scale(0.5)
             equation_frame.shift(
@@ -257,7 +239,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
     def show_snells(self, index, frame):
         left_text, right_text = [
             "\\dfrac{\\sin(\\theta_%d)}{\\phantom{\\sqrt{y_1}}}"%x
-            for x in index, index+1
+            for x in (index, index+1)
         ]
         left, equals, right = TexMobject(
             [left_text, "=", right_text]
@@ -269,7 +251,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 TexMobject(
                     text, size = "\\Large"
                 ).next_to(numerator, DOWN)
-                for text in "v_%d"%x, "\\sqrt{y_%d}"%x
+                for text in ("v_%d"%x, "\\sqrt{y_%d}"%x)
             ]
             vs.append(v)
             sqrt_ys.append(sqrt_y)
@@ -277,16 +259,16 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
             Mobject(
                 left.copy(), mobs[0], equals.copy(), right.copy(), mobs[1]
             ).replace(frame)
-            for mobs in vs, sqrt_ys
+            for mobs in (vs, sqrt_ys)
         ]
 
         self.add(start)
-        self.dither(2)
+        self.wait(2)
         self.play(Transform(
             start, end, 
             path_func = counterclockwise_path()
         ))
-        self.dither(2)
+        self.wait(2)
         self.remove(start, end)
 
     def show_main_equation(self):
@@ -299,7 +281,7 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
             (self.layer_tops[0]-self.equation.get_top())*UP
         )
         self.add(self.equation)
-        self.dither()
+        self.wait()
 
     def ask_continuous_question(self):
         continuous = self.get_continuous_background()
@@ -340,5 +322,5 @@ class MultilayeredGlass(PhotonScene, ZoomedScene):
                 theta.shift(point)
                 theta.shift(0.15*vect)
                 self.add(theta)
-            self.dither(self.frame_duration)
+            self.wait(self.frame_duration)
             self.remove(arc)

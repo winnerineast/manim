@@ -1,33 +1,29 @@
 #!/usr/bin/env python
 
+
 import numpy as np
 import itertools as it
 import operator as op
 from copy import deepcopy
 
+from manimlib.imports import *
 
-from animation import *
-from mobject import *
-from constants import *
-from mobject.region import  *
-from scene import Scene
-
-RADIUS = SPACE_HEIGHT - 0.1
+RADIUS = FRAME_Y_RADIUS - 0.1
 CIRCLE_DENSITY = DEFAULT_POINT_DENSITY_1D*RADIUS
 
 
 def logo_to_circle():
-    from generate_logo import DARK_BROWN, LOGO_RADIUS
+    from .generate_logo import DARK_BROWN, LOGO_RADIUS
     sc = Scene()
     small_circle = Circle(
         density = CIRCLE_DENSITY,
         color = 'skyblue'
-    ).scale(LOGO_RADIUS).highlight(
-        DARK_BROWN, lambda (x, y, z) : x < 0 and y > 0
+    ).scale(LOGO_RADIUS).set_color(
+        DARK_BROWN, lambda x_y_z : x_y_z[0] < 0 and x_y_z[1] > 0
     )
     big_circle = Circle(density = CIRCLE_DENSITY).scale(RADIUS)
     sc.add(small_circle)
-    sc.dither()`
+    sc.wait()
     sc.animate(Transform(small_circle, big_circle))
     return sc
 
@@ -41,7 +37,7 @@ def count_sections(*radians):
     ]
     dots = [Dot(point) for point in points]
     interior = Region(lambda x, y : x**2 + y**2 < RADIUS**2)    
-    for x in xrange(1, len(points)):
+    for x in range(1, len(points)):
         if x == 1:
             sc.animate(ShowCreation(dots[0]), ShowCreation(dots[1]))
             sc.add(dots[0], dots[1])
@@ -49,29 +45,29 @@ def count_sections(*radians):
             sc.animate(ShowCreation(dots[x]))
             sc.add(dots[x])
         new_lines = Mobject(*[
-            Line(points[x], points[y]) for y in xrange(x)
+            Line(points[x], points[y]) for y in range(x)
         ])
         sc.animate(Transform(deepcopy(dots[x]), new_lines, run_time = 2.0))
         sc.add(new_lines)
-        sc.dither()
+        sc.wait()
         regions = plane_partition_from_points(*points[:x+1])
         for reg in regions:
             reg.intersect(interior)
-        regions = filter(lambda reg : reg.bool_grid.any(), regions)
+        regions = [reg for reg in regions if reg.bool_grid.any()]
 
         last_num = None
         for reg, count in zip(regions, it.count(1)):
             number = TexMobject(str(count)).shift((RADIUS, 3, 0))
-            sc.highlight_region(reg)
+            sc.set_color_region(reg)
             rt = 1.0 / (x**0.8)
             sc.add(number)
             sc.remove(last_num)
             last_num = number
-            sc.dither(rt)
+            sc.wait(rt)
             sc.reset_background()
         sc.remove(last_num)
         sc.animate(Transform(last_num, deepcopy(last_num).center()))
-        sc.dither()
+        sc.wait()
         sc.remove(last_num)
     return sc
 
@@ -85,9 +81,9 @@ def summarize_pattern(*radians):
     ]
     dots = [Dot(point) for point in points]
     last_num = None
-    for x in xrange(len(points)):
+    for x in range(len(points)):
         new_lines = Mobject(*[
-            Line(points[x], points[y]) for y in xrange(x)
+            Line(points[x], points[y]) for y in range(x)
         ])
         num = TexMobject(str(moser_function(x + 1))).center()
         sc.animate(
@@ -99,7 +95,7 @@ def summarize_pattern(*radians):
         sc.remove(last_num)
         last_num = num
         sc.add(num, dots[x], new_lines)
-        sc.dither()
+        sc.wait()
     return sc
 
 def connect_points(*radians):
@@ -114,14 +110,14 @@ def connect_points(*radians):
     sc.add(*dots)
     anims = []
     all_lines = []
-    for x in xrange(len(points)):
+    for x in range(len(points)):
         lines = [Line(points[x], points[y]) for y in range(len(points))]
         lines = Mobject(*lines)
         anims.append(Transform(deepcopy(dots[x]), lines, run_time = 3.0))
         all_lines.append(lines)
     sc.animate(*anims)
     sc.add(*all_lines)
-    sc.dither()
+    sc.wait()
     return sc
 
 def interesting_problems():
@@ -143,7 +139,7 @@ def interesting_problems():
     sc.add(face, tb)
     sc.animate(ShowCreation(fermat, run_time = 1))
     sc.add(fermat)
-    sc.dither()
+    sc.wait()
     sc.animate(
         Transform(
             deepcopy(fermat).repeat(len(locales)),
@@ -152,7 +148,7 @@ def interesting_problems():
         FadeIn(face_copies, run_time = 1.0)
     )
     sc.animate(FadeIn(tb_copies))
-    sc.dither()
+    sc.wait()
     sc.animate(
         Transform(tb, sb),
         Transform(tb_copies, sb_copies)
@@ -172,10 +168,10 @@ def response_invitation():
     ])
 
     sc.add(video_icon)
-    sc.dither()
+    sc.wait()
     sc.animate(Transform(deepcopy(video_icon).repeat(3), mini_videos))
     sc.add(mini_videos)
-    sc.dither()
+    sc.wait()
     sc.animate(ShowCreation(comments, run_time = 1.0))
     return sc
 
@@ -209,7 +205,7 @@ def different_points(radians1, radians2):
             for line1, line2 in zip(lines1, lines2)
         ]
     )
-    sc.dither()
+    sc.wait()
     return sc
 
 def next_few_videos(*radians):
@@ -227,15 +223,15 @@ def next_few_videos(*radians):
         for point1, point2 in it.combinations(points, 2)
     ])
     thumbnail = Mobject(circle, dots, lines)
-    frame = VideoIcon().highlight(
+    frame = VideoIcon().set_color(
         "black",
-        lambda point : np.linalg.norm(point) < 0.5
+        lambda point : get_norm(point) < 0.5
     )
-    big_frame = deepcopy(frame).scale(SPACE_WIDTH)
+    big_frame = deepcopy(frame).scale(FRAME_X_RADIUS)
     frame.shift((-5, 0, 0))
 
     sc.add(thumbnail)
-    sc.dither()
+    sc.wait()
     sc.animate(
         Transform(big_frame, frame),
         Transform(
@@ -244,7 +240,7 @@ def next_few_videos(*radians):
         )
     )
     sc.add(frame, thumbnail)
-    sc.dither()
+    sc.wait()
     last = frame
     for x in [-2, 1, 4]:
         vi = VideoIcon().shift((x, 0, 0))
